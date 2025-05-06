@@ -117,21 +117,46 @@ def create_event():
     
     data = request.json
     
+    # Validate required fields
+    if not data.get('mother_name'):
+        return jsonify({'error': "Mother's name is required"}), 400
+    
+    if not data.get('due_date'):
+        return jsonify({'error': "Baby's due date is required"}), 400
+    
     try:
+        # Handle optional date fields
+        event_date = None
+        if data.get('event_date'):
+            try:
+                event_date = datetime.strptime(data.get('event_date'), '%Y-%m-%d').date()
+            except ValueError:
+                return jsonify({'error': "Invalid event date format"}), 400
+        else:
+            # Default to current date if not provided
+            event_date = datetime.utcnow().date()
+        
+        due_date = None
+        try:
+            due_date = datetime.strptime(data.get('due_date'), '%Y-%m-%d').date()
+        except ValueError:
+            return jsonify({'error': "Invalid due date format"}), 400
+        
+        # Create the event
         new_event = Event(
             event_code=Event.generate_event_code(),
             title=data.get('title', f"{data.get('mother_name')}'s Baby Shower"),
             host_id=current_user.id,
             mother_name=data.get('mother_name'),
             partner_name=data.get('partner_name'),
-            event_date=datetime.strptime(data.get('event_date'), '%Y-%m-%d').date(),
-            due_date=datetime.strptime(data.get('due_date'), '%Y-%m-%d').date(),
+            event_date=event_date,
+            due_date=due_date,
             baby_name=data.get('baby_name'),
             baby_name_revealed=data.get('baby_name_revealed', False),
             name_game_enabled=data.get('name_game_enabled', False),
             show_host_email=data.get('show_host_email', False),
             shower_link=data.get('shower_link'),
-            guess_price=data.get('guess_price', 1.0),
+            guess_price=float(data.get('guess_price', 1.0)),
             theme=data.get('theme', 'default'),
             theme_mode=data.get('theme_mode', 'light')
         )
@@ -143,6 +168,9 @@ def create_event():
         guest_emails = data.get('guest_emails', [])
         if guest_emails:
             for email in guest_emails:
+                if not email or '@' not in email:
+                    continue  # Skip invalid emails
+                    
                 # Check if the user already exists
                 user = User.query.filter_by(email=email).first()
                 if not user:
@@ -150,8 +178,18 @@ def create_event():
                     db.session.add(user)
                 
                 # Add user to the event's guests
-                new_event.guests.append(user)
+                if user not in new_event.guests:
+                    new_event.guests.append(user)
             
+            db.session.commit()
+        
+        # Handle Venmo information if provided
+        venmo_username = data.get('venmo_username')
+        venmo_phone_last4 = data.get('venmo_phone_last4')
+        
+        if venmo_username and venmo_phone_last4:
+            current_user.venmo_username = venmo_username
+            current_user.venmo_phone_last4 = venmo_phone_last4
             db.session.commit()
         
         return jsonify({
@@ -162,7 +200,8 @@ def create_event():
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 400
+        print(f"Error creating event: {str(e)}")
+        return jsonify({'error': f"Failed to create event: {str(e)}"}), 400
 
 @api.route('/events/<int:event_id>', methods=['PUT'])
 @login_required

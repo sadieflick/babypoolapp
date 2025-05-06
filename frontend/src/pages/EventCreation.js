@@ -112,16 +112,36 @@ const EventCreation = () => {
     setError('');
     
     try {
+      // Validate at least the mother's name and due date are provided
+      if (!motherName.trim()) {
+        setError("Mother's name is required");
+        setLoading(false);
+        return;
+      }
+      
+      if (!dueDate) {
+        setError("Baby's due date is required");
+        setLoading(false);
+        return;
+      }
+      
+      // Check venmo validation
+      if (venmoUsername && !venmoPhone) {
+        setError("Please enter the last 4 digits of your phone number for Venmo");
+        setLoading(false);
+        return;
+      }
+      
       // Prepare event data
       const eventData = {
-        title,
+        title: title || `${motherName}'s Baby Shower`,
         mother_name: motherName,
         partner_name: partnerName,
         event_date: eventDate,
         due_date: dueDate,
         show_host_email: showHostEmail,
         shower_link: showerLink,
-        guess_price: parseFloat(guessPrice),
+        guess_price: parseFloat(guessPrice) || 1.0,
         theme,
         theme_mode: themeMode,
         name_game_enabled: nameGameEnabled,
@@ -132,19 +152,33 @@ const EventCreation = () => {
         venmo_phone_last4: venmoPhone
       };
       
+      console.log("Creating event with data:", eventData);
+      
       // Create event
       const response = await createEvent(eventData);
       
+      if (!response || !response.id) {
+        throw new Error("Failed to receive valid response when creating event");
+      }
+      
+      console.log("Event created successfully:", response);
+      
       // Upload image if provided
       if (imageFile && response.id) {
+        console.log("Uploading image for event:", response.id);
         await uploadEventImage(response.id, imageFile);
       }
       
       // Navigate to dashboard
-      navigate('/host/dashboard');
+      navigate('/host/dashboard', { 
+        state: { 
+          successMessage: "Your event was created successfully!" 
+        }
+      });
       
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create event');
+      console.error("Event creation error:", err);
+      setError(err.response?.data?.error || 'Failed to create event. Please try again.');
     } finally {
       setLoading(false);
     }
