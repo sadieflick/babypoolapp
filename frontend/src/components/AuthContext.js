@@ -48,6 +48,9 @@ export const AuthProvider = ({ children }) => {
       navigate('/host/dashboard');
     } else if (userData.event_id) {
       navigate(`/guest/event/${userData.event_id}`);
+    } else if (userData.events && userData.events.length > 0) {
+      // If guest has multiple events, let them choose which one to view
+      navigate('/guest/select-event');
     } else {
       navigate('/');
     }

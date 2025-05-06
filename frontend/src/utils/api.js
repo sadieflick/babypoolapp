@@ -24,7 +24,9 @@ api.interceptors.request.use(
 // Auth API calls
 export const registerHost = async (userData) => {
   try {
-    const response = await axios.post('/auth/host/register', userData);
+    const response = await axios.post('/auth/host/register', userData, {
+      withCredentials: true  // Ensure cookies are sent with the request
+    });
     return response.data;
   } catch (error) {
     throw error;
@@ -78,7 +80,9 @@ export const logout = async () => {
 
 export const updateProfile = async (profileData) => {
   try {
-    const response = await axios.put('/auth/update-profile', profileData);
+    const response = await axios.put('/auth/update-profile', profileData, {
+      withCredentials: true  // Ensure cookies are sent with the request
+    });
     return response.data;
   } catch (error) {
     throw error;
@@ -131,6 +135,7 @@ export const uploadEventImage = async (eventId, imageFile) => {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      withCredentials: true  // Ensure cookies are sent with the request
     });
     
     return response.data;
@@ -141,7 +146,9 @@ export const uploadEventImage = async (eventId, imageFile) => {
 
 export const findEventByCode = async (eventCode) => {
   try {
-    const response = await axios.get(`/api/events/find-by-code/${eventCode}`);
+    const response = await axios.get(`/api/events/find-by-code/${eventCode}`, {
+      withCredentials: true  // Ensure cookies are sent with the request
+    });
     return response.data;
   } catch (error) {
     throw error;
@@ -152,6 +159,7 @@ export const searchEventByMother = async (searchTerm) => {
   try {
     const response = await axios.get('/api/events/find-by-mother', {
       params: { name: searchTerm },
+      withCredentials: true  // Ensure cookies are sent with the request
     });
     return {
       status: 'events_found',
