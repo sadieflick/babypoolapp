@@ -156,6 +156,38 @@
             opacity: 0;
             transition: opacity 0.5s ease-out;
         }
+        
+        /* Required field styling */
+        span.required {
+            color: #dc3545;
+            margin-left: 3px;
+        }
+        
+        .form-control.is-invalid {
+            border-color: #dc3545;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 20px 20px;
+            padding-right: 40px;
+        }
+        
+        .invalid-feedback {
+            display: none;
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .form-control.is-invalid + .invalid-feedback {
+            display: block;
+        }
+        
+        .form-text {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -186,13 +218,15 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="first_name" class="form-label">First Name</label>
+                    <label for="first_name" class="form-label">First Name <span class="required">*</span></label>
                     <input type="text" class="form-control" id="first_name" name="first_name" required>
+                    <small class="form-text text-muted">Required field</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="last_name" class="form-label">Last Name</label>
+                    <label for="last_name" class="form-label">Last Name <span class="required">*</span></label>
                     <input type="text" class="form-control" id="last_name" name="last_name" required>
+                    <small class="form-text text-muted">Required field</small>
                 </div>
                 
                 <button type="submit" class="btn btn-primary">Register</button>
@@ -219,10 +253,29 @@
     
     <script>
         // Helper functions for showing/hiding messages
-        function showError(message) {
+        function showError(message, field = null) {
             const errorElement = document.getElementById('error-message');
             errorElement.textContent = message;
             errorElement.style.display = 'block';
+            
+            // If a field is specified, mark it as invalid
+            if (field) {
+                const fieldElement = document.getElementById(field);
+                if (fieldElement) {
+                    fieldElement.classList.add('is-invalid');
+                    
+                    // Check if there's an existing feedback element
+                    let feedbackElement = fieldElement.nextElementSibling;
+                    if (!feedbackElement || !feedbackElement.classList.contains('invalid-feedback')) {
+                        // Create a feedback element if it doesn't exist
+                        feedbackElement = document.createElement('div');
+                        feedbackElement.classList.add('invalid-feedback');
+                        fieldElement.parentNode.insertBefore(feedbackElement, fieldElement.nextSibling);
+                    }
+                    
+                    feedbackElement.textContent = message;
+                }
+            }
             
             // Scroll to error message
             errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -245,6 +298,15 @@
         function hideMessages() {
             document.getElementById('error-message').style.display = 'none';
             document.getElementById('success-message').style.display = 'none';
+            
+            // Clear all validation states
+            document.querySelectorAll('.is-invalid').forEach(element => {
+                element.classList.remove('is-invalid');
+            });
+            
+            document.querySelectorAll('.invalid-feedback').forEach(element => {
+                element.style.display = 'none';
+            });
         }
         
         // Form submission handler
@@ -261,32 +323,32 @@
             
             // Client-side validation
             if (!email) {
-                showError('Email is required');
+                showError('Email is required', 'email');
                 return;
             }
             
             if (!password) {
-                showError('Password is required');
+                showError('Password is required', 'password');
                 return;
             }
             
             if (password.length < 8) {
-                showError('Password must be at least 8 characters long');
+                showError('Password must be at least 8 characters long', 'password');
                 return;
             }
             
             if (password !== confirmPassword) {
-                showError('Passwords do not match');
+                showError('Passwords do not match', 'confirm_password');
                 return;
             }
             
             if (!firstName) {
-                showError('First name is required');
+                showError('First name is required', 'first_name');
                 return;
             }
             
             if (!lastName) {
-                showError('Last name is required');
+                showError('Last name is required', 'last_name');
                 return;
             }
             
@@ -329,8 +391,24 @@
                         window.location.href = '/dashboard';
                     }, 1500);
                 } else {
-                    // Registration failed
-                    showError(data.error || 'Registration failed. Please try again.');
+                    // Registration failed - handle specific error types
+                    if (data.error) {
+                        if (data.error.includes('Email already exists')) {
+                            showError('Email already exists', 'email');
+                        } else if (data.error.includes('Email is required')) {
+                            showError('Email is required', 'email');
+                        } else if (data.error.includes('Password is required')) {
+                            showError('Password is required', 'password');
+                        } else if (data.error.includes('First name is required')) {
+                            showError('First name is required', 'first_name');
+                        } else if (data.error.includes('Last name is required')) {
+                            showError('Last name is required', 'last_name');
+                        } else {
+                            showError(data.error);
+                        }
+                    } else {
+                        showError('Registration failed. Please try again.');
+                    }
                 }
             } catch (error) {
                 console.error('Error:', error);
