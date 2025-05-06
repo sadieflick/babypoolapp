@@ -166,6 +166,9 @@
                 <p>Welcome back! Log in to manage your baby shower events.</p>
             </div>
             
+            <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+            <div id="success-message" class="alert alert-success" style="display: none;"></div>
+            
             <form id="login-form">
                 <div class="form-group">
                     <label for="email" class="form-label">Email</label>
@@ -200,13 +203,63 @@
     </footer>
     
     <script>
+        // Helper functions for showing/hiding messages
+        function showError(message) {
+            const errorElement = document.getElementById('error-message');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            
+            // Scroll to error message
+            errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 5000);
+        }
+        
+        function showSuccess(message) {
+            const successElement = document.getElementById('success-message');
+            successElement.textContent = message;
+            successElement.style.display = 'block';
+            
+            // Scroll to success message
+            successElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        function hideMessages() {
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('success-message').style.display = 'none';
+        }
+        
+        // Form submission handler
         document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
+            hideMessages();
             
+            // Get form values
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             
+            // Client-side validation
+            if (!email) {
+                showError('Email is required');
+                return;
+            }
+            
+            if (!password) {
+                showError('Password is required');
+                return;
+            }
+            
             try {
+                // Show loading state
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.textContent;
+                submitButton.textContent = 'Logging in...';
+                submitButton.disabled = true;
+                
+                // Make API request
                 const response = await fetch('/auth/host/login', {
                     method: 'POST',
                     headers: {
@@ -217,16 +270,25 @@
                 
                 const data = await response.json();
                 
+                // Reset button state
+                submitButton.textContent = originalButtonText;
+                submitButton.disabled = false;
+                
                 if (response.ok) {
                     // Login successful
-                    window.location.href = '/dashboard';
+                    showSuccess('Login successful! Redirecting to dashboard...');
+                    
+                    // Redirect after a short delay
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1500);
                 } else {
                     // Login failed
-                    alert(data.error || 'Login failed');
+                    showError(data.error || 'Login failed. Please check your credentials.');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                showError('A network error occurred. Please check your connection and try again.');
             }
         });
     </script>

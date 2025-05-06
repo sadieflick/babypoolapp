@@ -40,10 +40,14 @@ def host_register():
         if existing_user:
             return jsonify({'error': 'Email already exists'}), 400
         
-        # Create new host user
+        # Create new host user with specifically configured hash method
         new_user = User(
             email=email,
-            password_hash=generate_password_hash(password),
+            password_hash=generate_password_hash(
+                password,
+                method='pbkdf2:sha256',  # Use PBKDF2 with SHA256 for better security
+                salt_length=16           # Specify salt length
+            ),
             is_host=True
         )
         
