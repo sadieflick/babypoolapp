@@ -2,7 +2,7 @@ import os
 import logging
 from flask import Flask, render_template, send_from_directory
 from flask_cors import CORS
-from flask_login import LoginManager
+from flask_login import LoginManager, login_required
 from flask_bcrypt import Bcrypt
 from config import Config
 from models import db, User
@@ -73,6 +73,12 @@ app.register_blueprint(google_auth, url_prefix='/google_auth')
 # Create database tables
 with app.app_context():
     db.create_all()
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    """Host dashboard page"""
+    return render_template('dashboard.html')
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')

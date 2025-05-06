@@ -410,11 +410,17 @@ def guest_select_event():
         'message': 'Successfully joined event'
     })
 
-@auth_blueprint.route('/logout', methods=['POST'])
+@auth_blueprint.route('/logout', methods=['GET', 'POST'])
 @login_required
 def logout():
+    """Log out the current user"""
     logout_user()
-    return jsonify({'message': 'Logged out successfully'})
+    
+    # Check if the request is AJAX/API or browser-based
+    if request.is_json or request.method == 'POST':
+        return jsonify({'message': 'Logged out successfully'})
+    else:
+        return redirect(url_for('serve'))
 
 @auth_blueprint.route('/update-profile', methods=['PUT'])
 @login_required
