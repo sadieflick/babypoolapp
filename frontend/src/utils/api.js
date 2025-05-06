@@ -32,7 +32,9 @@ export const registerHost = async (userData) => {
 
 export const loginHost = async (email, password) => {
   try {
-    const response = await axios.post('/auth/host/login', { email, password });
+    const response = await axios.post('/auth/host/login', { email, password }, {
+      withCredentials: true  // Ensure cookies are sent with the request
+    });
     return response.data;
   } catch (error) {
     throw error;
@@ -41,7 +43,9 @@ export const loginHost = async (email, password) => {
 
 export const loginGuest = async (loginData) => {
   try {
-    const response = await axios.post('/auth/guest/login', loginData);
+    const response = await axios.post('/auth/guest/login', loginData, {
+      withCredentials: true  // Ensure cookies are sent with the request
+    });
     return response.data;
   } catch (error) {
     throw error;
@@ -50,7 +54,9 @@ export const loginGuest = async (loginData) => {
 
 export const selectEvent = async (eventData) => {
   try {
-    const response = await axios.post('/auth/guest/select-event', eventData);
+    const response = await axios.post('/auth/guest/select-event', eventData, {
+      withCredentials: true  // Ensure cookies are sent with the request
+    });
     return response.data;
   } catch (error) {
     throw error;

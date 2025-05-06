@@ -29,7 +29,9 @@ const HostLogin = () => {
       if (response.error) {
         setError(response.error);
       } else {
-        login(response, 'dummy-token');
+        // Generate a simple token based on timestamp for frontend auth
+        const token = Date.now().toString();
+        login(response, token);
         navigate('/host/dashboard');
       }
     } catch (err) {
