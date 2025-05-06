@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baby Pool</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        :root {
+            --primary: #ff99cc;
+            --primary-rgb: 255, 153, 204;
+            --primary-dark: #ff66b3;
+            --primary-light: #ffcce6;
+            --secondary: #99ccff;
+            --secondary-dark: #66b3ff;
+            --secondary-light: #cce6ff;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .hero {
+            background-color: var(--primary-light);
+            color: #333;
+            text-align: center;
+            padding: 60px 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--primary-dark);
+        }
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 30px;
+        }
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            padding: 10px 30px;
+            font-weight: 500;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        .btn-secondary {
+            background-color: var(--secondary);
+            border-color: var(--secondary);
+            color: #333;
+            padding: 10px 30px;
+            font-weight: 500;
+        }
+        .btn-secondary:hover {
+            background-color: var(--secondary-dark);
+            border-color: var(--secondary-dark);
+            color: #333;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        .feature-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .feature-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        .feature-card p {
+            color: #666;
+        }
+        .footer {
+            margin-top: auto;
+            padding: 20px;
+            background-color: #343a40;
+            color: white;
+            text-align: center;
+        }
+        .google-btn {
+            background-color: #4285F4;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            font-weight: 500;
+            margin-top: 20px;
+        }
+        .google-btn:hover {
+            background-color: #357ae8;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>Welcome to Baby Pool</h1>
+            <p>A fun way to guess when the baby will arrive! Create an event for your baby shower and have guests guess the birth date and time.</p>
+            <div class="cta-buttons">
+                <a href="/google_auth/google_login" class="btn btn-primary">Get Started</a>
+                <a href="#features" class="btn btn-secondary">Learn More</a>
+            </div>
+            <a href="/google_auth/google_login" class="google-btn">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Logo" style="height: 24px; margin-right: 10px;">
+                Sign in with Google
+            </a>
+        </div>
+        
+        <div id="features" class="features">
+            <div class="feature-card">
+                <h2>Date & Time Guessing</h2>
+                <p>Guests can make their predictions about when the baby will arrive, including the date and time of birth.</p>
+            </div>
+            <div class="feature-card">
+                <h2>Name Suggestions</h2>
+                <p>Let guests suggest baby names or guess the chosen name if it's already been selected.</p>
+            </div>
+            <div class="feature-card">
+                <h2>Fun Prize Pool</h2>
+                <p>Each guess contributes to a prize pool that the winners will share when the baby arrives!</p>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="footer">
+        <p>&copy; 2025 Baby Pool App</p>
+    </footer>
+</body>
+</html>

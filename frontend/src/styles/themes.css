@@ -1,0 +1,126 @@
+:root {
+  /* Light theme (default) */
+  --primary: #ff99cc;
+  --primary-rgb: 255, 153, 204;
+  --primary-dark: #ff66b3;
+  --primary-light: #ffcce6;
+  
+  --secondary: #99ccff;
+  --secondary-dark: #66b3ff;
+  --secondary-light: #cce6ff;
+  
+  --background: #f8f9fa;
+  --card-background: #ffffff;
+  --input-background: #ffffff;
+  
+  --text-primary: #343a40;
+  --text-secondary: #6c757d;
+  --text-disabled: #adb5bd;
+  
+  --text-on-primary: #ffffff;
+  --text-on-secondary: #343a40;
+  
+  --border: #dee2e6;
+  --disabled: #e9ecef;
+  --hover-light: #f1f3f5;
+  
+  --error: #dc3545;
+  --error-light: #f8d7da;
+  --success: #28a745;
+  --success-light: #d4edda;
+  --warning: #ffc107;
+  --warning-light: #fff3cd;
+  --info: #17a2b8;
+  --info-light: #d1ecf1;
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --primary: #ff99cc;
+  --primary-rgb: 255, 153, 204;
+  --primary-dark: #ff66b3;
+  --primary-light: #59364e;
+  
+  --secondary: #99ccff;
+  --secondary-dark: #66b3ff;
+  --secondary-light: #364759;
+  
+  --background: #121212;
+  --card-background: #1e1e1e;
+  --input-background: #2d2d2d;
+  
+  --text-primary: #f8f9fa;
+  --text-secondary: #adb5bd;
+  --text-disabled: #6c757d;
+  
+  --text-on-primary: #ffffff;
+  --text-on-secondary: #ffffff;
+  
+  --border: #343a40;
+  --disabled: #343a40;
+  --hover-light: #2d2d2d;
+  
+  --error: #f17a88;
+  --error-light: #47292d;
+  --success: #7ecc93;
+  --success-light: #294734;
+  --warning: #ffd667;
+  --warning-light: #473d29;
+  --info: #6dcfde;
+  --info-light: #294247;
+}
+
+/* Baby theme */
+.theme-baby {
+  --primary: #ff99cc;
+  --primary-rgb: 255, 153, 204;
+  --primary-dark: #ff66b3;
+  --primary-light: #ffcce6;
+  --secondary: #99ccff;
+  --secondary-dark: #66b3ff;
+  --secondary-light: #cce6ff;
+}
+
+/* Baby Blue theme */
+.theme-baby-blue {
+  --primary: #99ccff;
+  --primary-rgb: 153, 204, 255;
+  --primary-dark: #66b3ff;
+  --primary-light: #cce6ff;
+  --secondary: #ccecff;
+  --secondary-dark: #99d9ff;
+  --secondary-light: #e6f7ff;
+}
+
+/* Baby Pink theme */
+.theme-baby-pink {
+  --primary: #ff99cc;
+  --primary-rgb: 255, 153, 204;
+  --primary-dark: #ff66b3;
+  --primary-light: #ffcce6;
+  --secondary: #ffcce6;
+  --secondary-dark: #ffb3d9;
+  --secondary-light: #ffe6f2;
+}
+
+/* Mint theme */
+.theme-mint {
+  --primary: #66ccb8;
+  --primary-rgb: 102, 204, 184;
+  --primary-dark: #4dbca6;
+  --primary-light: #a3e2d7;
+  --secondary: #c6e9e3;
+  --secondary-dark: #a3dcd3;
+  --secondary-light: #e3f5f2;
+}
+
+/* Lavender theme */
+.theme-lavender {
+  --primary: #b39ddb;
+  --primary-rgb: 179, 157, 219;
+  --primary-dark: #9575cd;
+  --primary-light: #d1c4e9;
+  --secondary: #e1bee7;
+  --secondary-dark: #ce93d8;
+  --secondary-light: #f3e5f5;
+}
