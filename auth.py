@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session, current_app
+from flask import Blueprint, request, jsonify, session, current_app, render_template, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Event
@@ -70,6 +70,11 @@ def host_register():
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
+@auth_blueprint.route('/host_login', methods=['GET'])
+def host_login_page():
+    """Render the host login page"""
+    return render_template('host_login.html')
+
 @auth_blueprint.route('/host/login', methods=['POST'])
 def host_login():
     data = request.json
@@ -104,6 +109,11 @@ def host_login():
         'is_host': user.is_host,
         'message': 'Login successful'
     })
+
+@auth_blueprint.route('/guest_login', methods=['GET'])
+def guest_login_page():
+    """Render the guest login page"""
+    return render_template('guest_login.html')
 
 @auth_blueprint.route('/guest/login', methods=['POST'])
 def guest_login():

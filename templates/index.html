@@ -132,6 +132,35 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             transform: translateY(-2px);
         }
+        .login-options {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .login-divider {
+            width: 100%;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+            line-height: 0.1em;
+            margin: 20px 0 20px;
+            color: #888;
+        }
+        .login-divider span {
+            background: white;
+            padding: 0 10px;
+        }
+        .learn-more-link {
+            margin-top: 15px;
+            color: var(--primary-dark);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+        .learn-more-link:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -140,13 +169,17 @@
             <h1>Welcome to Baby Pool</h1>
             <p>A fun way to guess when the baby will arrive! Create an event for your baby shower and have guests guess the birth date and time.</p>
             <div class="cta-buttons">
-                <a href="/google_auth/google_login" class="btn btn-primary">Get Started</a>
-                <a href="#features" class="btn btn-secondary">Learn More</a>
+                <a href="/auth/guest_login" class="btn btn-primary">Join as Guest</a>
+                <a href="/auth/host_login" class="btn btn-secondary">Login as Host</a>
             </div>
-            <a href="/google_auth/google_login" class="google-btn">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Logo" style="height: 24px; margin-right: 10px;">
-                Sign in with Google
-            </a>
+            <div class="login-options">
+                <p class="login-divider"><span>or</span></p>
+                <a href="/google_auth/google_login" class="google-btn">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Logo" style="height: 24px; margin-right: 10px;">
+                    Sign in with Google
+                </a>
+                <a href="#features" class="learn-more-link">Learn More About Baby Pool</a>
+            </div>
         </div>
         
         <div id="features" class="features">
