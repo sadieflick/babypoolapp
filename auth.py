@@ -34,26 +34,28 @@ def host_register():
     if not validate_email(email):
         return jsonify({'error': 'Invalid email format'}), 400
     
-    # Check if email already exists
-    if User.query.filter_by(email=email).first():
-        return jsonify({'error': 'Email already exists'}), 400
-    
-    # Create new host user
-    new_user = User(
-        email=email,
-        password_hash=generate_password_hash(password),
-        is_host=True
-    )
-    
-    # Add optional fields if provided
-    if 'first_name' in data:
-        new_user.first_name = data['first_name']
-    if 'last_name' in data:
-        new_user.last_name = data['last_name']
-    if 'nickname' in data:
-        new_user.nickname = data['nickname']
-    
     try:
+        # Check if email already exists
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            return jsonify({'error': 'Email already exists'}), 400
+        
+        # Create new host user
+        new_user = User(
+            email=email,
+            password_hash=generate_password_hash(password),
+            is_host=True
+        )
+        
+        # Add optional fields if provided
+        if 'first_name' in data:
+            new_user.first_name = data['first_name']
+        if 'last_name' in data:
+            new_user.last_name = data['last_name']
+        if 'nickname' in data:
+            new_user.nickname = data['nickname']
+        
+        # Add to session and commit
         db.session.add(new_user)
         db.session.commit()
         
@@ -70,10 +72,11 @@ def host_register():
             'is_host': new_user.is_host,
             'message': 'Host registration successful'
         }), 201
-        
+    
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 400
+        current_app.logger.error(f"Registration error: {str(e)}")
+        return jsonify({'error': 'An error occurred during registration. Please try again.'}), 500
 
 @auth_blueprint.route('/host_login', methods=['GET'])
 def host_login_page():

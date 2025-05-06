@@ -1,10 +1,18 @@
 import os
+import logging
 from flask import Flask, render_template, send_from_directory
 from flask_cors import CORS
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
 from config import Config
 from models import db, User
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
+from sqlalchemy.exc import DisconnectionError, OperationalError
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__, 
             static_folder='./static', 
@@ -18,9 +26,40 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'auth.login'
 
+# Add database connection pool ping for PostgreSQL
+@event.listens_for(Engine, "connect")
+def ping_connection(dbapi_connection, connection_record):
+    """Ping database connection to prevent disconnections"""
+    cursor = dbapi_connection.cursor()
+    try:
+        cursor.execute("SELECT 1")
+    except Exception:
+        # Optional - raise disconnection error
+        raise DisconnectionError("Database connection failed")
+    finally:
+        cursor.close()
+
+# Configure a connection handler for retrying failed queries
+def get_db_connection_with_retry(max_retries=3):
+    """Get database connection with retry logic"""
+    retries = 0
+    while retries < max_retries:
+        try:
+            return db.engine.connect()
+        except OperationalError as e:
+            retries += 1
+            logger.error(f"Database connection error (attempt {retries}/{max_retries}): {str(e)}")
+            if retries >= max_retries:
+                raise
+            # Add exponential backoff if needed
+
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    try:
+        return User.query.get(int(user_id))
+    except Exception as e:
+        logger.error(f"Error loading user: {str(e)}")
+        return None
 
 # Register blueprints
 from routes import api

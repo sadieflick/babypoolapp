@@ -6,7 +6,17 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', secrets.token_hex(16))
     
     # Database configuration
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///baby_pool.db')
+    DB_URL = os.environ.get('DATABASE_URL', 'sqlite:///baby_pool.db')
+    
+    # PostgreSQL connection settings
+    # Note: Don't modify the URL directly as SQLAlchemy will handle connection parameters
+    SQLALCHEMY_DATABASE_URI = DB_URL
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size': 10,
+        'max_overflow': 20,
+        'pool_recycle': 1800,  # Recycle connections after 30 minutes
+        'pool_pre_ping': True,  # Test connections before using them
+    }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Session configuration
