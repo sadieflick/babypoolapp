@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { getEvents, getEvent, getEventGuests, getDateGuesses, getHourGuesses, getMinuteGuesses, getNameGuesses, updateGuestPayment, removeGuest, addGuest } from '../utils/api';
 import { formatDateDisplay } from '../utils/dateUtils';
 
 const HostDashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -46,6 +47,25 @@ const HostDashboard = () => {
       fetchEventData(selectedEvent);
     }
   }, [selectedEvent]);
+  
+  // Check for success message in location state
+  useEffect(() => {
+    if (location.state?.successMessage) {
+      setSuccessMessage(location.state.successMessage);
+      
+      // Clear the success message after 5 seconds
+      const timer = setTimeout(() => {
+        setSuccessMessage('');
+        // Clear the state
+        navigate(location.pathname, { 
+          replace: true, 
+          state: {} 
+        });
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [location, navigate]);
   
   const fetchEventData = async (eventId) => {
     setLoading(true);
