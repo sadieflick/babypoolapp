@@ -14,6 +14,11 @@ def validate_email(email):
     """Validate email format"""
     return EMAIL_REGEX.match(email)
 
+@auth_blueprint.route('/host_register', methods=['GET'])
+def host_register_page():
+    """Render the host registration page"""
+    return render_template('host_register.html')
+
 @auth_blueprint.route('/host/register', methods=['POST'])
 def host_register():
     data = request.json
