@@ -9,6 +9,35 @@ from utils import calculate_amount_owed
 
 api = Blueprint('api', __name__)
 
+# User endpoints
+@api.route('/users/me', methods=['GET'])
+@login_required
+def get_current_user_info():
+    """Return information about the currently logged-in user"""
+    user_data = {
+        'id': current_user.id,
+        'email': current_user.email,
+        'first_name': current_user.first_name,
+        'last_name': current_user.last_name,
+        'nickname': current_user.nickname,
+        'phone': current_user.phone,
+        'is_host': current_user.is_host
+    }
+    
+    # Include events if the user is a guest
+    if not current_user.is_host:
+        events_data = []
+        for event in current_user.events:
+            events_data.append({
+                'id': event.id,
+                'title': event.title,
+                'mother_name': event.mother_name,
+                'event_code': event.event_code
+            })
+        user_data['events'] = events_data
+    
+    return jsonify(user_data)
+
 # Helper function for file uploads
 def allowed_file(filename):
     return '.' in filename and \

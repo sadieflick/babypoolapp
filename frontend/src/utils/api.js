@@ -6,6 +6,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,  // Include credentials in all requests
 });
 
 // Add auth token to all requests if available
@@ -65,7 +66,9 @@ export const selectEvent = async (eventData) => {
 
 export const logout = async () => {
   try {
-    await axios.post('/auth/logout');
+    await axios.post('/auth/logout', {}, {
+      withCredentials: true  // Ensure cookies are sent with the request
+    });
     localStorage.removeItem('token');
     localStorage.removeItem('isHost');
   } catch (error) {
