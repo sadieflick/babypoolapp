@@ -38,8 +38,12 @@ with app.app_context():
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
+    """Serve the React single-page application for all routes not handled by API endpoints"""
+    # First check if the path corresponds to a static file
     if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
         return send_from_directory(app.static_folder, path)
+    
+    # Otherwise, serve the index.html template to handle SPA routing
     return render_template('index.html')
 
 if __name__ == '__main__':
