@@ -203,29 +203,32 @@
             
             <form id="register-form">
                 <div class="form-group">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email" name="email" required>
+                    <label for="email" class="form-label">Email <span class="required">*</span></label>
+                    <input type="email" class="form-control" id="email" name="email">
+                    <small class="form-text text-muted">Required field</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
+                    <label for="password" class="form-label">Password <span class="required">*</span></label>
+                    <input type="password" class="form-control" id="password" name="password">
+                    <small class="form-text text-muted">Required field, at least 8 characters</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="confirm_password" class="form-label">Confirm Password</label>
-                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    <label for="confirm_password" class="form-label">Confirm Password <span class="required">*</span></label>
+                    <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+                    <small class="form-text text-muted">Required field</small>
                 </div>
                 
                 <div class="form-group">
                     <label for="first_name" class="form-label">First Name <span class="required">*</span></label>
-                    <input type="text" class="form-control" id="first_name" name="first_name" required>
+                    <input type="text" class="form-control" id="first_name" name="first_name">
                     <small class="form-text text-muted">Required field</small>
                 </div>
                 
                 <div class="form-group">
                     <label for="last_name" class="form-label">Last Name <span class="required">*</span></label>
-                    <input type="text" class="form-control" id="last_name" name="last_name" required>
+                    <input type="text" class="form-control" id="last_name" name="last_name">
                     <small class="form-text text-muted">Required field</small>
                 </div>
                 
@@ -264,13 +267,33 @@
                 if (fieldElement) {
                     fieldElement.classList.add('is-invalid');
                     
-                    // Check if there's an existing feedback element
-                    let feedbackElement = fieldElement.nextElementSibling;
-                    if (!feedbackElement || !feedbackElement.classList.contains('invalid-feedback')) {
-                        // Create a feedback element if it doesn't exist
+                    // Find or create a feedback element
+                    // Skip the form-text help element if present
+                    let nextElement = fieldElement.nextElementSibling;
+                    let feedbackElement = null;
+                    
+                    // If the next element is a form-text element, look for the invalid-feedback after it
+                    if (nextElement && nextElement.classList.contains('form-text')) {
+                        let potentialFeedback = nextElement.nextElementSibling;
+                        if (potentialFeedback && potentialFeedback.classList.contains('invalid-feedback')) {
+                            feedbackElement = potentialFeedback;
+                        }
+                    } else if (nextElement && nextElement.classList.contains('invalid-feedback')) {
+                        // The next element is already an invalid-feedback element
+                        feedbackElement = nextElement;
+                    }
+                    
+                    // If we didn't find an existing invalid-feedback element, create one
+                    if (!feedbackElement) {
                         feedbackElement = document.createElement('div');
                         feedbackElement.classList.add('invalid-feedback');
-                        fieldElement.parentNode.insertBefore(feedbackElement, fieldElement.nextSibling);
+                        
+                        // Insert after the form-text if it exists, otherwise after the field
+                        if (nextElement && nextElement.classList.contains('form-text')) {
+                            fieldElement.parentNode.insertBefore(feedbackElement, nextElement.nextSibling);
+                        } else {
+                            fieldElement.parentNode.insertBefore(feedbackElement, fieldElement.nextSibling);
+                        }
                     }
                     
                     feedbackElement.textContent = message;
