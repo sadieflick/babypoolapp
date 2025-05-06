@@ -26,9 +26,17 @@ def host_register():
     # Validate required fields
     email = data.get('email')
     password = data.get('password')
+    first_name = data.get('first_name')
+    last_name = data.get('last_name')
     
     if not email or not password:
         return jsonify({'error': 'Email and password are required'}), 400
+        
+    if not first_name:
+        return jsonify({'error': 'First name is required'}), 400
+        
+    if not last_name:
+        return jsonify({'error': 'Last name is required'}), 400
     
     # Validate email format
     if not validate_email(email):
@@ -48,14 +56,12 @@ def host_register():
                 method='pbkdf2:sha256',  # Use PBKDF2 with SHA256 for better security
                 salt_length=16           # Specify salt length
             ),
+            first_name=first_name,
+            last_name=last_name,
             is_host=True
         )
         
         # Add optional fields if provided
-        if 'first_name' in data:
-            new_user.first_name = data['first_name']
-        if 'last_name' in data:
-            new_user.last_name = data['last_name']
         if 'nickname' in data:
             new_user.nickname = data['nickname']
         
