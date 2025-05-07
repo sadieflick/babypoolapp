@@ -157,6 +157,14 @@
                 showFieldError('email', 'Email is required');
                 return false;
             }
+            
+            // Email format validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showFieldError('email', 'Please enter a valid email address');
+                return false;
+            }
+            
             return true;
         }
         
