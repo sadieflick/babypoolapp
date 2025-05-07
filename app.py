@@ -74,11 +74,8 @@ app.register_blueprint(google_auth, url_prefix='/google_auth')
 with app.app_context():
     db.create_all()
 
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    """Host dashboard page"""
-    return render_template('dashboard.html')
+# Route for dashboard is handled by the SPA
+# All frontend routes are handled by the catch-all route below
 
 # Removed non-SPA route for event creation since the React app handles it now
 
