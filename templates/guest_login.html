@@ -19,6 +19,41 @@
     <!-- Temporary guest login form script until React is fully implemented -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Helper functions for validation
+        function showFieldError(field, message) {
+            const fieldElement = document.getElementById(field);
+            if (!fieldElement) return;
+            
+            fieldElement.style.borderColor = '#dc3545';
+            fieldElement.style.backgroundImage = "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e\")";
+            fieldElement.style.backgroundRepeat = 'no-repeat';
+            fieldElement.style.backgroundPosition = 'right 10px center';
+            fieldElement.style.backgroundSize = '20px 20px';
+            fieldElement.style.paddingRight = '40px';
+            
+            // Find feedback element
+            const parentElement = fieldElement.parentElement;
+            const feedbackElement = parentElement.querySelector('.invalid-feedback');
+            
+            if (feedbackElement) {
+                feedbackElement.textContent = message;
+                feedbackElement.style.display = 'block';
+            }
+        }
+        
+        function clearFieldError(field) {
+            field.style.borderColor = '#ddd';
+            field.style.backgroundImage = 'none';
+            field.style.paddingRight = '12px';
+            
+            const parentElement = field.parentElement;
+            const feedbackElement = parentElement.querySelector('.invalid-feedback');
+            
+            if (feedbackElement) {
+                feedbackElement.style.display = 'none';
+            }
+        }
+        
         const root = document.getElementById('root');
         
         // Render guest login form
@@ -115,6 +150,19 @@
             const codeTab = document.getElementById('code-tab');
             const searchTab = document.getElementById('search-tab');
             const emailTab = document.getElementById('email-tab');
+            
+            // Add input event listeners to clear validation errors when user starts typing
+            document.getElementById('event-code').addEventListener('input', function() {
+                clearFieldError(this);
+            });
+            
+            document.getElementById('search-term').addEventListener('input', function() {
+                clearFieldError(this);
+            });
+            
+            document.getElementById('email-input').addEventListener('input', function() {
+                clearFieldError(this);
+            });
             
             const codePane = document.getElementById('code');
             const searchPane = document.getElementById('search');
@@ -276,40 +324,7 @@
                             resultsDiv.innerHTML = '<p style="color: #666;">No events found matching that name.</p>';
                         }
 
-                        // Helper functions for validation
-                        function showFieldError(field, message) {
-                            const fieldElement = document.getElementById(field);
-                            if (!fieldElement) return;
-                            
-                            fieldElement.style.borderColor = '#dc3545';
-                            fieldElement.style.backgroundImage = "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e\")";
-                            fieldElement.style.backgroundRepeat = 'no-repeat';
-                            fieldElement.style.backgroundPosition = 'right 10px center';
-                            fieldElement.style.backgroundSize = '20px 20px';
-                            fieldElement.style.paddingRight = '40px';
-                            
-                            // Find feedback element
-                            const parentElement = fieldElement.parentElement;
-                            const feedbackElement = parentElement.querySelector('.invalid-feedback');
-                            
-                            if (feedbackElement) {
-                                feedbackElement.textContent = message;
-                                feedbackElement.style.display = 'block';
-                            }
-                        }
-                        
-                        function clearFieldError(field) {
-                            field.style.borderColor = '#ddd';
-                            field.style.backgroundImage = 'none';
-                            field.style.paddingRight = '12px';
-                            
-                            const parentElement = field.parentElement;
-                            const feedbackElement = parentElement.querySelector('.invalid-feedback');
-                            
-                            if (feedbackElement) {
-                                feedbackElement.style.display = 'none';
-                            }
-                        }
+
                     } else {
                         // Search failed
                         alert(data.error || 'No events found');
