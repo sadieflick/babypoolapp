@@ -157,18 +157,108 @@ const renderDashboard = () => {
     });
 };
 
+// Add login form handler to directly capture login without redirection
+const addLoginHandler = () => {
+    // Only add the handler if we're on the login page and the form exists
+    const loginForm = document.querySelector('form.auth-form');
+    if (!loginForm || window.location.pathname !== '/auth/host_login') {
+        return;
+    }
+    
+    console.log('Adding login form handler');
+    
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const submitButton = document.querySelector('button[type="submit"]');
+        const errorDiv = document.querySelector('.error-message') || document.createElement('div');
+        
+        if (!errorDiv.classList.contains('error-message')) {
+            errorDiv.classList.add('error-message');
+            loginForm.prepend(errorDiv);
+        }
+        
+        if (!emailInput || !passwordInput) {
+            errorDiv.textContent = 'Form inputs not found';
+            return;
+        }
+        
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+        
+        if (!email || !password) {
+            errorDiv.textContent = 'Please enter email and password';
+            return;
+        }
+        
+        // Disable submit button and show loading
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Logging in...';
+        }
+        
+        errorDiv.textContent = '';
+        
+        try {
+            // Make the login request
+            const response = await fetch('/auth/host/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Login failed');
+            }
+            
+            const userData = await response.json();
+            console.log('Login successful:', userData);
+            
+            // Store auth data in localStorage
+            const token = Date.now().toString(); // Simple token
+            localStorage.setItem('token', token);
+            localStorage.setItem('isHost', userData.is_host);
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+            
+            console.log('Auth data stored in localStorage');
+            
+            // Redirect to dashboard
+            window.location.href = '/host/dashboard';
+        } catch (error) {
+            console.error('Login error:', error);
+            errorDiv.textContent = error.message || 'Failed to login. Please try again.';
+            
+            // Re-enable submit button
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Login';
+            }
+        }
+    });
+};
+
 // Routing
 const handleRouting = () => {
     const path = window.location.pathname;
     console.log('Handling route:', path, 'Auth status:', isAuthenticated(), 'Is host:', isHost());
     
+    // Add login form handler if we're on the login page
+    if (path === '/auth/host_login') {
+        setTimeout(addLoginHandler, 100); // Small delay to ensure DOM is fully rendered
+    }
+    
     // If we're at the dashboard and logged in as a host, show the dashboard
     if (path === '/host/dashboard') {
         if (isAuthenticated() && isHost()) {
+            console.log('Rendering dashboard with user data:', getUserData());
             renderDashboard();
             return;
         } else {
-            // Not authenticated or not a host, redirect to login
+            console.log('Not authenticated for dashboard, redirecting to login');
             window.location.href = '/auth/host_login';
             return;
         }
