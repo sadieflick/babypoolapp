@@ -164,6 +164,18 @@
                         // Login successful
                         showSuccess('Login successful! Redirecting to dashboard...');
                         
+                        // Store authentication data in localStorage
+                        const token = Date.now().toString(); // Simple token based on timestamp
+                        localStorage.setItem('token', token);
+                        localStorage.setItem('isHost', data.is_host.toString());
+                        localStorage.setItem('currentUser', JSON.stringify(data));
+                        
+                        console.log('Authentication data stored in localStorage:', {
+                            token: token,
+                            isHost: data.is_host,
+                            userData: data
+                        });
+                        
                         // Redirect after a short delay
                         setTimeout(() => {
                             window.location.href = '/dashboard';

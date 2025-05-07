@@ -2,6 +2,7 @@
 
 import json
 import os
+import time
 
 import requests
 from flask import Blueprint, redirect, request, url_for
@@ -94,26 +95,99 @@ def callback():
     # Log in the user
     login_user(user)
     
-    # Redirect to appropriate page based on user type
-    print(f"Google login: User {user.email} authenticated, is_host={user.is_host}")
+    # Fetch hosted_events_count for host users
+    hosted_events_count = 0
+    if user.is_host:
+        # Count the number of events the user hosts
+        from models import Event
+        hosted_events_count = Event.query.filter_by(host_id=user.id).count()
     
+    # Create a response with a script that will set localStorage before redirecting
+    user_data = {
+        'id': user.id,
+        'email': user.email,
+        'first_name': user.first_name or users_name,
+        'last_name': user.last_name or '',
+        'nickname': user.nickname,
+        'is_host': user.is_host,
+        'hosted_events_count': hosted_events_count
+    }
+    
+    # Create HTML with script to set localStorage before redirecting
+    redirect_url = '/host/dashboard' if user.is_host else '/'
     if user.is_host:
         # Redirect to host dashboard
         print("Redirecting to host dashboard")
-        return redirect('/host/dashboard')
-    elif user.events:
+        redirect_url = '/host/dashboard'
+    elif hasattr(user, 'events') and user.events:
         # Redirect to the first event if user is a guest with events
         event_id = user.events[0].id
         print(f"Redirecting to guest event {event_id}")
-        return redirect(f'/guest/event/{event_id}')
+        redirect_url = f'/guest/event/{event_id}'
     else:
         # No events, redirect to home
-        print("Redirecting to home")
-        return redirect('/')
+        redirect_url = '/'
+    
+    html_response = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Google Login Successful</title>
+        <script>
+            // Store authentication data in localStorage
+            const token = "{str(time.time())}"; // Simple token based on timestamp
+            localStorage.setItem('token', token);
+            localStorage.setItem('isHost', {str(user.is_host).lower()});
+            localStorage.setItem('currentUser', '{json.dumps(user_data)}');
+            
+            console.log('Authentication data stored from Google login:', {{
+                token: token,
+                isHost: {str(user.is_host).lower()},
+                userData: {json.dumps(user_data)}
+            }});
+            
+            // Redirect to the appropriate page
+            window.location.href = "{redirect_url}";
+        </script>
+    </head>
+    <body>
+        <h1>Login Successful!</h1>
+        <p>You are being redirected...</p>
+    </body>
+    </html>
+    """
+    
+    return html_response
 
 
 @google_auth.route("/logout")
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for("index"))
+    
+    # Return HTML that clears localStorage before redirecting
+    html_response = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Logout Successful</title>
+        <script>
+            // Clear authentication data from localStorage
+            localStorage.removeItem('token');
+            localStorage.removeItem('isHost');
+            localStorage.removeItem('currentUser');
+            
+            console.log('Authentication data cleared on logout');
+            
+            // Redirect to home page
+            window.location.href = '/';
+        </script>
+    </head>
+    <body>
+        <h1>Logout Successful!</h1>
+        <p>You are being redirected to the home page...</p>
+    </body>
+    </html>
+    """
+    
+    return html_response
