@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Testing</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/themes.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background: #ff66b3;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .btn:hover {
+            background: #e64c9e;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        code {
+            background: #f8f9fa;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .mb-3 {
+            margin-bottom: 15px;
+        }
+        #results {
+            background: #f8f9fa;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .test-group {
+            margin-bottom: 30px;
+        }
+        h1, h2, h3 {
+            color: #ff66b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Authentication Testing Page</h1>
+        <p>This page provides tools to test the authentication and login functionality of the Baby Pool application.</p>
+    </div>
+
+    <div class="card">
+        <h2>Current Authentication State</h2>
+        <div id="auth-status" class="mb-3">Loading...</div>
+        <button class="btn" onclick="updateAuthStatus()">Refresh Status</button>
+        <button class="btn btn-secondary" onclick="clearAuthData()">Clear Auth Data</button>
+    </div>
+
+    <div class="card test-group">
+        <h2>Test Helper Functions</h2>
+        <p>These tests verify the basic authentication helper functions.</p>
+        <button class="btn" onclick="runAuthHelperTests()">Run Helper Tests</button>
+    </div>
+
+    <div class="card test-group">
+        <h2>Test Form Submission</h2>
+        <p>These tests verify the login form submission process.</p>
+        <button class="btn" onclick="window.location.href='/auth/host_login'">Go to Login Page</button>
+        <p>Once on the login page, open the browser console and run: <code>authTest.testForm()</code></p>
+    </div>
+
+    <div class="card test-group">
+        <h2>Test Routing Logic</h2>
+        <p>These tests verify the routing logic for authenticated/unauthenticated users.</p>
+        <button class="btn" onclick="runRoutingTests()">Run Routing Tests</button>
+    </div>
+
+    <div class="card test-group">
+        <h2>Simulate Authentication</h2>
+        <button class="btn" onclick="simulateLogin()">Simulate Login</button>
+        <button class="btn" onclick="simulateLogout()">Simulate Logout</button>
+    </div>
+
+    <div class="card">
+        <h2>Test Results</h2>
+        <div id="results">No tests run yet.</div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/auth_test.js"></script>
+    <script>
+        // Override console.log to also output to results div
+        const originalConsoleLog = console.log;
+        console.log = function() {
+            const args = Array.from(arguments);
+            originalConsoleLog.apply(console, args);
+            
+            const results = document.getElementById('results');
+            if (results) {
+                const newLine = document.createElement('div');
+                newLine.textContent = args.map(arg => {
+                    if (typeof arg === 'object') {
+                        try {
+                            return JSON.stringify(arg, null, 2);
+                        } catch (e) {
+                            return String(arg);
+                        }
+                    }
+                    return String(arg);
+                }).join(' ');
+                results.appendChild(newLine);
+                results.scrollTop = results.scrollHeight; // Auto-scroll to bottom
+            }
+        };
+
+        // Update auth status display
+        function updateAuthStatus() {
+            const statusDiv = document.getElementById('auth-status');
+            const isAuth = isAuthenticated();
+            const isHostUser = isHost();
+            const userData = getUserData();
+            
+            statusDiv.innerHTML = `
+                <p><strong>Is Authenticated:</strong> ${isAuth}</p>
+                <p><strong>Is Host:</strong> ${isHostUser}</p>
+                <p><strong>User Data:</strong> ${userData ? JSON.stringify(userData, null, 2) : 'None'}</p>
+                <p><strong>Raw localStorage:</strong></p>
+                <pre>${JSON.stringify({
+                    token: localStorage.getItem('token'),
+                    isHost: localStorage.getItem('isHost'),
+                    currentUser: localStorage.getItem('currentUser')
+                }, null, 2)}</pre>
+            `;
+        }
+
+        // Clear auth data
+        function clearAuthData() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('isHost');
+            localStorage.removeItem('currentUser');
+            console.log('Auth data cleared');
+            updateAuthStatus();
+        }
+
+        // Simulate login
+        function simulateLogin() {
+            const userData = {
+                id: 1,
+                email: 'test@example.com',
+                first_name: 'Test',
+                last_name: 'User',
+                is_host: true,
+                hosted_events_count: Math.floor(Math.random() * 5)
+            };
+            
+            localStorage.setItem('token', Date.now().toString());
+            localStorage.setItem('isHost', 'true');
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+            
+            console.log('Simulated login with data:', userData);
+            updateAuthStatus();
+        }
+
+        // Simulate logout
+        function simulateLogout() {
+            clearAuthData();
+            console.log('Simulated logout');
+        }
+
+        // Run auth helper tests
+        function runAuthHelperTests() {
+            document.getElementById('results').innerHTML = '';
+            console.log('Running authentication helper tests...');
+            authTest.checkAuth();
+            updateAuthStatus();
+        }
+
+        // Run routing tests
+        function runRoutingTests() {
+            document.getElementById('results').innerHTML = '';
+            console.log('Running routing tests...');
+            authTest.testRouting();
+            updateAuthStatus();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAuthStatus();
+            console.log('Test page loaded and ready');
+        });
+    </script>
+</body>
+</html>

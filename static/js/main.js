@@ -268,8 +268,28 @@ const handleRouting = () => {
     renderHomePage();
 };
 
+// Debug functions
+function debugAuthState() {
+    console.log({
+        isAuthenticated: isAuthenticated(),
+        isHost: isHost(),
+        userData: getUserData(),
+        token: localStorage.getItem('token'),
+        isHostStorage: localStorage.getItem('isHost'),
+        userDataRaw: localStorage.getItem('currentUser')
+    });
+}
+
 // Call the routing handler when the DOM is loaded
 document.addEventListener('DOMContentLoaded', handleRouting);
 
 // Listen for navigation events (if using history API)
 window.addEventListener('popstate', handleRouting);
+
+// Make helper functions accessible globally for testing
+window.isAuthenticated = isAuthenticated;
+window.isHost = isHost;
+window.getUserData = getUserData;
+window.handleRouting = handleRouting;
+window.renderDashboard = renderDashboard;
+window.debugAuthState = debugAuthState;

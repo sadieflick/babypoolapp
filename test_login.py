@@ -86,9 +86,12 @@ class LoginTestCase(unittest.TestCase):
         # Assert redirect status code
         self.assertEqual(response.status_code, 302)
         
-        # Assert redirect location
+        # Assert redirect location goes to login page with next parameter
         location = response.location
-        self.assertTrue(location.endswith('/host/dashboard'), f"Expected redirect to end with /host/dashboard, got {location}")
+        self.assertTrue(location.startswith('/auth/host_login'), 
+                        f"Expected redirect to login page, got {location}")
+        self.assertIn('next=%2Fdashboard', location, 
+                      f"Expected next parameter in redirect URL, got {location}")
 
     def test_dashboard_redirect_logged_in(self):
         """Test that /dashboard redirects to host/dashboard when logged in"""

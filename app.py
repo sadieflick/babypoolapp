@@ -85,6 +85,11 @@ def dashboard():
     """Redirect dashboard requests to the SPA host dashboard route"""
     return redirect('/host/dashboard')
 
+@app.route('/test/auth')
+def test_auth():
+    """Test authentication page for debugging purposes"""
+    return render_template('test_auth.html')
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
