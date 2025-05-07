@@ -8,7 +8,9 @@ const isAuthenticated = () => {
 };
 
 const isHost = () => {
-    return localStorage.getItem('isHost') === 'true';
+    const isHostValue = localStorage.getItem('isHost');
+    console.log('isHost() called, raw value:', isHostValue);
+    return isHostValue === 'true';
 };
 
 const getUserData = () => {
@@ -221,10 +223,19 @@ const addLoginHandler = () => {
             // Store auth data in localStorage
             const token = Date.now().toString(); // Simple token
             localStorage.setItem('token', token);
-            localStorage.setItem('isHost', userData.is_host);
+            
+            // Convert is_host boolean to string 'true'/'false' explicitly
+            const isHostValue = userData.is_host === true ? 'true' : 'false';
+            console.log('Setting isHost localStorage value:', isHostValue, 'from userData.is_host:', userData.is_host);
+            localStorage.setItem('isHost', isHostValue);
+            
             localStorage.setItem('currentUser', JSON.stringify(userData));
             
-            console.log('Auth data stored in localStorage');
+            console.log('Auth data stored in localStorage', {
+                token: localStorage.getItem('token'),
+                isHost: localStorage.getItem('isHost'),
+                userData: localStorage.getItem('currentUser')
+            });
             
             // Redirect to dashboard
             window.location.href = '/host/dashboard';
@@ -266,12 +277,26 @@ const handleRouting = () => {
     
     // Handle event creation page
     if (path === '/host/event/create') {
+        // Add detailed debugging to diagnose the issue
+        console.log('Event creation page route detected');
+        console.log('Authentication state:', {
+            token: localStorage.getItem('token'),
+            isAuthenticated: isAuthenticated(),
+            isHostValue: localStorage.getItem('isHost'),
+            isHost: isHost(),
+            userData: getUserData()
+        });
+        
         if (isAuthenticated() && isHost()) {
             console.log('Rendering event creation page with user data:', getUserData());
             // The server will render this page
             return;
         } else {
             console.log('Not authenticated for event creation, redirecting to login');
+            console.log('- isAuthenticated():', isAuthenticated());
+            console.log('- isHost():', isHost());
+            console.log('- localStorage token:', localStorage.getItem('token'));
+            console.log('- localStorage isHost:', localStorage.getItem('isHost'));
             window.location.href = '/auth/host_login';
             return;
         }

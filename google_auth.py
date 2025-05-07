@@ -137,12 +137,14 @@ def callback():
             // Store authentication data in localStorage
             const token = "{str(time.time())}"; // Simple token based on timestamp
             localStorage.setItem('token', token);
-            localStorage.setItem('isHost', {str(user.is_host).lower()});
+            
+            // Convert boolean to string 'true'/'false' in the correct format expected by isHost()
+            localStorage.setItem('isHost', {str(user.is_host).lower()} ? 'true' : 'false');
             localStorage.setItem('currentUser', '{json.dumps(user_data)}');
             
             console.log('Authentication data stored from Google login:', {{
                 token: token,
-                isHost: {str(user.is_host).lower()},
+                isHost: localStorage.getItem('isHost'),
                 userData: {json.dumps(user_data)}
             }});
             
