@@ -79,6 +79,12 @@ with app.app_context():
 
 # Removed non-SPA route for event creation since the React app handles it now
 
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    """Redirect dashboard requests to the SPA host dashboard route"""
+    return redirect('/host/dashboard')
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
