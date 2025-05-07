@@ -264,6 +264,19 @@ const handleRouting = () => {
         }
     }
     
+    // Handle event creation page
+    if (path === '/host/event/create') {
+        if (isAuthenticated() && isHost()) {
+            console.log('Rendering event creation page with user data:', getUserData());
+            // The server will render this page
+            return;
+        } else {
+            console.log('Not authenticated for event creation, redirecting to login');
+            window.location.href = '/auth/host_login';
+            return;
+        }
+    }
+    
     // Default: render the home page for root or unhandled paths
     renderHomePage();
 };
