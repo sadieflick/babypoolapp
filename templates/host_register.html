@@ -256,52 +256,49 @@
     
     <script>
         // Helper functions for showing/hiding messages
-        function showError(message, field = null) {
-            const errorElement = document.getElementById('error-message');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
+        function showFieldError(field, message) {
+            const fieldElement = document.getElementById(field);
+            if (!fieldElement) return;
             
-            // If a field is specified, mark it as invalid
-            if (field) {
-                const fieldElement = document.getElementById(field);
-                if (fieldElement) {
-                    fieldElement.classList.add('is-invalid');
-                    
-                    // Find or create a feedback element
-                    // Skip the form-text help element if present
-                    let nextElement = fieldElement.nextElementSibling;
-                    let feedbackElement = null;
-                    
-                    // If the next element is a form-text element, look for the invalid-feedback after it
-                    if (nextElement && nextElement.classList.contains('form-text')) {
-                        let potentialFeedback = nextElement.nextElementSibling;
-                        if (potentialFeedback && potentialFeedback.classList.contains('invalid-feedback')) {
-                            feedbackElement = potentialFeedback;
-                        }
-                    } else if (nextElement && nextElement.classList.contains('invalid-feedback')) {
-                        // The next element is already an invalid-feedback element
-                        feedbackElement = nextElement;
-                    }
-                    
-                    // If we didn't find an existing invalid-feedback element, create one
-                    if (!feedbackElement) {
-                        feedbackElement = document.createElement('div');
-                        feedbackElement.classList.add('invalid-feedback');
-                        
-                        // Insert after the form-text if it exists, otherwise after the field
-                        if (nextElement && nextElement.classList.contains('form-text')) {
-                            fieldElement.parentNode.insertBefore(feedbackElement, nextElement.nextSibling);
-                        } else {
-                            fieldElement.parentNode.insertBefore(feedbackElement, fieldElement.nextSibling);
-                        }
-                    }
-                    
-                    feedbackElement.textContent = message;
+            fieldElement.classList.add('is-invalid');
+            
+            // Find or create a feedback element
+            // Skip the form-text help element if present
+            let nextElement = fieldElement.nextElementSibling;
+            let feedbackElement = null;
+            
+            // If the next element is a form-text element, look for the invalid-feedback after it
+            if (nextElement && nextElement.classList.contains('form-text')) {
+                let potentialFeedback = nextElement.nextElementSibling;
+                if (potentialFeedback && potentialFeedback.classList.contains('invalid-feedback')) {
+                    feedbackElement = potentialFeedback;
+                }
+            } else if (nextElement && nextElement.classList.contains('invalid-feedback')) {
+                // The next element is already an invalid-feedback element
+                feedbackElement = nextElement;
+            }
+            
+            // If we didn't find an existing invalid-feedback element, create one
+            if (!feedbackElement) {
+                feedbackElement = document.createElement('div');
+                feedbackElement.classList.add('invalid-feedback');
+                
+                // Insert after the form-text if it exists, otherwise after the field
+                if (nextElement && nextElement.classList.contains('form-text')) {
+                    fieldElement.parentNode.insertBefore(feedbackElement, nextElement.nextSibling);
+                } else {
+                    fieldElement.parentNode.insertBefore(feedbackElement, fieldElement.nextSibling);
                 }
             }
             
-            // Scroll to error message
-            errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            feedbackElement.textContent = message;
+            feedbackElement.style.display = 'block';
+        }
+        
+        function showGenericError(message) {
+            const errorElement = document.getElementById('error-message');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
             
             // Auto-hide after 5 seconds
             setTimeout(() => {
@@ -332,6 +329,82 @@
             });
         }
         
+        // Real-time field validation
+        function validateEmail(field) {
+            const email = field.value.trim();
+            if (!email) {
+                showFieldError('email', 'Email is required');
+                return false;
+            }
+            return true;
+        }
+        
+        function validatePassword(field) {
+            const password = field.value;
+            if (!password) {
+                showFieldError('password', 'Password is required');
+                return false;
+            } else if (password.length < 8) {
+                showFieldError('password', 'Password must be at least 8 characters long');
+                return false;
+            }
+            return true;
+        }
+        
+        function validateConfirmPassword(field) {
+            const confirmPassword = field.value;
+            const password = document.getElementById('password').value;
+            if (password && password !== confirmPassword) {
+                showFieldError('confirm_password', 'Passwords do not match');
+                return false;
+            }
+            return true;
+        }
+        
+        function validateName(field) {
+            const name = field.value.trim();
+            if (!name) {
+                showFieldError(field.id, field.id === 'first_name' ? 'First name is required' : 'Last name is required');
+                return false;
+            }
+            return true;
+        }
+        
+        // Function to clear errors on a field
+        function clearFieldError(field) {
+            field.classList.remove('is-invalid');
+            let nextElement = field.nextElementSibling;
+            
+            // Skip the form-text help element if present
+            if (nextElement && nextElement.classList.contains('form-text')) {
+                nextElement = nextElement.nextElementSibling;
+            }
+            
+            if (nextElement && nextElement.classList.contains('invalid-feedback')) {
+                nextElement.style.display = 'none';
+            }
+        }
+        
+        // Add blur event listeners for validation and input listeners to clear errors
+        const fields = ['email', 'password', 'confirm_password', 'first_name', 'last_name'];
+        
+        fields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            
+            // Validate on blur (when user leaves the field)
+            field.addEventListener('blur', function() {
+                if (fieldId === 'email') validateEmail(this);
+                else if (fieldId === 'password') validatePassword(this);
+                else if (fieldId === 'confirm_password') validateConfirmPassword(this);
+                else validateName(this);
+            });
+            
+            // Clear errors when user starts typing
+            field.addEventListener('input', function() {
+                clearFieldError(this);
+            });
+        });
+        
         // Form submission handler
         document.getElementById('register-form').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -344,34 +417,39 @@
             const firstName = document.getElementById('first_name').value;
             const lastName = document.getElementById('last_name').value;
             
-            // Client-side validation
+            // Client-side validation - validate all fields at once
+            let hasErrors = false;
+            
             if (!email) {
-                showError('Email is required', 'email');
-                return;
+                showFieldError('email', 'Email is required');
+                hasErrors = true;
             }
             
             if (!password) {
-                showError('Password is required', 'password');
-                return;
+                showFieldError('password', 'Password is required');
+                hasErrors = true;
+            } else if (password.length < 8) {
+                showFieldError('password', 'Password must be at least 8 characters long');
+                hasErrors = true;
             }
             
-            if (password.length < 8) {
-                showError('Password must be at least 8 characters long', 'password');
-                return;
-            }
-            
-            if (password !== confirmPassword) {
-                showError('Passwords do not match', 'confirm_password');
-                return;
+            if (password !== confirmPassword && password) {
+                showFieldError('confirm_password', 'Passwords do not match');
+                hasErrors = true;
             }
             
             if (!firstName) {
-                showError('First name is required', 'first_name');
-                return;
+                showFieldError('first_name', 'First name is required');
+                hasErrors = true;
             }
             
             if (!lastName) {
-                showError('Last name is required', 'last_name');
+                showFieldError('last_name', 'Last name is required');
+                hasErrors = true;
+            }
+            
+            // If there are any validation errors, don't submit the form
+            if (hasErrors) {
                 return;
             }
             
@@ -417,25 +495,25 @@
                     // Registration failed - handle specific error types
                     if (data.error) {
                         if (data.error.includes('Email already exists')) {
-                            showError('Email already exists', 'email');
+                            showFieldError('email', 'Email already exists');
                         } else if (data.error.includes('Email is required')) {
-                            showError('Email is required', 'email');
+                            showFieldError('email', 'Email is required');
                         } else if (data.error.includes('Password is required')) {
-                            showError('Password is required', 'password');
+                            showFieldError('password', 'Password is required');
                         } else if (data.error.includes('First name is required')) {
-                            showError('First name is required', 'first_name');
+                            showFieldError('first_name', 'First name is required');
                         } else if (data.error.includes('Last name is required')) {
-                            showError('Last name is required', 'last_name');
+                            showFieldError('last_name', 'Last name is required');
                         } else {
-                            showError(data.error);
+                            showGenericError(data.error);
                         }
                     } else {
-                        showError('Registration failed. Please try again.');
+                        showGenericError('Registration failed. Please try again.');
                     }
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showError('A network error occurred. Please check your connection and try again.');
+                showGenericError('A network error occurred. Please check your connection and try again.');
             }
         });
     </script>
