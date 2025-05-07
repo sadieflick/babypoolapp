@@ -32,7 +32,7 @@ const HostLogin = () => {
         // Generate a simple token based on timestamp for frontend auth
         const token = Date.now().toString();
         login(response, token);
-        navigate('/host/dashboard');
+        // Navigate is handled in AuthContext.login method
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to login. Please try again.');

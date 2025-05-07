@@ -87,8 +87,15 @@ def callback():
         db.session.commit()
 
     login_user(user)
-
-    return redirect(url_for("index"))
+    
+    # Redirect to appropriate page based on user type
+    if user.is_host:
+        return redirect(url_for("serve", path="host/dashboard"))
+    elif user.events:
+        # Redirect to the first event if user is a guest with events
+        return redirect(url_for("serve", path=f"guest/event/{user.events[0].id}"))
+    else:
+        return redirect(url_for("serve"))
 
 
 @google_auth.route("/logout")

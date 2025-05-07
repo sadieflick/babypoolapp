@@ -118,6 +118,9 @@ def host_login():
     session.permanent = True
     current_app.permanent_session_lifetime = timedelta(days=7)
     
+    # Fetch hosted events count for dashboard redirection
+    hosted_events_count = Event.query.filter_by(host_id=user.id).count()
+    
     return jsonify({
         'id': user.id,
         'email': user.email,
@@ -125,6 +128,7 @@ def host_login():
         'last_name': user.last_name,
         'nickname': user.nickname,
         'is_host': user.is_host,
+        'hosted_events_count': hosted_events_count,
         'message': 'Login successful'
     })
 
