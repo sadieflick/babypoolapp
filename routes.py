@@ -295,7 +295,7 @@ def upload_event_image(event_id):
     
     return jsonify({'error': 'File type not allowed'}), 400
 
-@api.route('/events/find-by-code/<event_code>', methods=['GET'])
+@api.route('/events/code/<event_code>', methods=['GET'])
 def find_event_by_code(event_code):
     event = Event.query.filter_by(event_code=event_code).first()
     
@@ -549,7 +549,7 @@ def remove_guest(event_id, user_id):
     return jsonify({'message': 'Guest removed successfully'})
 
 # Guess routes
-@api.route('/events/<int:event_id>/date-guesses', methods=['GET'])
+@api.route('/events/<int:event_id>/guesses/date', methods=['GET'])
 def get_date_guesses(event_id):
     event = Event.query.get_or_404(event_id)
     
@@ -579,7 +579,7 @@ def get_date_guesses(event_id):
     
     return jsonify(guesses_data)
 
-@api.route('/events/<int:event_id>/date-guesses', methods=['POST'])
+@api.route('/events/<int:event_id>/guesses/date', methods=['POST'])
 @login_required
 def create_date_guess(event_id):
     event = Event.query.get_or_404(event_id)
@@ -636,7 +636,7 @@ def create_date_guess(event_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
-@api.route('/events/<int:event_id>/hour-guesses', methods=['GET'])
+@api.route('/events/<int:event_id>/guesses/hour', methods=['GET'])
 def get_hour_guesses(event_id):
     event = Event.query.get_or_404(event_id)
     
@@ -667,7 +667,7 @@ def get_hour_guesses(event_id):
     
     return jsonify(guesses_data)
 
-@api.route('/events/<int:event_id>/hour-guesses', methods=['POST'])
+@api.route('/events/<int:event_id>/guesses/hour', methods=['POST'])
 @login_required
 def create_hour_guess(event_id):
     event = Event.query.get_or_404(event_id)
@@ -733,7 +733,7 @@ def create_hour_guess(event_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
-@api.route('/events/<int:event_id>/minute-guesses', methods=['GET'])
+@api.route('/events/<int:event_id>/guesses/minute', methods=['GET'])
 def get_minute_guesses(event_id):
     event = Event.query.get_or_404(event_id)
     
@@ -763,7 +763,7 @@ def get_minute_guesses(event_id):
     
     return jsonify(guesses_data)
 
-@api.route('/events/<int:event_id>/minute-guesses', methods=['POST'])
+@api.route('/events/<int:event_id>/guesses/minute', methods=['POST'])
 @login_required
 def create_minute_guess(event_id):
     event = Event.query.get_or_404(event_id)
@@ -821,7 +821,7 @@ def create_minute_guess(event_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
-@api.route('/events/<int:event_id>/name-guesses', methods=['GET'])
+@api.route('/events/<int:event_id>/guesses/name', methods=['GET'])
 def get_name_guesses(event_id):
     event = Event.query.get_or_404(event_id)
     
@@ -854,7 +854,7 @@ def get_name_guesses(event_id):
     
     return jsonify(guesses_data)
 
-@api.route('/events/<int:event_id>/name-guesses', methods=['POST'])
+@api.route('/events/<int:event_id>/guesses/name', methods=['POST'])
 @login_required
 def create_name_guess(event_id):
     event = Event.query.get_or_404(event_id)
@@ -973,7 +973,7 @@ def update_current_user():
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
-@api.route('/events/<int:event_id>/user-guesses', methods=['GET'])
+@api.route('/events/<int:event_id>/user/guesses', methods=['GET'])
 @login_required
 def get_user_guesses(event_id):
     event = Event.query.get_or_404(event_id)
