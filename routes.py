@@ -65,6 +65,8 @@ def get_events():
     
     return jsonify(events_data)
 
+
+
 @api.route('/events/<int:event_id>', methods=['GET'])
 def get_event(event_id):
     event = Event.query.get_or_404(event_id)
