@@ -82,20 +82,34 @@ def callback():
 
     user = User.query.filter_by(email=users_email).first()
     if not user:
-        user = User(username=users_name, email=users_email)
+        # Create new user with Google info
+        user = User(
+            email=users_email,
+            first_name=users_name,
+            is_host=False  # Default to non-host account
+        )
         db.session.add(user)
         db.session.commit()
 
+    # Log in the user
     login_user(user)
     
     # Redirect to appropriate page based on user type
+    print(f"Google login: User {user.email} authenticated, is_host={user.is_host}")
+    
     if user.is_host:
-        return redirect(url_for("serve", path="host/dashboard"))
+        # Redirect to host dashboard
+        print("Redirecting to host dashboard")
+        return redirect('/host/dashboard')
     elif user.events:
         # Redirect to the first event if user is a guest with events
-        return redirect(url_for("serve", path=f"guest/event/{user.events[0].id}"))
+        event_id = user.events[0].id
+        print(f"Redirecting to guest event {event_id}")
+        return redirect(f'/guest/event/{event_id}')
     else:
-        return redirect(url_for("serve"))
+        # No events, redirect to home
+        print("Redirecting to home")
+        return redirect('/')
 
 
 @google_auth.route("/logout")

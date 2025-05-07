@@ -17,6 +17,8 @@ const HostLogin = () => {
     setError('');
     setLoading(true);
     
+    console.log("Host login form submitted");
+    
     if (!email || !password) {
       setError('Please enter email and password');
       setLoading(false);
@@ -24,17 +26,30 @@ const HostLogin = () => {
     }
     
     try {
+      console.log("Attempting to login with email:", email);
       const response = await loginHost(email, password);
+      
+      console.log("Login response:", response);
       
       if (response.error) {
         setError(response.error);
       } else {
         // Generate a simple token based on timestamp for frontend auth
         const token = Date.now().toString();
+        console.log("Login successful, token generated, calling login function");
         login(response, token);
         // Navigate is handled in AuthContext.login method
+        
+        // Force navigation to dashboard as a backup
+        setTimeout(() => {
+          console.log("Backup navigation to dashboard");
+          if (window.location.pathname !== '/host/dashboard') {
+            navigate('/host/dashboard');
+          }
+        }, 500);
       }
     } catch (err) {
+      console.error("Login error:", err);
       setError(err.response?.data?.error || 'Failed to login. Please try again.');
     } finally {
       setLoading(false);

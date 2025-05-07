@@ -13,6 +13,19 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  // Restore user from localStorage on initial load
+  useEffect(() => {
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      try {
+        setCurrentUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error("Error parsing saved user:", e);
+        localStorage.removeItem('currentUser');
+      }
+    }
+  }, []);
+
   useEffect(() => {
     // Check if user is already logged in
     const checkAuth = async () => {
@@ -22,10 +35,13 @@ export const AuthProvider = ({ children }) => {
         try {
           const userData = await getCurrentUser();
           setCurrentUser(userData);
+          // Save user data to localStorage
+          localStorage.setItem('currentUser', JSON.stringify(userData));
         } catch (err) {
           console.error("Auth check failed:", err);
           localStorage.removeItem('token');
           localStorage.removeItem('isHost');
+          localStorage.removeItem('currentUser');
           setCurrentUser(null);
           setError("Your session has expired. Please log in again.");
         }
@@ -38,20 +54,26 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (userData, token) => {
+    console.log("Login called with userData:", userData);
     localStorage.setItem('token', token);
     localStorage.setItem('isHost', userData.is_host);
+    localStorage.setItem('currentUser', JSON.stringify(userData));
     setCurrentUser(userData);
     setError(null);
     
     // Redirect based on user type
     if (userData.is_host) {
+      console.log("Redirecting to host dashboard");
       navigate('/host/dashboard');
     } else if (userData.event_id) {
+      console.log("Redirecting to guest event");
       navigate(`/guest/event/${userData.event_id}`);
     } else if (userData.events && userData.events.length > 0) {
       // If guest has multiple events, let them choose which one to view
+      console.log("Redirecting to select event");
       navigate('/guest/select-event');
     } else {
+      console.log("Redirecting to home");
       navigate('/');
     }
   };
@@ -59,15 +81,15 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('isHost');
+    localStorage.removeItem('currentUser');
     setCurrentUser(null);
     navigate('/');
   };
 
   const updateUser = (updatedUserData) => {
-    setCurrentUser(prev => ({
-      ...prev,
-      ...updatedUserData
-    }));
+    const updated = {...currentUser, ...updatedUserData};
+    setCurrentUser(updated);
+    localStorage.setItem('currentUser', JSON.stringify(updated));
   };
 
   return (

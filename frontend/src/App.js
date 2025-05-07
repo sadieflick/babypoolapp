@@ -26,15 +26,28 @@ import Footer from './components/Footer';
 const ProtectedRoute = ({ children, requireHost }) => {
   const token = localStorage.getItem('token');
   const isHost = localStorage.getItem('isHost') === 'true';
+  const savedUser = localStorage.getItem('currentUser');
   
-  if (!token) {
+  // Add debug logging
+  console.log("ProtectedRoute check:", { 
+    token: !!token, 
+    isHost, 
+    requireHost, 
+    hasUser: !!savedUser,
+    path: window.location.pathname
+  });
+  
+  if (!token || !savedUser) {
+    console.log("Not authenticated, redirecting to home");
     return <Navigate to="/" replace />;
   }
   
   if (requireHost && !isHost) {
+    console.log("Host access required but user is not a host, redirecting to home");
     return <Navigate to="/" replace />;
   }
   
+  console.log("Access granted to protected route");
   return children;
 };
 
