@@ -88,8 +88,16 @@
                 
                 // Validate on blur (when user leaves the field)
                 field.addEventListener('blur', function() {
-                    if (fieldId === 'email' && !this.value) {
-                        showFieldError('email', 'Email is required');
+                    if (fieldId === 'email') {
+                        if (!this.value) {
+                            showFieldError('email', 'Email is required');
+                        } else {
+                            // Simple email format check
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            if (!emailRegex.test(this.value)) {
+                                showFieldError('email', 'Please enter a valid email address');
+                            }
+                        }
                     } else if (fieldId === 'password' && !this.value) {
                         showFieldError('password', 'Password is required');
                     }
@@ -111,6 +119,13 @@
                 if (!email) {
                     showFieldError('email', 'Email is required');
                     hasErrors = true;
+                } else {
+                    // Email format validation
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(email)) {
+                        showFieldError('email', 'Please enter a valid email address');
+                        hasErrors = true;
+                    }
                 }
                 
                 // Validate password
