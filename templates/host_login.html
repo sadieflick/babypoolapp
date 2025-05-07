@@ -5,212 +5,139 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Host Login - Baby Pool</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <style>
-        :root {
-            --primary: #ff99cc;
-            --primary-rgb: 255, 153, 204;
-            --primary-dark: #ff66b3;
-            --primary-light: #ffcce6;
-            --secondary: #99ccff;
-            --secondary-dark: #66b3ff;
-            --secondary-light: #cce6ff;
-        }
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f8f9fa;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .login-container {
-            max-width: 500px;
-            margin: 40px auto;
-            padding: 30px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .login-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .login-header h1 {
-            font-size: 2rem;
-            color: var(--primary-dark);
-            margin-bottom: 10px;
-        }
-        .login-header p {
-            color: #666;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-label {
-            font-weight: 500;
-            color: #444;
-        }
-        .form-control {
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-        }
-        .form-control:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 0.25rem rgba(var(--primary-rgb), 0.25);
-        }
-        .btn-primary {
-            background-color: var(--primary);
-            border-color: var(--primary);
-            padding: 12px 30px;
-            font-weight: 500;
-            border-radius: 30px;
-            box-shadow: 0 4px 8px rgba(255, 153, 204, 0.3);
-            transition: all 0.3s ease;
-            width: 100%;
-            margin-top: 10px;
-        }
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-            border-color: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(255, 153, 204, 0.4);
-        }
-        .google-btn {
-            background-color: white;
-            color: #444;
-            padding: 12px 20px;
-            border-radius: 30px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 500;
-            margin-top: 20px;
-            border: 1px solid #ddd;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-        .google-btn:hover {
-            background-color: #f8f8f8;
-            color: #444;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
-        }
-        .login-divider {
-            width: 100%;
-            text-align: center;
-            border-bottom: 1px solid #ddd;
-            line-height: 0.1em;
-            margin: 20px 0 20px;
-            color: #888;
-        }
-        .login-divider span {
-            background: white;
-            padding: 0 10px;
-        }
-        .footer {
-            margin-top: auto;
-            padding: 20px;
-            background-color: #343a40;
-            color: white;
-            text-align: center;
-        }
-        .links {
-            margin-top: 20px;
-            text-align: center;
-        }
-        .links a {
-            color: var(--primary-dark);
-            text-decoration: none;
-        }
-        .links a:hover {
-            text-decoration: underline;
-        }
-        
-        /* Alert styling */
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 1px solid transparent;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            opacity: 1;
-        }
-        .alert-danger {
-            color: #721c24;
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
-        }
-        .alert-success {
-            color: #155724;
-            background-color: #d4edda;
-            border-color: #c3e6cb;
-        }
-        .alert-fade {
-            opacity: 0;
-            transition: opacity 0.5s ease-out;
-        }
-    </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/themes.css">
 </head>
 <body>
-    <div class="container">
-        <div class="login-container">
-            <div class="login-header">
-                <h1>Host Login</h1>
-                <p>Welcome back! Log in to manage your baby shower events.</p>
-            </div>
-            
-            <div id="error-message" class="alert alert-danger" style="display: none;"></div>
-            <div id="success-message" class="alert alert-success" style="display: none;"></div>
-            
-            <form id="login-form">
-                <div class="form-group">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email" name="email" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">Log In</button>
-            </form>
-            
-            <p class="login-divider"><span>or</span></p>
-            
-            <a href="/google_auth/google_login" class="google-btn">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Logo" style="height: 24px; margin-right: 10px;">
-                Sign in with Google
-            </a>
-            
-            <div class="links">
-                <a href="/auth/host_register">Don't have an account? Register</a>
-                <br>
-                <a href="/">Back to Home</a>
-            </div>
-        </div>
-    </div>
+    <!-- React app root -->
+    <div id="root"></div>
+
+    <!-- Load the bundled React app -->
+    <script src="/static/js/main.js"></script>
     
-    <footer class="footer">
-        <p>&copy; 2025 Baby Pool App</p>
-    </footer>
-    
+    <!-- Temporary login form script until React is fully implemented -->
     <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const root = document.getElementById('root');
+        
+        // Render login form
+        root.innerHTML = `
+            <div style="font-family: 'Poppins', sans-serif; padding: 2rem; text-align: center;">
+                <h1 style="color: #ff66b3; margin-bottom: 1rem;">Baby Pool App</h1>
+                
+                <div style="max-width: 500px; margin: 40px auto; padding: 30px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h2 style="font-size: 2rem; color: #ff66b3; margin-bottom: 10px;">Host Login</h2>
+                        <p style="color: #666;">Welcome back! Log in to manage your baby shower events.</p>
+                    </div>
+                    
+                    <div id="error-message" style="padding: 15px; margin-bottom: 20px; border: 1px solid #f5c6cb; border-radius: 8px; color: #721c24; background-color: #f8d7da; display: none;"></div>
+                    <div id="success-message" style="padding: 15px; margin-bottom: 20px; border: 1px solid #c3e6cb; border-radius: 8px; color: #155724; background-color: #d4edda; display: none;"></div>
+                    
+                    <form id="login-form">
+                        <div style="margin-bottom: 20px; text-align: left;">
+                            <label for="email" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">Email</label>
+                            <input type="email" id="email" name="email" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+                        </div>
+                        
+                        <div style="margin-bottom: 20px; text-align: left;">
+                            <label for="password" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">Password</label>
+                            <input type="password" id="password" name="password" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+                        </div>
+                        
+                        <button type="submit" style="background-color: #ff99cc; border: none; color: white; padding: 12px 30px; font-weight: 500; border-radius: 30px; box-shadow: 0 4px 8px rgba(255, 153, 204, 0.3); transition: all 0.3s ease; width: 100%; margin-top: 10px; cursor: pointer;">Log In</button>
+                    </form>
+                    
+                    <div style="width: 100%; text-align: center; border-bottom: 1px solid #ddd; line-height: 0.1em; margin: 20px 0; color: #888;">
+                        <span style="background: white; padding: 0 10px;">or</span>
+                    </div>
+                    
+                    <a href="/google_auth/google_login" style="background-color: white; color: #444; padding: 12px 20px; border-radius: 30px; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: 500; margin-top: 20px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s ease;">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Logo" style="height: 24px; margin-right: 10px;">
+                        Sign in with Google
+                    </a>
+                    
+                    <div style="margin-top: 20px; text-align: center;">
+                        <a href="/auth/host_register" style="color: #ff66b3; text-decoration: none; display: block; margin-bottom: 5px;">Don't have an account? Register</a>
+                        <a href="/" style="color: #ff66b3; text-decoration: none;">Back to Home</a>
+                    </div>
+                </div>
+                
+                <footer style="margin-top: 3rem; padding: 20px; background-color: #343a40; color: white; text-align: center;">
+                    <p>&copy; 2025 Baby Pool App</p>
+                </footer>
+            </div>
+        `;
+        
+        // Add form functionality
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                hideMessages();
+                
+                // Get form values
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                // Client-side validation
+                if (!email) {
+                    showError('Email is required');
+                    return;
+                }
+                
+                if (!password) {
+                    showError('Password is required');
+                    return;
+                }
+                
+                try {
+                    // Show loading state
+                    const submitButton = this.querySelector('button[type="submit"]');
+                    const originalButtonText = submitButton.textContent;
+                    submitButton.textContent = 'Logging in...';
+                    submitButton.disabled = true;
+                    
+                    // Make API request
+                    const response = await fetch('/auth/host/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email, password })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // Reset button state
+                    submitButton.textContent = originalButtonText;
+                    submitButton.disabled = false;
+                    
+                    if (response.ok) {
+                        // Login successful
+                        showSuccess('Login successful! Redirecting to dashboard...');
+                        
+                        // Redirect after a short delay
+                        setTimeout(() => {
+                            window.location.href = '/dashboard';
+                        }, 1500);
+                    } else {
+                        // Login failed
+                        showError(data.error || 'Login failed. Please check your credentials.');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showError('A network error occurred. Please check your connection and try again.');
+                }
+            });
+        }
+        
         // Helper functions for showing/hiding messages
         function showError(message) {
             const errorElement = document.getElementById('error-message');
             errorElement.textContent = message;
             errorElement.style.display = 'block';
-            
-            // Scroll to error message
-            errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             
             // Auto-hide after 5 seconds
             setTimeout(() => {
@@ -222,75 +149,13 @@
             const successElement = document.getElementById('success-message');
             successElement.textContent = message;
             successElement.style.display = 'block';
-            
-            // Scroll to success message
-            successElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         
         function hideMessages() {
             document.getElementById('error-message').style.display = 'none';
             document.getElementById('success-message').style.display = 'none';
         }
-        
-        // Form submission handler
-        document.getElementById('login-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            hideMessages();
-            
-            // Get form values
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            // Client-side validation
-            if (!email) {
-                showError('Email is required');
-                return;
-            }
-            
-            if (!password) {
-                showError('Password is required');
-                return;
-            }
-            
-            try {
-                // Show loading state
-                const submitButton = this.querySelector('button[type="submit"]');
-                const originalButtonText = submitButton.textContent;
-                submitButton.textContent = 'Logging in...';
-                submitButton.disabled = true;
-                
-                // Make API request
-                const response = await fetch('/auth/host/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password })
-                });
-                
-                const data = await response.json();
-                
-                // Reset button state
-                submitButton.textContent = originalButtonText;
-                submitButton.disabled = false;
-                
-                if (response.ok) {
-                    // Login successful
-                    showSuccess('Login successful! Redirecting to dashboard...');
-                    
-                    // Redirect after a short delay
-                    setTimeout(() => {
-                        window.location.href = '/dashboard';
-                    }, 1500);
-                } else {
-                    // Login failed
-                    showError(data.error || 'Login failed. Please check your credentials.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showError('A network error occurred. Please check your connection and try again.');
-            }
-        });
+    });
     </script>
 </body>
 </html>
