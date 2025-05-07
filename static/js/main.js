@@ -289,7 +289,7 @@ const handleRouting = () => {
         
         if (isAuthenticated() && isHost()) {
             console.log('Rendering event creation page with user data:', getUserData());
-            // The server will render this page
+            renderEventCreation();
             return;
         } else {
             console.log('Not authenticated for event creation, redirecting to login');
@@ -324,10 +324,179 @@ document.addEventListener('DOMContentLoaded', handleRouting);
 // Listen for navigation events (if using history API)
 window.addEventListener('popstate', handleRouting);
 
+// Render the event creation form
+const renderEventCreation = () => {
+    const userData = getUserData();
+    const userName = userData?.first_name || 'User';
+
+    document.getElementById('root').innerHTML = `
+        <div style="font-family: 'Poppins', sans-serif; min-height: 100vh; display: flex; flex-direction: column;">
+            <!-- Navigation Bar -->
+            <nav style="background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <h1 style="color: #ff66b3; margin: 0; font-size: 1.5rem;">Baby Pool</h1>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="color: #555;">Hello, ${userName}</span>
+                    <button id="logout-btn" style="background: none; border: none; color: #888; cursor: pointer;">Logout</button>
+                </div>
+            </nav>
+            
+            <!-- Main Content -->
+            <main style="flex: 1; padding: 2rem; background-color: #f8f9fa;">
+                <div style="max-width: 800px; margin: 0 auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h2 style="color: #333; margin: 0;">Create New Event</h2>
+                        <a href="/host/dashboard" style="text-decoration: none; color: #666; display: inline-flex; align-items: center; gap: 0.5rem;">
+                            <span>Back to Dashboard</span>
+                        </a>
+                    </div>
+                    
+                    <div style="background: white; border-radius: 10px; padding: 2rem; text-align: left; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <form id="event-creation-form" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            <div class="error-message" style="color: #d9534f; margin-bottom: 1rem; display: none;"></div>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <label for="motherName" style="font-weight: 500; color: #333;">Mother-to-be's Name*</label>
+                                <input type="text" id="motherName" name="mother_name" required
+                                    style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-family: inherit;" 
+                                    placeholder="Enter mother's name">
+                            </div>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <label for="partnerName" style="font-weight: 500; color: #333;">Partner's Name (Optional)</label>
+                                <input type="text" id="partnerName" name="partner_name"
+                                    style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-family: inherit;" 
+                                    placeholder="Enter partner's name">
+                            </div>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <label for="title" style="font-weight: 500; color: #333;">Event Title</label>
+                                <input type="text" id="title" name="title"
+                                    style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-family: inherit;" 
+                                    placeholder="Title will default to [Mother's Name]'s Baby Shower">
+                                <small style="color: #888; font-size: 0.8rem;">If left blank, we'll use "[Mother's Name]'s Baby Shower"</small>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <label for="eventDate" style="font-weight: 500; color: #333;">Event Date*</label>
+                                    <input type="date" id="eventDate" name="event_date" required
+                                        style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-family: inherit;">
+                                </div>
+                                
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <label for="dueDate" style="font-weight: 500; color: #333;">Baby Due Date*</label>
+                                    <input type="date" id="dueDate" name="due_date" required
+                                        style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-family: inherit;">
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <label for="guessPrice" style="font-weight: 500; color: #333;">How much will guests contribute for each guess? ($)*</label>
+                                <input type="number" id="guessPrice" name="guess_price" min="0.01" step="0.01" value="1.00" required
+                                    style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-family: inherit;">
+                            </div>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <label for="showerLink" style="font-weight: 500; color: #333;">Link to Baby Shower Website (Optional)</label>
+                                <input type="url" id="showerLink" name="shower_link"
+                                    style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-family: inherit;" 
+                                    placeholder="https://example.com">
+                            </div>
+                            
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" id="showHostEmail" name="show_host_email" 
+                                    style="width: 1.2rem; height: 1.2rem;">
+                                <label for="showHostEmail" style="font-weight: 500; color: #333;">Show your email to guests</label>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
+                                <a href="/host/dashboard" style="text-decoration: none; background-color: #f8f9fa; color: #666; padding: 0.75rem 1.5rem; border-radius: 8px; border: 1px solid #ddd; font-weight: 500;">Cancel</a>
+                                <button type="submit" style="background-color: #ff66b3; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer;">Create Event</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </main>
+            
+            <!-- Footer -->
+            <footer style="background-color: white; padding: 1.5rem; text-align: center; box-shadow: 0 -2px 4px rgba(0,0,0,0.05);">
+                <p style="color: #888; margin: 0;">&copy; 2025 Baby Pool App</p>
+            </footer>
+        </div>
+    `;
+
+    // Add logout functionality
+    document.getElementById('logout-btn')?.addEventListener('click', () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('isHost');
+        localStorage.removeItem('currentUser');
+        window.location.href = '/';
+    });
+
+    // Add form submission handler
+    document.getElementById('event-creation-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const errorDiv = document.querySelector('.error-message');
+        const submitButton = e.target.querySelector('button[type="submit"]');
+        
+        errorDiv.style.display = 'none';
+        submitButton.textContent = 'Creating...';
+        submitButton.disabled = true;
+        
+        try {
+            // Get form data
+            const formData = new FormData(e.target);
+            const eventData = {
+                title: formData.get('title'),
+                mother_name: formData.get('mother_name'),
+                partner_name: formData.get('partner_name'),
+                event_date: formData.get('event_date'),
+                due_date: formData.get('due_date'),
+                guess_price: parseFloat(formData.get('guess_price')),
+                shower_link: formData.get('shower_link'),
+                show_host_email: formData.get('show_host_email') === 'on'
+            };
+            
+            // Make API request
+            const response = await fetch('/api/events', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(eventData)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to create event');
+            }
+            
+            const data = await response.json();
+            console.log('Event created successfully:', data);
+            
+            // Redirect to dashboard with success message
+            window.location.href = '/host/dashboard?success=Event created successfully';
+            
+        } catch (error) {
+            console.error('Error creating event:', error);
+            errorDiv.textContent = error.message || 'Failed to create event. Please try again.';
+            errorDiv.style.display = 'block';
+            
+            submitButton.textContent = 'Create Event';
+            submitButton.disabled = false;
+        }
+    });
+};
+
 // Make helper functions accessible globally for testing
 window.isAuthenticated = isAuthenticated;
 window.isHost = isHost;
 window.getUserData = getUserData;
 window.handleRouting = handleRouting;
 window.renderDashboard = renderDashboard;
+window.renderEventCreation = renderEventCreation;
 window.debugAuthState = debugAuthState;
