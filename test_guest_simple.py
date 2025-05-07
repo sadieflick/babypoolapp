@@ -119,10 +119,10 @@ class GuestSimpleTestCase(unittest.TestCase):
         guess_date = (datetime.now() + timedelta(days=65)).strftime('%Y-%m-%d')
         
         guess_data = {
-            'guess_date': guess_date
+            'date': guess_date
         }
         
-        response = self.client.post(f'/api/events/{self.test_event_id}/date_guesses',
+        response = self.client.post(f'/api/events/{self.test_event_id}/guesses/date',
             json=guess_data,
             content_type='application/json')
         
@@ -143,6 +143,35 @@ class GuestSimpleTestCase(unittest.TestCase):
             ).first()
             self.assertIsNotNone(date_guess)
             self.assertEqual(date_guess.guess_date.strftime('%Y-%m-%d'), guess_date)
+
+    def test_view_guesses(self):
+        """Test that a guest can view their guesses"""
+        # First login
+        login_response = self.login_as_guest()
+        self.assertEqual(login_response.status_code, 200)
+        
+        # First, make a date guess
+        guess_date = (datetime.now() + timedelta(days=65)).strftime('%Y-%m-%d')
+        guess_data = {'date': guess_date}
+        
+        self.client.post(f'/api/events/{self.test_event_id}/guesses/date',
+            json=guess_data,
+            content_type='application/json')
+        
+        # Now get the user's guesses
+        response = self.client.get(f'/api/events/{self.test_event_id}/user/guesses')
+        
+        print(f"View guesses status code: {response.status_code}")
+        print(f"View guesses response data: {response.data.decode('utf-8')}")
+        
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify the guesses are returned
+        data = json.loads(response.data)
+        self.assertIn('date_guesses', data)
+        self.assertEqual(len(data['date_guesses']), 1)
+        self.assertEqual(data['total_guesses'], 1)
+        self.assertEqual(data['guess_price'], 1.0)
 
 if __name__ == '__main__':
     unittest.main()
