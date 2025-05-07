@@ -1,0 +1,207 @@
+/* Theme styles for the Baby Pool app */
+
+/* Default theme */
+.theme-default {
+    --theme-primary: #ff99cc;
+    --theme-primary-rgb: 255, 153, 204;
+    --theme-primary-dark: #ff66b3;
+    --theme-primary-light: #ffcce6;
+    --theme-secondary: #99ccff;
+    --theme-secondary-dark: #66b3ff;
+    --theme-secondary-light: #cce6ff;
+    --theme-bg: #ffffff;
+    --theme-text: #333333;
+    --theme-border: #eeeeee;
+}
+
+/* Blue theme */
+.theme-blue {
+    --theme-primary: #4d94ff;
+    --theme-primary-rgb: 77, 148, 255;
+    --theme-primary-dark: #1a75ff;
+    --theme-primary-light: #80b3ff;
+    --theme-secondary: #b3d9ff;
+    --theme-secondary-dark: #80bfff;
+    --theme-secondary-light: #e6f2ff;
+    --theme-bg: #ffffff;
+    --theme-text: #333333;
+    --theme-border: #eeeeee;
+}
+
+/* Green theme */
+.theme-green {
+    --theme-primary: #66cc99;
+    --theme-primary-rgb: 102, 204, 153;
+    --theme-primary-dark: #40bf80;
+    --theme-primary-light: #8cd9b3;
+    --theme-secondary: #b3e6cc;
+    --theme-secondary-dark: #8cd9b3;
+    --theme-secondary-light: #d9f2e6;
+    --theme-bg: #ffffff;
+    --theme-text: #333333;
+    --theme-border: #eeeeee;
+}
+
+/* Purple theme */
+.theme-purple {
+    --theme-primary: #cc99ff;
+    --theme-primary-rgb: 204, 153, 255;
+    --theme-primary-dark: #b366ff;
+    --theme-primary-light: #e6ccff;
+    --theme-secondary: #d9b3ff;
+    --theme-secondary-dark: #c299ff;
+    --theme-secondary-light: #f0e6ff;
+    --theme-bg: #ffffff;
+    --theme-text: #333333;
+    --theme-border: #eeeeee;
+}
+
+/* Yellow theme */
+.theme-yellow {
+    --theme-primary: #ffcc66;
+    --theme-primary-rgb: 255, 204, 102;
+    --theme-primary-dark: #ffbb33;
+    --theme-primary-light: #ffdd99;
+    --theme-secondary: #ffe6b3;
+    --theme-secondary-dark: #ffd980;
+    --theme-secondary-light: #fff2e6;
+    --theme-bg: #ffffff;
+    --theme-text: #333333;
+    --theme-border: #eeeeee;
+}
+
+/* Dark mode modifiers */
+.dark-mode {
+    --theme-bg: #343a40;
+    --theme-text: #f8f9fa;
+    --theme-border: #495057;
+}
+
+/* Apply theme variables to components */
+.themed-content {
+    background-color: var(--theme-bg);
+    color: var(--theme-text);
+}
+
+.themed-card {
+    background-color: var(--theme-bg);
+    border: 1px solid var(--theme-border);
+}
+
+.themed-card .card-header {
+    background-color: var(--theme-primary-light);
+    color: var(--theme-text);
+}
+
+.themed-btn-primary {
+    background-color: var(--theme-primary);
+    border-color: var(--theme-primary);
+    color: white;
+}
+
+.themed-btn-primary:hover {
+    background-color: var(--theme-primary-dark);
+    border-color: var(--theme-primary-dark);
+}
+
+.themed-btn-secondary {
+    background-color: var(--theme-secondary);
+    border-color: var(--theme-secondary);
+    color: var(--theme-text);
+}
+
+.themed-btn-secondary:hover {
+    background-color: var(--theme-secondary-dark);
+    border-color: var(--theme-secondary-dark);
+}
+
+/* Theme specific overrides for components */
+.theme-default .navbar {
+    background-color: var(--theme-primary);
+}
+
+.theme-blue .navbar {
+    background-color: var(--theme-primary);
+}
+
+.theme-green .navbar {
+    background-color: var(--theme-primary);
+}
+
+.theme-purple .navbar {
+    background-color: var(--theme-primary);
+}
+
+.theme-yellow .navbar {
+    background-color: var(--theme-primary);
+}
+
+/* Dark mode specific overrides */
+.dark-mode .form-control {
+    background-color: #495057;
+    border-color: #6c757d;
+    color: #f8f9fa;
+}
+
+.dark-mode .form-control:focus {
+    background-color: #495057;
+    color: #f8f9fa;
+}
+
+.dark-mode .card {
+    background-color: #343a40;
+    border-color: #495057;
+}
+
+.dark-mode .card-header {
+    background-color: #495057;
+}
+
+.dark-mode .navbar {
+    background-color: #212529;
+}
+
+.dark-mode .dropdown-menu {
+    background-color: #343a40;
+    border-color: #495057;
+}
+
+.dark-mode .dropdown-item {
+    color: #f8f9fa;
+}
+
+.dark-mode .dropdown-item:hover {
+    background-color: #495057;
+}
+
+.dark-mode .table {
+    color: #f8f9fa;
+}
+
+.dark-mode .table td,
+.dark-mode .table th {
+    border-color: #495057;
+}
+
+.dark-mode .modal-content {
+    background-color: #343a40;
+    border-color: #495057;
+}
+
+.dark-mode .close {
+    color: #f8f9fa;
+}
+
+.dark-mode .text-muted {
+    color: #adb5bd !important;
+}
+
+/* Hover and focus states for dark mode */
+.dark-mode a:not(.btn) {
+    color: var(--theme-primary-light);
+}
+
+.dark-mode a:not(.btn):hover,
+.dark-mode a:not(.btn):focus {
+    color: var(--theme-primary);
+}
