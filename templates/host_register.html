@@ -5,294 +5,116 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Host Registration - Baby Pool</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <style>
-        :root {
-            --primary: #ff99cc;
-            --primary-rgb: 255, 153, 204;
-            --primary-dark: #ff66b3;
-            --primary-light: #ffcce6;
-            --secondary: #99ccff;
-            --secondary-dark: #66b3ff;
-            --secondary-light: #cce6ff;
-        }
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f8f9fa;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .register-container {
-            max-width: 500px;
-            margin: 40px auto;
-            padding: 30px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .register-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .register-header h1 {
-            font-size: 2rem;
-            color: var(--primary-dark);
-            margin-bottom: 10px;
-        }
-        .register-header p {
-            color: #666;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-label {
-            font-weight: 500;
-            color: #444;
-        }
-        .form-control {
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-        }
-        .form-control:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 0.25rem rgba(var(--primary-rgb), 0.25);
-        }
-        .btn-primary {
-            background-color: var(--primary);
-            border-color: var(--primary);
-            padding: 12px 30px;
-            font-weight: 500;
-            border-radius: 30px;
-            box-shadow: 0 4px 8px rgba(255, 153, 204, 0.3);
-            transition: all 0.3s ease;
-            width: 100%;
-            margin-top: 10px;
-        }
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-            border-color: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(255, 153, 204, 0.4);
-        }
-        .google-btn {
-            background-color: white;
-            color: #444;
-            padding: 12px 20px;
-            border-radius: 30px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 500;
-            margin-top: 20px;
-            border: 1px solid #ddd;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-        .google-btn:hover {
-            background-color: #f8f8f8;
-            color: #444;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
-        }
-        .register-divider {
-            width: 100%;
-            text-align: center;
-            border-bottom: 1px solid #ddd;
-            line-height: 0.1em;
-            margin: 20px 0 20px;
-            color: #888;
-        }
-        .register-divider span {
-            background: white;
-            padding: 0 10px;
-        }
-        .footer {
-            margin-top: auto;
-            padding: 20px;
-            background-color: #343a40;
-            color: white;
-            text-align: center;
-        }
-        .links {
-            margin-top: 20px;
-            text-align: center;
-        }
-        .links a {
-            color: var(--primary-dark);
-            text-decoration: none;
-        }
-        .links a:hover {
-            text-decoration: underline;
-        }
-        
-        /* Alert styling */
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 1px solid transparent;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            opacity: 1;
-        }
-        .alert-danger {
-            color: #721c24;
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
-        }
-        .alert-success {
-            color: #155724;
-            background-color: #d4edda;
-            border-color: #c3e6cb;
-        }
-        .alert-fade {
-            opacity: 0;
-            transition: opacity 0.5s ease-out;
-        }
-        
-        /* Required field styling */
-        span.required {
-            color: #dc3545;
-            margin-left: 3px;
-        }
-        
-        .form-control.is-invalid {
-            border-color: #dc3545;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            background-size: 20px 20px;
-            padding-right: 40px;
-        }
-        
-        .invalid-feedback {
-            display: none;
-            color: #dc3545;
-            font-size: 14px;
-            margin-top: 5px;
-        }
-        
-        .form-control.is-invalid + .invalid-feedback {
-            display: block;
-        }
-        
-        .form-text {
-            font-size: 0.85em;
-            color: #6c757d;
-            margin-top: 5px;
-        }
-    </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/themes.css">
 </head>
 <body>
-    <div class="container">
-        <div class="register-container">
-            <div class="register-header">
-                <h1>Host Registration</h1>
-                <p>Create an account to host baby shower events.</p>
-            </div>
-            
-            <div id="error-message" class="alert alert-danger" style="display: none;"></div>
-            <div id="success-message" class="alert alert-success" style="display: none;"></div>
-            
-            <form id="register-form">
-                <div class="form-group">
-                    <label for="email" class="form-label">Email <span class="required">*</span></label>
-                    <input type="email" class="form-control" id="email" name="email">
-                    <small class="form-text text-muted">Required field</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="password" class="form-label">Password <span class="required">*</span></label>
-                    <input type="password" class="form-control" id="password" name="password">
-                    <small class="form-text text-muted">Required field, at least 8 characters</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="confirm_password" class="form-label">Confirm Password <span class="required">*</span></label>
-                    <input type="password" class="form-control" id="confirm_password" name="confirm_password">
-                    <small class="form-text text-muted">Required field</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="first_name" class="form-label">First Name <span class="required">*</span></label>
-                    <input type="text" class="form-control" id="first_name" name="first_name">
-                    <small class="form-text text-muted">Required field</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="last_name" class="form-label">Last Name <span class="required">*</span></label>
-                    <input type="text" class="form-control" id="last_name" name="last_name">
-                    <small class="form-text text-muted">Required field</small>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">Register</button>
-            </form>
-            
-            <p class="register-divider"><span>or</span></p>
-            
-            <a href="/google_auth/google_login" class="google-btn">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Logo" style="height: 24px; margin-right: 10px;">
-                Sign up with Google
-            </a>
-            
-            <div class="links">
-                <a href="/auth/host_login">Already have an account? Log in</a>
-                <br>
-                <a href="/">Back to Home</a>
-            </div>
-        </div>
-    </div>
+    <!-- React app root -->
+    <div id="root"></div>
+
+    <!-- Load the bundled React app -->
+    <script src="/static/js/main.js"></script>
     
-    <footer class="footer">
-        <p>&copy; 2025 Baby Pool App</p>
-    </footer>
-    
+    <!-- Temporary registration form script until React is fully implemented -->
     <script>
-        // Helper functions for showing/hiding messages
+    document.addEventListener('DOMContentLoaded', function() {
+        const root = document.getElementById('root');
+        
+        // Render registration form
+        root.innerHTML = `
+            <div style="font-family: 'Poppins', sans-serif; padding: 2rem; text-align: center;">
+                <h1 style="color: #ff66b3; margin-bottom: 1rem;">Baby Pool App</h1>
+                
+                <div style="max-width: 500px; margin: 40px auto; padding: 30px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h2 style="font-size: 2rem; color: #ff66b3; margin-bottom: 10px;">Host Registration</h2>
+                        <p style="color: #666;">Create an account to host baby shower events.</p>
+                    </div>
+                    
+                    <div id="error-message" style="padding: 15px; margin-bottom: 20px; border: 1px solid #f5c6cb; border-radius: 8px; color: #721c24; background-color: #f8d7da; display: none;"></div>
+                    <div id="success-message" style="padding: 15px; margin-bottom: 20px; border: 1px solid #c3e6cb; border-radius: 8px; color: #155724; background-color: #d4edda; display: none;"></div>
+                    
+                    <form id="register-form" style="text-align: left;">
+                        <div style="margin-bottom: 20px;">
+                            <label for="email" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">Email <span style="color: #dc3545; margin-left: 3px;">*</span></label>
+                            <input type="email" id="email" name="email" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+                            <small style="font-size: 0.85em; color: #6c757d; margin-top: 5px; display: block;">Required field</small>
+                            <div class="invalid-feedback" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px;"></div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label for="password" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">Password <span style="color: #dc3545; margin-left: 3px;">*</span></label>
+                            <input type="password" id="password" name="password" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+                            <small style="font-size: 0.85em; color: #6c757d; margin-top: 5px; display: block;">Required field, at least 8 characters</small>
+                            <div class="invalid-feedback" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px;"></div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label for="confirm_password" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">Confirm Password <span style="color: #dc3545; margin-left: 3px;">*</span></label>
+                            <input type="password" id="confirm_password" name="confirm_password" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+                            <small style="font-size: 0.85em; color: #6c757d; margin-top: 5px; display: block;">Required field</small>
+                            <div class="invalid-feedback" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px;"></div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label for="first_name" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">First Name <span style="color: #dc3545; margin-left: 3px;">*</span></label>
+                            <input type="text" id="first_name" name="first_name" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+                            <small style="font-size: 0.85em; color: #6c757d; margin-top: 5px; display: block;">Required field</small>
+                            <div class="invalid-feedback" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px;"></div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label for="last_name" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">Last Name <span style="color: #dc3545; margin-left: 3px;">*</span></label>
+                            <input type="text" id="last_name" name="last_name" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+                            <small style="font-size: 0.85em; color: #6c757d; margin-top: 5px; display: block;">Required field</small>
+                            <div class="invalid-feedback" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px;"></div>
+                        </div>
+                        
+                        <button type="submit" style="background-color: #ff99cc; border: none; color: white; padding: 12px 30px; font-weight: 500; border-radius: 30px; box-shadow: 0 4px 8px rgba(255, 153, 204, 0.3); transition: all 0.3s ease; width: 100%; margin-top: 10px; cursor: pointer;">Register</button>
+                    </form>
+                    
+                    <div style="width: 100%; text-align: center; border-bottom: 1px solid #ddd; line-height: 0.1em; margin: 20px 0; color: #888;">
+                        <span style="background: white; padding: 0 10px;">or</span>
+                    </div>
+                    
+                    <a href="/google_auth/google_login" style="background-color: white; color: #444; padding: 12px 20px; border-radius: 30px; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: 500; margin-top: 20px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s ease;">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Logo" style="height: 24px; margin-right: 10px;">
+                        Sign up with Google
+                    </a>
+                    
+                    <div style="margin-top: 20px; text-align: center;">
+                        <a href="/auth/host_login" style="color: #ff66b3; text-decoration: none; display: block; margin-bottom: 5px;">Already have an account? Log in</a>
+                        <a href="/" style="color: #ff66b3; text-decoration: none;">Back to Home</a>
+                    </div>
+                </div>
+                
+                <footer style="margin-top: 3rem; padding: 20px; background-color: #343a40; color: white; text-align: center;">
+                    <p>&copy; 2025 Baby Pool App</p>
+                </footer>
+            </div>
+        `;
+        
+        // Helper functions for validation
         function showFieldError(field, message) {
             const fieldElement = document.getElementById(field);
             if (!fieldElement) return;
             
-            fieldElement.classList.add('is-invalid');
+            fieldElement.style.borderColor = '#dc3545';
+            fieldElement.style.backgroundImage = "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e\")";
+            fieldElement.style.backgroundRepeat = 'no-repeat';
+            fieldElement.style.backgroundPosition = 'right 10px center';
+            fieldElement.style.backgroundSize = '20px 20px';
+            fieldElement.style.paddingRight = '40px';
             
-            // Find or create a feedback element
-            // Skip the form-text help element if present
-            let nextElement = fieldElement.nextElementSibling;
-            let feedbackElement = null;
+            // Find feedback element - it's the div with class invalid-feedback
+            const parentElement = fieldElement.parentElement;
+            const feedbackElement = parentElement.querySelector('.invalid-feedback');
             
-            // If the next element is a form-text element, look for the invalid-feedback after it
-            if (nextElement && nextElement.classList.contains('form-text')) {
-                let potentialFeedback = nextElement.nextElementSibling;
-                if (potentialFeedback && potentialFeedback.classList.contains('invalid-feedback')) {
-                    feedbackElement = potentialFeedback;
-                }
-            } else if (nextElement && nextElement.classList.contains('invalid-feedback')) {
-                // The next element is already an invalid-feedback element
-                feedbackElement = nextElement;
+            if (feedbackElement) {
+                feedbackElement.textContent = message;
+                feedbackElement.style.display = 'block';
             }
-            
-            // If we didn't find an existing invalid-feedback element, create one
-            if (!feedbackElement) {
-                feedbackElement = document.createElement('div');
-                feedbackElement.classList.add('invalid-feedback');
-                
-                // Insert after the form-text if it exists, otherwise after the field
-                if (nextElement && nextElement.classList.contains('form-text')) {
-                    fieldElement.parentNode.insertBefore(feedbackElement, nextElement.nextSibling);
-                } else {
-                    fieldElement.parentNode.insertBefore(feedbackElement, fieldElement.nextSibling);
-                }
-            }
-            
-            feedbackElement.textContent = message;
-            feedbackElement.style.display = 'block';
         }
         
         function showGenericError(message) {
@@ -310,9 +132,6 @@
             const successElement = document.getElementById('success-message');
             successElement.textContent = message;
             successElement.style.display = 'block';
-            
-            // Scroll to success message
-            successElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         
         function hideMessages() {
@@ -320,8 +139,10 @@
             document.getElementById('success-message').style.display = 'none';
             
             // Clear all validation states
-            document.querySelectorAll('.is-invalid').forEach(element => {
-                element.classList.remove('is-invalid');
+            document.querySelectorAll('input').forEach(element => {
+                element.style.borderColor = '#ddd';
+                element.style.backgroundImage = 'none';
+                element.style.paddingRight = '12px';
             });
             
             document.querySelectorAll('.invalid-feedback').forEach(element => {
@@ -329,7 +150,7 @@
             });
         }
         
-        // Real-time field validation
+        // Validation functions
         function validateEmail(field) {
             const email = field.value.trim();
             if (!email) {
@@ -372,150 +193,116 @@
         
         // Function to clear errors on a field
         function clearFieldError(field) {
-            field.classList.remove('is-invalid');
-            let nextElement = field.nextElementSibling;
+            field.style.borderColor = '#ddd';
+            field.style.backgroundImage = 'none';
+            field.style.paddingRight = '12px';
             
-            // Skip the form-text help element if present
-            if (nextElement && nextElement.classList.contains('form-text')) {
-                nextElement = nextElement.nextElementSibling;
-            }
+            const parentElement = field.parentElement;
+            const feedbackElement = parentElement.querySelector('.invalid-feedback');
             
-            if (nextElement && nextElement.classList.contains('invalid-feedback')) {
-                nextElement.style.display = 'none';
+            if (feedbackElement) {
+                feedbackElement.style.display = 'none';
             }
         }
         
-        // Add blur event listeners for validation and input listeners to clear errors
-        const fields = ['email', 'password', 'confirm_password', 'first_name', 'last_name'];
-        
-        fields.forEach(fieldId => {
-            const field = document.getElementById(fieldId);
+        // Register the form submission handler and validation
+        const loginForm = document.getElementById('register-form');
+        if (loginForm) {
+            // Add blur event listeners for validation and input listeners to clear errors
+            const fields = ['email', 'password', 'confirm_password', 'first_name', 'last_name'];
             
-            // Validate on blur (when user leaves the field)
-            field.addEventListener('blur', function() {
-                if (fieldId === 'email') validateEmail(this);
-                else if (fieldId === 'password') validatePassword(this);
-                else if (fieldId === 'confirm_password') validateConfirmPassword(this);
-                else validateName(this);
-            });
-            
-            // Clear errors when user starts typing
-            field.addEventListener('input', function() {
-                clearFieldError(this);
-            });
-        });
-        
-        // Form submission handler
-        document.getElementById('register-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            hideMessages();
-            
-            // Get form values
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm_password').value;
-            const firstName = document.getElementById('first_name').value;
-            const lastName = document.getElementById('last_name').value;
-            
-            // Client-side validation - validate all fields at once
-            let hasErrors = false;
-            
-            if (!email) {
-                showFieldError('email', 'Email is required');
-                hasErrors = true;
-            }
-            
-            if (!password) {
-                showFieldError('password', 'Password is required');
-                hasErrors = true;
-            } else if (password.length < 8) {
-                showFieldError('password', 'Password must be at least 8 characters long');
-                hasErrors = true;
-            }
-            
-            if (password !== confirmPassword && password) {
-                showFieldError('confirm_password', 'Passwords do not match');
-                hasErrors = true;
-            }
-            
-            if (!firstName) {
-                showFieldError('first_name', 'First name is required');
-                hasErrors = true;
-            }
-            
-            if (!lastName) {
-                showFieldError('last_name', 'Last name is required');
-                hasErrors = true;
-            }
-            
-            // If there are any validation errors, don't submit the form
-            if (hasErrors) {
-                return;
-            }
-            
-            try {
-                // Show loading state
-                const submitButton = this.querySelector('button[type="submit"]');
-                const originalButtonText = submitButton.textContent;
-                submitButton.textContent = 'Registering...';
-                submitButton.disabled = true;
+            fields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
                 
-                // Make API request
-                const response = await fetch('/auth/host/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        email, 
-                        password,
-                        first_name: firstName,
-                        last_name: lastName
-                    })
+                // Validate on blur (when user leaves the field)
+                field.addEventListener('blur', function() {
+                    if (fieldId === 'email') validateEmail(this);
+                    else if (fieldId === 'password') validatePassword(this);
+                    else if (fieldId === 'confirm_password') validateConfirmPassword(this);
+                    else validateName(this);
                 });
                 
-                const data = await response.json();
+                // Clear errors when user starts typing
+                field.addEventListener('input', function() {
+                    clearFieldError(this);
+                });
+            });
+            
+            // Form submission handler
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                hideMessages();
                 
-                // Reset button state
-                submitButton.textContent = originalButtonText;
-                submitButton.disabled = false;
+                // Get form values
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirm_password').value;
+                const firstName = document.getElementById('first_name').value;
+                const lastName = document.getElementById('last_name').value;
                 
-                if (response.ok) {
-                    // Registration successful
-                    showSuccess('Registration successful! Redirecting to dashboard...');
-                    
-                    // Clear form
-                    this.reset();
-                    
-                    // Redirect after a short delay
-                    setTimeout(() => {
-                        window.location.href = '/dashboard';
-                    }, 1500);
-                } else {
-                    // Registration failed - handle specific error types
-                    if (data.error) {
-                        if (data.error.includes('Email already exists')) {
-                            showFieldError('email', 'Email already exists');
-                        } else if (data.error.includes('Email is required')) {
-                            showFieldError('email', 'Email is required');
-                        } else if (data.error.includes('Password is required')) {
-                            showFieldError('password', 'Password is required');
-                        } else if (data.error.includes('First name is required')) {
-                            showFieldError('first_name', 'First name is required');
-                        } else if (data.error.includes('Last name is required')) {
-                            showFieldError('last_name', 'Last name is required');
-                        } else {
-                            showGenericError(data.error);
-                        }
-                    } else {
-                        showGenericError('Registration failed. Please try again.');
-                    }
+                // Client-side validation - validate all fields at once
+                let hasErrors = false;
+                
+                if (!validateEmail(document.getElementById('email'))) hasErrors = true;
+                if (!validatePassword(document.getElementById('password'))) hasErrors = true;
+                if (!validateConfirmPassword(document.getElementById('confirm_password'))) hasErrors = true;
+                if (!validateName(document.getElementById('first_name'))) hasErrors = true;
+                if (!validateName(document.getElementById('last_name'))) hasErrors = true;
+                
+                if (hasErrors) {
+                    return;
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                showGenericError('A network error occurred. Please check your connection and try again.');
-            }
-        });
+                
+                try {
+                    // Show loading state
+                    const submitButton = this.querySelector('button[type="submit"]');
+                    const originalButtonText = submitButton.textContent;
+                    submitButton.textContent = 'Registering...';
+                    submitButton.disabled = true;
+                    
+                    // Make API request
+                    const response = await fetch('/auth/host/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            email, 
+                            password, 
+                            first_name: firstName,
+                            last_name: lastName
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // Reset button state
+                    submitButton.textContent = originalButtonText;
+                    submitButton.disabled = false;
+                    
+                    if (response.ok) {
+                        // Registration successful
+                        showSuccess('Registration successful! Redirecting to dashboard...');
+                        
+                        // Redirect after a short delay
+                        setTimeout(() => {
+                            window.location.href = '/dashboard';
+                        }, 1500);
+                    } else {
+                        // Registration failed
+                        if (data.error && data.error.includes('Email')) {
+                            showFieldError('email', data.error);
+                        } else {
+                            showGenericError(data.error || 'Registration failed. Please try again.');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showGenericError('A network error occurred. Please check your connection and try again.');
+                }
+            });
+        }
+    });
     </script>
 </body>
 </html>
