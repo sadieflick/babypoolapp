@@ -503,3 +503,44 @@ def update_profile():
             'payment_method': current_user.payment_method
         }
     })
+
+@auth_blueprint.route('/token/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh_token():
+    """Refresh an expired access token"""
+    # Get the identity from the refresh token
+    current_user_identity = get_jwt_identity()
+    
+    # Create a new access token
+    access_token = create_access_token(identity=current_user_identity)
+    
+    # Create response with the new token
+    response = jsonify({
+        'access_token': access_token,
+        'message': 'Token refreshed successfully'
+    })
+    
+    # Set the new access token in cookies
+    set_access_cookies(response, access_token)
+    
+    return response
+
+@auth_blueprint.route('/token/verify', methods=['GET'])
+@jwt_required()
+def verify_token():
+    """Verify if the current token is valid"""
+    current_user_identity = get_jwt_identity()
+    
+    # Fetch user data if needed
+    user_id = current_user_identity.get('id') if isinstance(current_user_identity, dict) else current_user_identity
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({'valid': False, 'message': 'User not found'}), 401
+    
+    return jsonify({
+        'valid': True,
+        'user_id': user.id,
+        'email': user.email,
+        'is_host': user.is_host
+    })

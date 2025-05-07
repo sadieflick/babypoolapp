@@ -3,10 +3,16 @@
 import json
 import os
 import time
+from datetime import timedelta
 
 import requests
-from flask import Blueprint, redirect, request, url_for
+from flask import Blueprint, redirect, request, url_for, make_response
 from flask_login import login_required, login_user, logout_user
+from flask_jwt_extended import (
+    create_access_token, create_refresh_token, 
+    set_access_cookies, set_refresh_cookies,
+    unset_jwt_cookies
+)
 from models import User, db
 from oauthlib.oauth2 import WebApplicationClient
 
@@ -113,7 +119,22 @@ def callback():
         'hosted_events_count': hosted_events_count
     }
     
-    # Create HTML with script to set localStorage before redirecting
+    # Create JWT tokens for the user
+    identity = {
+        'id': user.id,
+        'email': user.email,
+        'is_host': user.is_host,
+        'type': 'host' if user.is_host else 'guest'
+    }
+    
+    # Create tokens with appropriate expirations
+    access_token_expires = timedelta(days=7) if user.is_host else timedelta(days=30)
+    refresh_token_expires = timedelta(days=30)
+    
+    access_token = create_access_token(identity=identity, expires_delta=access_token_expires)
+    refresh_token = create_refresh_token(identity=identity, expires_delta=refresh_token_expires)
+    
+    # Determine redirect URL based on user type
     redirect_url = '/host/dashboard' if user.is_host else '/'
     if user.is_host:
         # Redirect to host dashboard
@@ -128,6 +149,7 @@ def callback():
         # No events, redirect to home
         redirect_url = '/'
     
+    # Create HTML response with tokens
     html_response = f"""
     <!DOCTYPE html>
     <html>
@@ -135,15 +157,17 @@ def callback():
         <title>Google Login Successful</title>
         <script>
             // Store authentication data in localStorage
-            const token = "{str(time.time())}"; // Simple token based on timestamp
+            const token = "{access_token}";
             localStorage.setItem('token', token);
+            localStorage.setItem('refresh_token', "{refresh_token}");
             
             // Convert boolean to string 'true'/'false' in the correct format expected by isHost()
             localStorage.setItem('isHost', {str(user.is_host).lower()} ? 'true' : 'false');
             localStorage.setItem('currentUser', '{json.dumps(user_data)}');
             
             console.log('Authentication data stored from Google login:', {{
-                token: token,
+                token: localStorage.getItem('token').substring(0, 20) + "...", // Only log partial token for security
+                refresh_token: "present", // Don't log actual refresh token
                 isHost: localStorage.getItem('isHost'),
                 userData: {json.dumps(user_data)}
             }});
@@ -159,7 +183,12 @@ def callback():
     </html>
     """
     
-    return html_response
+    # Create response object and set cookies
+    response = make_response(html_response)
+    set_access_cookies(response, access_token)
+    set_refresh_cookies(response, refresh_token)
+    
+    return response
 
 
 @google_auth.route("/logout")
@@ -174,8 +203,9 @@ def logout():
     <head>
         <title>Logout Successful</title>
         <script>
-            // Clear authentication data from localStorage
+            // Clear all authentication data from localStorage
             localStorage.removeItem('token');
+            localStorage.removeItem('refresh_token');
             localStorage.removeItem('isHost');
             localStorage.removeItem('currentUser');
             
@@ -192,4 +222,8 @@ def logout():
     </html>
     """
     
-    return html_response
+    # Create response and clear cookies
+    response = make_response(html_response)
+    unset_jwt_cookies(response)
+    
+    return response
