@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, render_template, send_from_directory
+from flask import Flask, render_template, send_from_directory, redirect
 from flask_cors import CORS
 from flask_login import LoginManager, login_required
 from flask_bcrypt import Bcrypt
@@ -24,7 +24,7 @@ db.init_app(app)
 CORS(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
-login_manager.login_view = 'auth.login'
+login_manager.login_view = 'auth.host_login_page'
 
 # Add database connection pool ping for PostgreSQL
 @event.listens_for(Engine, "connect")
