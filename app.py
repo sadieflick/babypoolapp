@@ -1,9 +1,11 @@
 import os
 import logging
-from flask import Flask, render_template, send_from_directory, redirect
+from datetime import timedelta
+from flask import Flask, render_template, send_from_directory, redirect, jsonify
 from flask_cors import CORS
-from flask_login import LoginManager, login_required
+from flask_login import LoginManager, login_required, current_user
 from flask_bcrypt import Bcrypt
+from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
 from config import Config
 from models import db, User
 from sqlalchemy import event
@@ -19,10 +21,17 @@ app = Flask(__name__,
             template_folder='./templates')
 app.config.from_object(Config)
 
+# Configure JWT settings
+app.config['JWT_SECRET_KEY'] = app.config['SECRET_KEY']
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)  # Default expiration for hosts
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)  # For longer sessions
+app.config['JWT_TOKEN_LOCATION'] = ['headers', 'cookies']  # Look for token in both headers and cookies
+
 # Initialize extensions
 db.init_app(app)
 CORS(app)
 bcrypt = Bcrypt(app)
+jwt = JWTManager(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'auth.host_login_page'
 

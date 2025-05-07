@@ -1,8 +1,15 @@
-from flask import Blueprint, request, jsonify, session, current_app, render_template, redirect, url_for, flash
+from flask import Blueprint, request, jsonify, session, current_app, render_template, redirect, url_for, flash, make_response
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_jwt_extended import (
+    create_access_token, create_refresh_token, 
+    get_jwt_identity, jwt_required,
+    set_access_cookies, set_refresh_cookies,
+    unset_jwt_cookies
+)
 from models import db, User, Event
 import re
+import json
 from datetime import datetime, timedelta
 
 auth_blueprint = Blueprint('auth', __name__)
@@ -111,17 +118,30 @@ def host_login():
     if not user.is_host:
         return jsonify({'error': 'This account is not registered as a host'}), 403
     
-    # Login the user
+    # Login the user using Flask-Login (for backward compatibility)
     login_user(user)
     
-    # Set shorter session expiry for hosts (1 week)
+    # Set shorter session expiry for hosts (7 days)
     session.permanent = True
     current_app.permanent_session_lifetime = timedelta(days=7)
     
     # Fetch hosted events count for dashboard redirection
     hosted_events_count = Event.query.filter_by(host_id=user.id).count()
     
-    return jsonify({
+    # Create identity for JWT tokens
+    identity = {
+        'id': user.id,
+        'email': user.email,
+        'is_host': user.is_host,
+        'type': 'host'
+    }
+    
+    # Create JWT tokens with appropriate expiration
+    access_token = create_access_token(identity=identity, expires_delta=timedelta(days=7))
+    refresh_token = create_refresh_token(identity=identity, expires_delta=timedelta(days=30))
+    
+    # Prepare user data for response
+    user_data = {
         'id': user.id,
         'email': user.email,
         'first_name': user.first_name,
@@ -130,7 +150,20 @@ def host_login():
         'is_host': user.is_host,
         'hosted_events_count': hosted_events_count,
         'message': 'Login successful'
-    })
+    }
+    
+    # Create response with tokens
+    response = jsonify(user_data)
+    
+    # Set JWT tokens in cookies for browser use
+    set_access_cookies(response, access_token)
+    set_refresh_cookies(response, refresh_token)
+    
+    # Also include tokens in JSON for client-side storage in localStorage
+    response.json['access_token'] = access_token
+    response.json['refresh_token'] = refresh_token
+    
+    return response
 
 @auth_blueprint.route('/guest_login', methods=['GET'])
 def guest_login_page():
@@ -428,9 +461,16 @@ def logout():
     
     # Check if the request is AJAX/API or browser-based
     if request.is_json or request.method == 'POST':
-        return jsonify({'message': 'Logged out successfully'})
+        response = jsonify({'message': 'Logged out successfully'})
+        # Clear JWT cookies
+        unset_jwt_cookies(response)
+        return response
     else:
-        return redirect(url_for('serve'))
+        # Create a redirect response
+        response = redirect(url_for('serve'))
+        # Clear JWT cookies
+        unset_jwt_cookies(response)
+        return response
 
 @auth_blueprint.route('/update-profile', methods=['PUT'])
 @login_required
