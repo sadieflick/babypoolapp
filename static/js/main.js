@@ -2,9 +2,30 @@
 // Simplified React app bundle
 // This is a temporary solution until we can get the full build process working
 
-// Create React elements manually
-const renderApp = () => {
-    // Display a loading message
+// Authentication helper
+const isAuthenticated = () => {
+    return localStorage.getItem('token') !== null;
+};
+
+const isHost = () => {
+    return localStorage.getItem('isHost') === 'true';
+};
+
+const getUserData = () => {
+    const userData = localStorage.getItem('currentUser');
+    if (userData) {
+        try {
+            return JSON.parse(userData);
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+            return null;
+        }
+    }
+    return null;
+};
+
+// Page rendering functions
+const renderHomePage = () => {
     document.getElementById('root').innerHTML = `
         <div style="font-family: 'Poppins', sans-serif; padding: 2rem; text-align: center;">
             <h1 style="color: #ff66b3; margin-bottom: 1rem;">Baby Pool App</h1>
@@ -75,5 +96,90 @@ const renderApp = () => {
     });
 };
 
-// Call the render function when the DOM is loaded
-document.addEventListener('DOMContentLoaded', renderApp);
+const renderDashboard = () => {
+    const userData = getUserData();
+    const userName = userData?.first_name || 'User';
+    const hostedEventsCount = userData?.hosted_events_count || 0;
+
+    document.getElementById('root').innerHTML = `
+        <div style="font-family: 'Poppins', sans-serif; min-height: 100vh; display: flex; flex-direction: column;">
+            <!-- Navigation Bar -->
+            <nav style="background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <h1 style="color: #ff66b3; margin: 0; font-size: 1.5rem;">Baby Pool</h1>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="color: #555;">Hello, ${userName}</span>
+                    <button id="logout-btn" style="background: none; border: none; color: #888; cursor: pointer;">Logout</button>
+                </div>
+            </nav>
+            
+            <!-- Main Content -->
+            <main style="flex: 1; padding: 2rem; background-color: #f8f9fa;">
+                <div style="max-width: 1200px; margin: 0 auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h2 style="color: #333; margin: 0;">Host Dashboard</h2>
+                        <a href="/host/event/create" style="text-decoration: none; background-color: #ff66b3; color: white; padding: 0.5rem 1rem; border-radius: 30px; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem;">
+                            <span>Create Event</span>
+                        </a>
+                    </div>
+                    
+                    ${hostedEventsCount === 0 ? `
+                        <div style="background: white; border-radius: 10px; padding: 2rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                            <img src="https://img.icons8.com/pastel-glyph/64/ff66b3/confetti.png" alt="Celebration" style="width: 64px; height: 64px; margin-bottom: 1rem;">
+                            <h3 style="color: #333; margin-bottom: 1rem;">Welcome to Baby Pool!</h3>
+                            <p style="color: #666; margin-bottom: 2rem;">You haven't created any baby shower events yet. Create your first event to get started!</p>
+                            <a href="/host/event/create" style="text-decoration: none; background-color: #ff66b3; color: white; padding: 0.75rem 1.5rem; border-radius: 30px; font-weight: 500; box-shadow: 0 4px 8px rgba(255, 102, 179, 0.3); transition: all 0.3s ease;">Create Your First Event</a>
+                        </div>
+                    ` : `
+                        <div style="background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                            <h3 style="color: #333; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #eee;">Your Events (${hostedEventsCount})</h3>
+                            <p>Loading your events...</p>
+                            <!-- Events would be loaded dynamically here -->
+                        </div>
+                    `}
+                </div>
+            </main>
+            
+            <!-- Footer -->
+            <footer style="background-color: white; padding: 1.5rem; text-align: center; box-shadow: 0 -2px 4px rgba(0,0,0,0.05);">
+                <p style="color: #888; margin: 0;">&copy; 2025 Baby Pool App</p>
+            </footer>
+        </div>
+    `;
+
+    // Add logout functionality
+    document.getElementById('logout-btn')?.addEventListener('click', () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('isHost');
+        localStorage.removeItem('currentUser');
+        window.location.href = '/';
+    });
+};
+
+// Routing
+const handleRouting = () => {
+    const path = window.location.pathname;
+    console.log('Handling route:', path, 'Auth status:', isAuthenticated(), 'Is host:', isHost());
+    
+    // If we're at the dashboard and logged in as a host, show the dashboard
+    if (path === '/host/dashboard') {
+        if (isAuthenticated() && isHost()) {
+            renderDashboard();
+            return;
+        } else {
+            // Not authenticated or not a host, redirect to login
+            window.location.href = '/auth/host_login';
+            return;
+        }
+    }
+    
+    // Default: render the home page for root or unhandled paths
+    renderHomePage();
+};
+
+// Call the routing handler when the DOM is loaded
+document.addEventListener('DOMContentLoaded', handleRouting);
+
+// Listen for navigation events (if using history API)
+window.addEventListener('popstate', handleRouting);
