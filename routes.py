@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app
 from flask_login import current_user, login_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, User, Event, DateGuess, HourGuess, MinuteGuess, NameGuess, Payment
 from werkzeug.utils import secure_filename
 import os
@@ -9,25 +10,46 @@ from utils import calculate_amount_owed
 
 api = Blueprint('api', __name__)
 
+# Helper function to get user from JWT identity
+def get_user_from_jwt():
+    """Get the current user based on JWT identity"""
+    jwt_identity = get_jwt_identity()
+    
+    # Handle both string and dictionary identity formats
+    if isinstance(jwt_identity, dict):
+        user_id = jwt_identity.get('id')
+    else:
+        user_id = jwt_identity
+        
+    if not user_id:
+        return None
+        
+    return User.query.get(user_id)
+
 # User endpoints
 @api.route('/users/me', methods=['GET'])
-@login_required
+@jwt_required()
 def get_current_user_info():
-    """Return information about the currently logged-in user"""
+    """Return information about the currently logged-in user using JWT"""
+    user = get_user_from_jwt()
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 401
+        
     user_data = {
-        'id': current_user.id,
-        'email': current_user.email,
-        'first_name': current_user.first_name,
-        'last_name': current_user.last_name,
-        'nickname': current_user.nickname,
-        'phone': current_user.phone,
-        'is_host': current_user.is_host
+        'id': user.id,
+        'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'nickname': user.nickname,
+        'phone': user.phone,
+        'is_host': user.is_host
     }
     
     # Include events if the user is a guest
-    if not current_user.is_host:
+    if not user.is_host:
         events_data = []
-        for event in current_user.events:
+        for event in user.events:
             events_data.append({
                 'id': event.id,
                 'title': event.title,
@@ -45,12 +67,17 @@ def allowed_file(filename):
 
 # Event routes
 @api.route('/events', methods=['GET'])
-@login_required
+@jwt_required()
 def get_events():
-    if current_user.is_host:
-        events = Event.query.filter_by(host_id=current_user.id).all()
+    user = get_user_from_jwt()
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 401
+        
+    if user.is_host:
+        events = Event.query.filter_by(host_id=user.id).all()
     else:
-        events = current_user.events
+        events = user.events
     
     events_data = []
     for event in events:
@@ -70,11 +97,19 @@ def get_events():
 @api.route('/events/<int:event_id>', methods=['GET'])
 def get_event(event_id):
     event = Event.query.get_or_404(event_id)
+    user = None
     
+    # Try to get user from JWT if present
+    try:
+        user = get_user_from_jwt()
+    except:
+        # No JWT token or invalid token
+        pass
+        
     # If user is not the host and not a guest, only return limited info
-    if not current_user.is_authenticated or (
-        current_user.id != event.host_id and 
-        current_user not in event.guests
+    if not user or (
+        user.id != event.host_id and 
+        user not in event.guests
     ):
         return jsonify({
             'id': event.id,
@@ -112,9 +147,14 @@ def get_event(event_id):
     return jsonify(event_data)
 
 @api.route('/events', methods=['POST'])
-@login_required
+@jwt_required()
 def create_event():
-    if not current_user.is_host:
+    user = get_user_from_jwt()
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 401
+        
+    if not user.is_host:
         return jsonify({'error': 'Only hosts can create events'}), 403
     
     data = request.json
@@ -148,7 +188,7 @@ def create_event():
         new_event = Event(
             event_code=Event.generate_event_code(),
             title=data.get('title', f"{data.get('mother_name')}'s Baby Shower"),
-            host_id=current_user.id,
+            host_id=user.id,
             mother_name=data.get('mother_name'),
             partner_name=data.get('partner_name'),
             event_date=event_date,
@@ -174,14 +214,14 @@ def create_event():
                     continue  # Skip invalid emails
                     
                 # Check if the user already exists
-                user = User.query.filter_by(email=email).first()
-                if not user:
-                    user = User(email=email)
-                    db.session.add(user)
+                guest_user = User.query.filter_by(email=email).first()
+                if not guest_user:
+                    guest_user = User(email=email)
+                    db.session.add(guest_user)
                 
                 # Add user to the event's guests
-                if user not in new_event.guests:
-                    new_event.guests.append(user)
+                if guest_user not in new_event.guests:
+                    new_event.guests.append(guest_user)
             
             db.session.commit()
         
@@ -190,8 +230,8 @@ def create_event():
         venmo_phone_last4 = data.get('venmo_phone_last4')
         
         if venmo_username and venmo_phone_last4:
-            current_user.venmo_username = venmo_username
-            current_user.venmo_phone_last4 = venmo_phone_last4
+            user.venmo_username = venmo_username
+            user.venmo_phone_last4 = venmo_phone_last4
             db.session.commit()
         
         return jsonify({
@@ -206,12 +246,17 @@ def create_event():
         return jsonify({'error': f"Failed to create event: {str(e)}"}), 400
 
 @api.route('/events/<int:event_id>', methods=['PUT'])
-@login_required
+@jwt_required()
 def update_event(event_id):
+    user = get_user_from_jwt()
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 401
+        
     event = Event.query.get_or_404(event_id)
     
     # Ensure only the host can update the event
-    if current_user.id != event.host_id:
+    if user.id != event.host_id:
         return jsonify({'error': 'Unauthorized'}), 403
     
     data = request.json
