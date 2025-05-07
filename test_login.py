@@ -15,29 +15,29 @@ class LoginTestCase(unittest.TestCase):
         """Set up test client and database"""
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        # Keep using the production database for these tests since we need persistence
         self.client = app.test_client()
         
         with app.app_context():
-            # Create tables
-            db.create_all()
-            
-            # Create test user
-            test_user = User(
-                email='test@example.com',
-                password_hash=generate_password_hash('password123'),
-                first_name='Test',
-                last_name='User',
-                is_host=True
-            )
-            db.session.add(test_user)
-            db.session.commit()
+            # Check if the test user already exists
+            test_user = User.query.filter_by(email='test@example.com').first()
+            if not test_user:
+                # Create test user
+                test_user = User(
+                    email='test@example.com',
+                    password_hash=generate_password_hash('password123'),
+                    first_name='Test',
+                    last_name='User',
+                    is_host=True
+                )
+                db.session.add(test_user)
+                db.session.commit()
 
     def tearDown(self):
         """Clean up after tests"""
         with app.app_context():
             db.session.remove()
-            db.drop_all()
+            # Don't drop tables in the production database
 
     def test_successful_login_api(self):
         """Test that the login API returns successful response with user data"""
@@ -87,7 +87,8 @@ class LoginTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         
         # Assert redirect location
-        self.assertTrue(response.location.endswith('/host/dashboard'))
+        location = response.location
+        self.assertTrue(location.endswith('/host/dashboard'), f"Expected redirect to end with /host/dashboard, got {location}")
 
     def test_dashboard_redirect_logged_in(self):
         """Test that /dashboard redirects to host/dashboard when logged in"""

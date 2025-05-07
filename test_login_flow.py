@@ -13,9 +13,9 @@ import json
 from urllib.parse import urlparse
 
 # Test config
-BASE_URL = "http://localhost:5000"  # Update this to match your server URL
-TEST_EMAIL = "test@example.com"  # Update with a valid test email
-TEST_PASSWORD = "password123"  # Update with a valid test password
+BASE_URL = "https://7c042730-8a5a-4e01-97b1-634fc69ab091-00-jr4li66n88of.worf.replit.dev"  # Your Replit URL
+TEST_EMAIL = "test@example.com"  # Using our test user
+TEST_PASSWORD = "password123"  # Using our test password
 
 
 def print_step(message):
