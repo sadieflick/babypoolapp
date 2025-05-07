@@ -80,6 +80,18 @@ def dashboard():
     """Host dashboard page"""
     return render_template('dashboard.html')
 
+@app.route('/events/new')
+@login_required
+def create_event_page():
+    """Event creation page"""
+    from flask import flash, redirect, url_for
+    from flask_login import current_user
+    
+    if not current_user.is_host:
+        flash("Only hosts can create events", "warning")
+        return redirect(url_for('dashboard'))
+    return render_template('event_create.html')
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):

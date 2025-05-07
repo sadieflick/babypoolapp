@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Event - Baby Pool</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        :root {
+            --primary: #ff99cc;
+            --primary-rgb: 255, 153, 204;
+            --primary-dark: #ff66b3;
+            --primary-light: #ffcce6;
+            --secondary: #99ccff;
+            --secondary-dark: #66b3ff;
+            --secondary-light: #cce6ff;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .page-header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .page-header h1 {
+            font-size: 2rem;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+        }
+        .form-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .form-control {
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(var(--primary-rgb), 0.25);
+        }
+        .form-text {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            padding: 10px 20px;
+            font-weight: 500;
+            border-radius: 30px;
+            box-shadow: 0 4px 8px rgba(var(--primary-rgb), 0.3);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(var(--primary-rgb), 0.4);
+        }
+        .btn-outline-secondary {
+            color: #6c757d;
+            border-color: #6c757d;
+            padding: 10px 20px;
+            font-weight: 500;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #6c757d;
+            color: white;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .step-dot {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: #ddd;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+        .step-dot.active {
+            background-color: var(--primary);
+            transform: scale(1.2);
+        }
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .form-error {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 8px;
+        }
+        .image-preview {
+            margin-top: 15px;
+            text-align: center;
+        }
+        .image-preview img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+        }
+        .footer {
+            margin-top: auto;
+            padding: 20px;
+            background-color: #343a40;
+            color: white;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    {% include 'includes/nav.html' %}
+    
+    <div class="container">
+        <div class="page-header">
+            <h1>Create New Event</h1>
+            <p>Set up a baby shower guessing game for your upcoming event.</p>
+        </div>
+        
+        <!-- React App Root for Event Creation -->
+        <div id="event-creation-root"></div>
+        
+        <!-- Fallback content if JavaScript is disabled -->
+        <noscript>
+            <div class="form-card">
+                <div class="alert alert-warning">
+                    <p>This page requires JavaScript to create an event. Please enable JavaScript in your browser or use our alternative method:</p>
+                    <p>Contact us at support@babypool.app to set up your event manually.</p>
+                </div>
+            </div>
+        </noscript>
+    </div>
+    
+    <footer class="footer">
+        <p>&copy; 2025 Baby Pool App</p>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/event-creation.js') }}"></script>
+</body>
+</html>
