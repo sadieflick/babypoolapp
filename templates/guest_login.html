@@ -54,6 +54,29 @@
             }
         }
         
+        // Helper functions for showing/hiding messages
+        function showError(message) {
+            const errorElement = document.getElementById('error-message');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 5000);
+        }
+        
+        function showSuccess(message) {
+            const successElement = document.getElementById('success-message');
+            successElement.textContent = message;
+            successElement.style.display = 'block';
+        }
+        
+        function hideMessages() {
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('success-message').style.display = 'none';
+        }
+        
         const root = document.getElementById('root');
         
         // Render guest login form
@@ -66,6 +89,9 @@
                         <h2 style="font-size: 2rem; color: #ff66b3; margin-bottom: 10px;">Join Baby Pool</h2>
                         <p style="color: #666;">Join the fun and guess when the baby will arrive!</p>
                     </div>
+                    
+                    <div id="error-message" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px; margin-bottom: 20px; font-weight: 500;"></div>
+                    <div id="success-message" style="padding: 15px; margin-bottom: 20px; border: 1px solid #c3e6cb; border-radius: 8px; color: #155724; background-color: #d4edda; display: none;"></div>
                     
                     <ul class="nav nav-tabs" id="loginTabs" role="tablist" style="border-bottom: 1px solid #ddd; margin-bottom: 20px;">
                         <li class="nav-item" role="presentation">
