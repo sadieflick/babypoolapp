@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { getCurrentUser } from '../utils/api';
 
 // Create the context
@@ -13,7 +14,7 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Restore user from localStorage on initial load
+  // Restore user from localStorage on initial load and set as temporary state
   useEffect(() => {
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
@@ -27,19 +28,54 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    // Check if user is already logged in
+    // Check if user is already logged in and verify token with backend
     const checkAuth = async () => {
       const token = localStorage.getItem('token');
       
       if (token) {
         try {
-          const userData = await getCurrentUser();
-          setCurrentUser(userData);
-          // Save user data to localStorage
-          localStorage.setItem('currentUser', JSON.stringify(userData));
+          // First verify if token is valid
+          const verifyResponse = await axios.get('/auth/token/verify', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            withCredentials: true
+          });
+          
+          if (verifyResponse.data.valid) {
+            // If token is valid, get the latest user data
+            const userData = await getCurrentUser();
+            setCurrentUser(userData);
+            // Save updated user data to localStorage
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+          } else {
+            // If token is invalid but we have a refresh token, try to refresh
+            const refreshToken = localStorage.getItem('refresh_token');
+            if (refreshToken) {
+              try {
+                const refreshResponse = await axios.post('/auth/token/refresh', {}, {
+                  withCredentials: true
+                });
+                
+                // Store the new access token
+                localStorage.setItem('token', refreshResponse.data.access_token);
+                
+                // Fetch user data with new token
+                const userData = await getCurrentUser();
+                setCurrentUser(userData);
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+              } catch (refreshErr) {
+                throw new Error('Token refresh failed');
+              }
+            } else {
+              throw new Error('No refresh token available');
+            }
+          }
         } catch (err) {
           console.error("Auth check failed:", err);
+          // Clear all auth data
           localStorage.removeItem('token');
+          localStorage.removeItem('refresh_token');
           localStorage.removeItem('isHost');
           localStorage.removeItem('currentUser');
           setCurrentUser(null);
@@ -78,12 +114,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('isHost');
-    localStorage.removeItem('currentUser');
-    setCurrentUser(null);
-    navigate('/');
+  const logout = async () => {
+    try {
+      // Call the logout API endpoint to invalidate server-side tokens
+      await axios.post('/auth/logout', {}, {
+        withCredentials: true
+      });
+    } catch (err) {
+      console.error('Logout error:', err);
+      // Continue with local logout even if server-side logout fails
+    } finally {
+      // Clean up all local storage items
+      localStorage.removeItem('token');
+      localStorage.removeItem('refresh_token'); 
+      localStorage.removeItem('isHost');
+      localStorage.removeItem('currentUser');
+      setCurrentUser(null);
+      navigate('/');
+    }
   };
 
   const updateUser = (updatedUserData) => {
