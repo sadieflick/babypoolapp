@@ -739,14 +739,19 @@ def get_hour_guesses(event_id):
     return jsonify(guesses_data)
 
 @api.route('/events/<int:event_id>/guesses/hour', methods=['POST'])
-@login_required
+@jwt_required()
 def create_hour_guess(event_id):
+    # Get user from JWT
+    user = get_user_from_jwt()
+    if not user:
+        return jsonify({'error': 'User not found'}), 401
+    
     event = Event.query.get_or_404(event_id)
     
     # Ensure the user is a guest of this event
-    if current_user not in event.guests and current_user.id != event.host_id:
+    if user not in event.guests and user.id != event.host_id:
         # Add the user as a guest if they're not already
-        event.guests.append(current_user)
+        event.guests.append(user)
         db.session.commit()
     
     data = request.json
@@ -767,7 +772,7 @@ def create_hour_guess(event_id):
     try:
         # Check if the user already has a guess for this hour
         existing_guess = HourGuess.query.filter_by(
-            user_id=current_user.id,
+            user_id=user.id,
             event_id=event_id,
             hour=hour,
             am_pm=am_pm
@@ -784,12 +789,12 @@ def create_hour_guess(event_id):
         ).first()
         
         if taken_guess:
-            user = User.query.get(taken_guess.user_id)
-            return jsonify({'error': f'This hour is already taken by {user.get_display_name()}'}), 400
+            guess_user = User.query.get(taken_guess.user_id)
+            return jsonify({'error': f'This hour is already taken by {guess_user.get_display_name()}'}), 400
         
         # Create the new guess
         new_guess = HourGuess(
-            user_id=current_user.id,
+            user_id=user.id,
             event_id=event_id,
             hour=hour,
             am_pm=am_pm
@@ -835,14 +840,19 @@ def get_minute_guesses(event_id):
     return jsonify(guesses_data)
 
 @api.route('/events/<int:event_id>/guesses/minute', methods=['POST'])
-@login_required
+@jwt_required()
 def create_minute_guess(event_id):
+    # Get user from JWT
+    user = get_user_from_jwt()
+    if not user:
+        return jsonify({'error': 'User not found'}), 401
+    
     event = Event.query.get_or_404(event_id)
     
     # Ensure the user is a guest of this event
-    if current_user not in event.guests and current_user.id != event.host_id:
+    if user not in event.guests and user.id != event.host_id:
         # Add the user as a guest if they're not already
-        event.guests.append(current_user)
+        event.guests.append(user)
         db.session.commit()
     
     data = request.json
@@ -858,7 +868,7 @@ def create_minute_guess(event_id):
     try:
         # Check if the user already has a guess for this minute
         existing_guess = MinuteGuess.query.filter_by(
-            user_id=current_user.id,
+            user_id=user.id,
             event_id=event_id,
             minute=minute
         ).first()
@@ -873,12 +883,12 @@ def create_minute_guess(event_id):
         ).first()
         
         if taken_guess:
-            user = User.query.get(taken_guess.user_id)
-            return jsonify({'error': f'This minute is already taken by {user.get_display_name()}'}), 400
+            guess_user = User.query.get(taken_guess.user_id)
+            return jsonify({'error': f'This minute is already taken by {guess_user.get_display_name()}'}), 400
         
         # Create the new guess
         new_guess = MinuteGuess(
-            user_id=current_user.id,
+            user_id=user.id,
             event_id=event_id,
             minute=minute
         )
@@ -926,17 +936,22 @@ def get_name_guesses(event_id):
     return jsonify(guesses_data)
 
 @api.route('/events/<int:event_id>/guesses/name', methods=['POST'])
-@login_required
+@jwt_required()
 def create_name_guess(event_id):
+    # Get user from JWT
+    user = get_user_from_jwt()
+    if not user:
+        return jsonify({'error': 'User not found'}), 401
+    
     event = Event.query.get_or_404(event_id)
     
     if not event.name_game_enabled:
         return jsonify({'error': 'Name game is not enabled for this event'}), 400
     
     # Ensure the user is a guest of this event
-    if current_user not in event.guests and current_user.id != event.host_id:
+    if user not in event.guests and user.id != event.host_id:
         # Add the user as a guest if they're not already
-        event.guests.append(current_user)
+        event.guests.append(user)
         db.session.commit()
     
     data = request.json
@@ -948,7 +963,7 @@ def create_name_guess(event_id):
     try:
         # Create the new name guess
         new_guess = NameGuess(
-            user_id=current_user.id,
+            user_id=user.id,
             event_id=event_id,
             name=name
         )
@@ -963,8 +978,13 @@ def create_name_guess(event_id):
         return jsonify({'error': str(e)}), 400
 
 @api.route('/events/<int:event_id>/guesses/<string:guess_type>/<int:guess_id>', methods=['DELETE'])
-@login_required
+@jwt_required()
 def delete_guess(event_id, guess_type, guess_id):
+    # Get user from JWT
+    user = get_user_from_jwt()
+    if not user:
+        return jsonify({'error': 'User not found'}), 401
+    
     event = Event.query.get_or_404(event_id)
     
     # Determine which model to use based on guess_type
@@ -985,7 +1005,7 @@ def delete_guess(event_id, guess_type, guess_id):
     
     # Ensure the user has permission to delete this guess
     # (either they are the host or it's their own guess)
-    if current_user.id != event.host_id and current_user.id != guess.user_id:
+    if user.id != event.host_id and user.id != guess.user_id:
         return jsonify({'error': 'Unauthorized'}), 403
     
     try:
@@ -999,42 +1019,52 @@ def delete_guess(event_id, guess_type, guess_id):
         return jsonify({'error': str(e)}), 400
 
 @api.route('/users/me', methods=['GET'])
-@login_required
+@jwt_required()
 def get_current_user():
+    # Get user from JWT
+    user = get_user_from_jwt()
+    if not user:
+        return jsonify({'error': 'User not found'}), 401
+    
     return jsonify({
-        'id': current_user.id,
-        'email': current_user.email,
-        'first_name': current_user.first_name,
-        'last_name': current_user.last_name,
-        'nickname': current_user.nickname,
-        'phone': current_user.phone,
-        'is_host': current_user.is_host,
-        'payment_method': current_user.payment_method
+        'id': user.id,
+        'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'nickname': user.nickname,
+        'phone': user.phone,
+        'is_host': user.is_host,
+        'payment_method': user.payment_method
     })
 
 @api.route('/users/me', methods=['PUT'])
-@login_required
+@jwt_required()
 def update_current_user():
+    # Get user from JWT
+    user = get_user_from_jwt()
+    if not user:
+        return jsonify({'error': 'User not found'}), 401
+    
     data = request.json
     
     try:
         if 'first_name' in data:
-            current_user.first_name = data['first_name']
+            user.first_name = data['first_name']
         if 'last_name' in data:
-            current_user.last_name = data['last_name']
+            user.last_name = data['last_name']
         if 'nickname' in data:
-            current_user.nickname = data['nickname']
+            user.nickname = data['nickname']
         if 'phone' in data:
-            current_user.phone = data['phone']
+            user.phone = data['phone']
         if 'payment_method' in data:
-            current_user.payment_method = data['payment_method']
+            user.payment_method = data['payment_method']
         
         # Host-specific fields
-        if current_user.is_host:
+        if user.is_host:
             if 'venmo_username' in data:
-                current_user.venmo_username = data['venmo_username']
+                user.venmo_username = data['venmo_username']
             if 'venmo_phone_last4' in data:
-                current_user.venmo_phone_last4 = data['venmo_phone_last4']
+                user.venmo_phone_last4 = data['venmo_phone_last4']
         
         db.session.commit()
         
@@ -1045,19 +1075,24 @@ def update_current_user():
         return jsonify({'error': str(e)}), 400
 
 @api.route('/events/<int:event_id>/user/guesses', methods=['GET'])
-@login_required
+@jwt_required()
 def get_user_guesses(event_id):
+    # Get user from JWT
+    user = get_user_from_jwt()
+    if not user:
+        return jsonify({'error': 'User not found'}), 401
+    
     event = Event.query.get_or_404(event_id)
     
     # Ensure the user is a guest of this event or the host
-    if current_user not in event.guests and current_user.id != event.host_id:
+    if user not in event.guests and user.id != event.host_id:
         return jsonify({'error': 'Unauthorized'}), 403
     
     # Get all guesses for the current user in this event
-    date_guesses = DateGuess.query.filter_by(user_id=current_user.id, event_id=event_id).all()
-    hour_guesses = HourGuess.query.filter_by(user_id=current_user.id, event_id=event_id).all()
-    minute_guesses = MinuteGuess.query.filter_by(user_id=current_user.id, event_id=event_id).all()
-    name_guesses = NameGuess.query.filter_by(user_id=current_user.id, event_id=event_id).all()
+    date_guesses = DateGuess.query.filter_by(user_id=user.id, event_id=event_id).all()
+    hour_guesses = HourGuess.query.filter_by(user_id=user.id, event_id=event_id).all()
+    minute_guesses = MinuteGuess.query.filter_by(user_id=user.id, event_id=event_id).all()
+    name_guesses = NameGuess.query.filter_by(user_id=user.id, event_id=event_id).all()
     
     # Format guesses
     date_guesses_data = [{'id': g.id, 'date': g.guess_date.strftime('%Y-%m-%d')} for g in date_guesses]
@@ -1069,7 +1104,7 @@ def get_user_guesses(event_id):
     total_guesses = len(date_guesses) + len(hour_guesses) + len(minute_guesses) + len(name_guesses)
     amount_owed = total_guesses * event.guess_price
     
-    payments = Payment.query.filter_by(user_id=current_user.id, event_id=event_id).all()
+    payments = Payment.query.filter_by(user_id=user.id, event_id=event_id).all()
     total_paid = sum(payment.amount for payment in payments)
     
     payment_status = 'paid' if total_paid >= amount_owed else 'pending'
