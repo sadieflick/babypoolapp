@@ -118,6 +118,7 @@ def serve(path):
         'host/event/',
         'guest/dashboard',
         'guest/event/',
+        'guest/login',
         'auth/guest_login'
     ]
     
