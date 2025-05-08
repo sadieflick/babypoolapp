@@ -646,14 +646,19 @@ def get_date_guesses(event_id):
     return jsonify(guesses_data)
 
 @api.route('/events/<int:event_id>/guesses/date', methods=['POST'])
-@login_required
+@jwt_required()
 def create_date_guess(event_id):
+    # Get user from JWT
+    user = get_user_from_jwt()
+    if not user:
+        return jsonify({'error': 'User not found'}), 401
+    
     event = Event.query.get_or_404(event_id)
     
     # Ensure the user is a guest of this event
-    if current_user not in event.guests and current_user.id != event.host_id:
+    if user not in event.guests and user.id != event.host_id:
         # Add the user as a guest if they're not already
-        event.guests.append(current_user)
+        event.guests.append(user)
         db.session.commit()
     
     data = request.json
@@ -668,7 +673,7 @@ def create_date_guess(event_id):
         
         # Check if the user already has a guess for this date
         existing_guess = DateGuess.query.filter_by(
-            user_id=current_user.id,
+            user_id=user.id,
             event_id=event_id,
             guess_date=date_obj
         ).first()
@@ -683,12 +688,12 @@ def create_date_guess(event_id):
         ).first()
         
         if taken_guess:
-            user = User.query.get(taken_guess.user_id)
-            return jsonify({'error': f'This date is already taken by {user.get_display_name()}'}), 400
+            guess_user = User.query.get(taken_guess.user_id)
+            return jsonify({'error': f'This date is already taken by {guess_user.get_display_name()}'}), 400
         
         # Create the new guess
         new_guess = DateGuess(
-            user_id=current_user.id,
+            user_id=user.id,
             event_id=event_id,
             guess_date=date_obj
         )
