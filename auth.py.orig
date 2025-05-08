@@ -235,7 +235,7 @@ def guest_login():
         
         # Create tokens with 30-day expiration for guests (longer than hosts)
         access_token = create_access_token(
-            identity=str(user.id),  # Convert to string to satisfy JWT requirements
+            identity=user.id,
             additional_claims={
                 'is_host': user.is_host,
                 'email': user.email
@@ -243,7 +243,7 @@ def guest_login():
             expires_delta=timedelta(days=30)
         )
         refresh_token = create_refresh_token(
-            identity=str(user.id),  # Convert to string to satisfy JWT requirements
+            identity=user.id,
             additional_claims={
                 'is_host': user.is_host,
                 'email': user.email
@@ -366,7 +366,7 @@ def guest_login():
         
         # Create tokens with 30-day expiration for guests (longer than hosts)
         access_token = create_access_token(
-            identity=str(user.id),  # Convert to string to satisfy JWT requirements
+            identity=user.id,
             additional_claims={
                 'is_host': user.is_host,
                 'email': user.email
@@ -374,7 +374,7 @@ def guest_login():
             expires_delta=timedelta(days=30)
         )
         refresh_token = create_refresh_token(
-            identity=str(user.id),  # Convert to string to satisfy JWT requirements
+            identity=user.id,
             additional_claims={
                 'is_host': user.is_host,
                 'email': user.email
@@ -521,7 +521,7 @@ def guest_select_event():
     
     # Create tokens with 30-day expiration for guests (longer than hosts)
     access_token = create_access_token(
-        identity=str(user.id),  # Convert to string to satisfy JWT requirements
+        identity=user.id,
         additional_claims={
             'is_host': user.is_host,
             'email': user.email
@@ -529,7 +529,7 @@ def guest_select_event():
         expires_delta=timedelta(days=30)
     )
     refresh_token = create_refresh_token(
-        identity=str(user.id),  # Convert to string to satisfy JWT requirements
+        identity=user.id,
         additional_claims={
             'is_host': user.is_host,
             'email': user.email
@@ -616,7 +616,7 @@ def refresh_token():
     current_user_identity = get_jwt_identity()
     
     # Create a new access token
-    access_token = create_access_token(identity=str(current_user_identity))
+    access_token = create_access_token(identity=current_user_identity)
     
     # Create response with the new token
     response = jsonify({
