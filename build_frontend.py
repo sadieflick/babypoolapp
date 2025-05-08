@@ -1316,8 +1316,24 @@ const handleRouting = async () => {
         if (isAuthenticated() && !isHost()) {
             // Extract the event ID from the URL
             const eventId = path.split('/')[3];
-            // Redirect to the regular event page which serves as the dashboard
-            window.location.href = `/guest/event/${eventId}`;
+            // We should render a guest dashboard here, but for now
+            // we'll leave it as is and not redirect
+            renderHomePage();
+            return;
+        } else {
+            // Not authenticated as guest, redirect to login
+            window.location.href = '/guest/login';
+            return;
+        }
+    }
+    
+    // Regular guest event page - match pattern /guest/event/:eventId
+    if (path.match(/^\/guest\/event\/\d+$/)) {
+        if (isAuthenticated() && !isHost()) {
+            // Extract the event ID from the URL
+            const eventId = path.split('/')[3];
+            // We should render a guest event page here
+            renderHomePage();
             return;
         } else {
             // Not authenticated as guest, redirect to login
