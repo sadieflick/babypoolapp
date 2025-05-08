@@ -635,6 +635,7 @@ const GuestLogin = () => {
         {loginStep === 'initial' && renderInitialForm()}
         {loginStep === 'event-code' && renderEventCodeForm()}
         {loginStep === 'search-mother' && renderMotherSearchForm()}
+        {loginStep === 'name-only' && renderNameOnlyForm()}
         {loginStep === 'user-info' && renderUserInfoForm()}
         
         <div className="auth-links">

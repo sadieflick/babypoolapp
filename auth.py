@@ -310,9 +310,19 @@ def guest_login():
         first_name = data.get('first_name')
         last_name = data.get('last_name')
         phone = data.get('phone')
+        nickname = data.get('nickname')  # For name-only flow
         
-        # Need either email or first/last name
-        if not email and (not first_name or not last_name) and not phone:
+        # Start with name-only flow if no identifying info is provided
+        if not email and not first_name and not last_name and not phone and not nickname:
+            return jsonify({
+                'status': 'need_name_only',
+                'event_id': event.id,
+                'event_title': event.title,
+                'message': 'Please tell us your name to get started'
+            }), 200
+        
+        # Need either email or first/last name or phone
+        if not email and not nickname and (not first_name or not last_name) and not phone:
             return jsonify({
                 'status': 'need_user_info',
                 'event_id': event.id,
@@ -330,6 +340,26 @@ def guest_login():
         # Then check by phone if provided and still no user found
         if not user and phone:
             user = User.query.filter_by(phone=phone).first()
+            
+        # Check by nickname if provided (for name-only flow)
+        if not user and nickname:
+            # Check if there's a unique match by nickname in this event
+            matching_guests = []
+            for guest in event.guests:
+                if guest.nickname and guest.nickname.lower() == nickname.lower():
+                    matching_guests.append(guest)
+            
+            # If exactly one match, use that user
+            if len(matching_guests) == 1:
+                user = matching_guests[0]
+            # If multiple matches, return status to get more info
+            elif len(matching_guests) > 1:
+                return jsonify({
+                    'status': 'need_user_info',
+                    'event_id': event.id,
+                    'event_title': event.title,
+                    'message': 'Multiple users with this name found. Please provide more information.'
+                }), 200
         
         # Finally check by name match in this specific event if both first and last name provided
         if not user and first_name and last_name:
@@ -346,6 +376,7 @@ def guest_login():
                 email=email,
                 first_name=first_name,
                 last_name=last_name,
+                nickname=nickname,
                 phone=phone,
                 is_host=False
             )
@@ -358,6 +389,8 @@ def guest_login():
                 user.last_name = last_name
             if phone and not user.phone:
                 user.phone = phone
+            if nickname:
+                user.nickname = nickname
         
         # Add user to event guests if not already
         if user not in event.guests:
