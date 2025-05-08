@@ -42,12 +42,8 @@ const GuestLogin = () => {
           delete userData.access_token;
           delete userData.refresh_token;
           
-          // Store refresh token
-          if (refresh_token) {
-            localStorage.setItem('refresh_token', refresh_token);
-          }
-          
-          login(userData, access_token || 'dummy-token');
+          // Pass both tokens to the login method
+          login(userData, access_token, refresh_token);
         } else if (response.status === 'need_event') {
           setLoginStep('event-code');
         } else if (response.status === 'need_profile_info') {
@@ -92,12 +88,8 @@ const GuestLogin = () => {
           delete userData.access_token;
           delete userData.refresh_token;
           
-          // Store refresh token
-          if (refresh_token) {
-            localStorage.setItem('refresh_token', refresh_token);
-          }
-          
-          login(userData, access_token || 'dummy-token');
+          // Pass both tokens to the login method
+          login(userData, access_token, refresh_token);
         } else if (response.status === 'need_user_info') {
           setLoginStep('user-info');
           setSelectedEvent({ 
@@ -175,12 +167,8 @@ const GuestLogin = () => {
         delete userData.access_token;
         delete userData.refresh_token;
         
-        // Store refresh token
-        if (refresh_token) {
-          localStorage.setItem('refresh_token', refresh_token);
-        }
-        
-        login(userData, access_token || 'dummy-token');
+        // Pass both tokens to the login method
+        login(userData, access_token, refresh_token);
         navigate(`/guest/event/${response.event_id}`);
       } else if (response.error) {
         setError(response.error);

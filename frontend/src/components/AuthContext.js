@@ -25,17 +25,20 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('currentUser');
       }
     }
+    setLoading(false);
   }, []);
 
   useEffect(() => {
     // Check if user is already logged in and verify token with backend
     const checkAuth = async () => {
+      if (loading) return; // Wait until initial load is complete
+      
       const token = localStorage.getItem('token');
       
-      if (token) {
+      if (token && currentUser) {
         try {
           // First verify if token is valid
-          const verifyResponse = await axios.get('/auth/token/verify', {
+          const verifyResponse = await axios.get('/auth/verify-token', {
             headers: {
               'Authorization': `Bearer ${token}`
             },
@@ -53,7 +56,10 @@ export const AuthProvider = ({ children }) => {
             const refreshToken = localStorage.getItem('refresh_token');
             if (refreshToken) {
               try {
-                const refreshResponse = await axios.post('/auth/token/refresh', {}, {
+                const refreshResponse = await axios.post('/auth/refresh-token', {}, {
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  },
                   withCredentials: true
                 });
                 
@@ -82,17 +88,28 @@ export const AuthProvider = ({ children }) => {
           setError("Your session has expired. Please log in again.");
         }
       }
-      
-      setLoading(false);
     };
     
     checkAuth();
-  }, []);
+  }, [currentUser, loading]);
 
-  const login = (userData, token) => {
+  const login = (userData, accessToken, refreshToken = null) => {
     console.log("Login called with userData:", userData);
-    localStorage.setItem('token', token);
-    localStorage.setItem('isHost', userData.is_host);
+    
+    if (!accessToken) {
+      console.error("No access token provided during login");
+      setError("Authentication failed. Please try again.");
+      return;
+    }
+    
+    // Store tokens
+    localStorage.setItem('token', accessToken);
+    if (refreshToken) {
+      localStorage.setItem('refresh_token', refreshToken);
+    }
+    
+    // Store user data
+    localStorage.setItem('isHost', userData.is_host || false);
     localStorage.setItem('currentUser', JSON.stringify(userData));
     setCurrentUser(userData);
     setError(null);
@@ -116,8 +133,10 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
+      const token = localStorage.getItem('token');
       // Call the logout API endpoint to invalidate server-side tokens
       await axios.post('/auth/logout', {}, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         withCredentials: true
       });
     } catch (err) {
