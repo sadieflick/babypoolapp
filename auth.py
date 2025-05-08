@@ -102,7 +102,17 @@ def host_login_page():
 
 @auth_blueprint.route('/host/login', methods=['POST'])
 def host_login():
-    data = request.json
+    # Enhanced error handling for request data parsing
+    try:
+        data = request.json
+        if not data:
+            # Try form data if JSON is empty or None
+            data = request.form.to_dict()
+        
+        print(f"DEBUG: Login request data: {data}")
+    except Exception as e:
+        print(f"ERROR: Failed to parse request data: {str(e)}")
+        return jsonify({'error': 'Invalid request format'}), 400
     
     email = data.get('email')
     password = data.get('password')
@@ -147,13 +157,10 @@ def host_login():
     # Fetch hosted events count for dashboard redirection
     hosted_events_count = Event.query.filter_by(host_id=user.id).count()
     
-    # Create identity for JWT tokens
-    identity = {
-        'id': user.id,
-        'email': user.email,
-        'is_host': user.is_host,
-        'type': 'host'
-    }
+    # Create identity for JWT tokens - using string ID for compatibility
+    # Note: Flask-JWT-Extended requires identity to be a JSON serializable type
+    # We're using the user ID as a string to ensure compatibility
+    identity = str(user.id)
     
     # Create JWT tokens with appropriate expiration
     access_token = create_access_token(identity=identity, expires_delta=timedelta(days=7))

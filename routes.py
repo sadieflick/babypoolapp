@@ -13,18 +13,26 @@ api = Blueprint('api', __name__)
 # Helper function to get user from JWT identity
 def get_user_from_jwt():
     """Get the current user based on JWT identity"""
-    jwt_identity = get_jwt_identity()
-    
-    # Handle both string and dictionary identity formats
-    if isinstance(jwt_identity, dict):
-        user_id = jwt_identity.get('id')
-    else:
-        user_id = jwt_identity
+    try:
+        jwt_identity = get_jwt_identity()
         
-    if not user_id:
+        # Now we're using string ID for consistent compatibility
+        # Convert to int if it's a string
+        if isinstance(jwt_identity, str):
+            user_id = int(jwt_identity)
+        # Legacy support for dict format if needed
+        elif isinstance(jwt_identity, dict):
+            user_id = jwt_identity.get('id')
+        else:
+            user_id = jwt_identity
+            
+        if not user_id:
+            return None
+            
+        return User.query.get(user_id)
+    except Exception as e:
+        print(f"Error getting user from JWT: {str(e)}")
         return None
-        
-    return User.query.get(user_id)
 
 # User endpoints
 @api.route('/users/me', methods=['GET'])
