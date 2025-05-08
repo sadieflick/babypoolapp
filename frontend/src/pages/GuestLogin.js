@@ -1,88 +1,101 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { loginGuest, findEventByCode, searchEventByMother, selectEvent } from '../utils/api';
+import { loginGuest, selectEvent, searchEventByMother } from '../utils/api';
 import { useAuth } from '../components/AuthContext';
 import NameOnlyForm from '../components/NameOnlyForm';
 
-const GuestLogin = () => {
-  const [loginStep, setLoginStep] = useState('initial'); // 'initial', 'event-code', 'search-mother', 'name-only', 'user-info'
-  const [email, setEmail] = useState('');
-  const [eventCode, setEventCode] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [nickname, setNickname] = useState('');
-  const [nameOnly, setNameOnly] = useState(''); // For name-only step
-  const [phone, setPhone] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('venmo');
-  const [events, setEvents] = useState([]);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+// State reducer pattern for more consistent state updates
+const initialState = {
+  step: 'initial',                // 'initial', 'event-code', 'search-mother', 'name-only', 'user-info'
+  email: '',
+  eventCode: '',
+  searchTerm: '',
+  firstName: '',
+  lastName: '',
+  nickname: '',
+  nameOnly: '',
+  phone: '',
+  paymentMethod: 'venmo',
+  events: [],
+  selectedEvent: null,
+  error: '',
+  loading: false,
+  loginResponse: null
+};
+
+function reducer(state, action) {
+  console.log("🔵 REDUCER - Action:", action.type, action.payload);
   
+  switch (action.type) {
+    case 'SET_STEP':
+      return { ...state, step: action.payload };
+    case 'SET_FIELD':
+      return { ...state, [action.field]: action.payload };
+    case 'SET_ERROR':
+      return { ...state, error: action.payload };
+    case 'SET_LOADING':
+      return { ...state, loading: action.payload };
+    case 'SET_SELECTED_EVENT':
+      return { ...state, selectedEvent: action.payload };
+    case 'SET_EVENTS':
+      return { ...state, events: action.payload };
+    case 'SET_LOGIN_RESPONSE':
+      return { ...state, loginResponse: action.payload };
+    case 'HANDLE_NEED_NAME_ONLY':
+      console.log("🔵 REDUCER - Handling need_name_only", action.payload);
+      return { 
+        ...state, 
+        step: 'name-only',
+        selectedEvent: {
+          id: action.payload.event_id,
+          title: action.payload.event_title
+        },
+        loading: false
+      };
+    case 'HANDLE_NEED_USER_INFO':
+      return { 
+        ...state, 
+        step: 'user-info',
+        selectedEvent: {
+          id: action.payload.event_id,
+          title: action.payload.event_title
+        },
+        loading: false
+      };
+    case 'RESET_FORM':
+      return { ...initialState };
+    default:
+      return state;
+  }
+}
+
+const GuestLogin = () => {
+  const [state, dispatch] = useReducer(reducer, initialState);
   const { login } = useAuth();
   const navigate = useNavigate();
   
-  // State for storing the login response
-  const [loginResponse, setLoginResponse] = useState(null);
-
-  // Keep track of mount status to avoid state updates on unmounted component
-  const isMounted = React.useRef(true);
+  // Destructure state for easier access
+  const { 
+    step, email, eventCode, searchTerm, firstName, lastName, 
+    nickname, nameOnly, phone, paymentMethod, events, 
+    selectedEvent, error, loading, loginResponse 
+  } = state;
 
   // Component lifecycle tracking
   useEffect(() => {
     console.log("🔵 FRONTEND - GuestLogin component mounted");
-    
-    // Set mounted flag
-    isMounted.current = true;
-    
-    // Cleanup when component unmounts
     return () => {
       console.log("🔵 FRONTEND - GuestLogin component unmounting");
-      isMounted.current = false;
     };
   }, []);
 
-  // Use effect to respond to login response changes - this will only run when loginResponse changes
+  // Handle login response changes
   useEffect(() => {
     if (!loginResponse) return;
     
-    console.log("🔵 FRONTEND - useEffect triggered with loginResponse", loginResponse);
-    console.log("🔵 FRONTEND - Current loginStep before update:", loginStep);
+    console.log("🔵 FRONTEND - Login response effect triggered:", loginResponse);
     
-    // Make sure component is still mounted
-    if (!isMounted.current) {
-      console.log("🔵 FRONTEND - Skipping state update on unmounted component");
-      return;
-    }
-    
-    if (loginResponse.status === 'need_name_only') {
-      console.log("🔵 FRONTEND - Setting login step to name-only from useEffect");
-      
-      // Make state update synchronously one at a time to ensure proper order
-      setSelectedEvent({ 
-        id: loginResponse.event_id,
-        title: loginResponse.event_title
-      });
-      
-      // Use direct setter to force name-only step
-      setLoginStep('name-only');
-      
-      console.log("🔵 FRONTEND - Name-only step applied");
-    } else if (loginResponse.status === 'need_user_info') {
-      console.log("🔵 FRONTEND - Setting login step to user-info from useEffect");
-      
-      // Make state update synchronously one at a time to ensure proper order
-      setSelectedEvent({ 
-        id: loginResponse.event_id,
-        title: loginResponse.event_title
-      });
-      
-      // Use direct setter to force user-info step
-      setLoginStep('user-info');
-      
-      console.log("🔵 FRONTEND - User-info step applied");
-    } else if (loginResponse.status === 'logged_in') {
+    if (loginResponse.status === 'logged_in') {
       const { access_token, refresh_token } = loginResponse;
       
       // Remove tokens from user data before passing it to AuthContext
@@ -98,14 +111,14 @@ const GuestLogin = () => {
       // Pass both tokens to the login method - this will handle the redirect
       login(userData, access_token, refresh_token);
     }
-  }, [loginResponse, login, loginStep]);
+  }, [loginResponse, login]);
 
   const handleInitialSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    dispatch({ type: 'SET_ERROR', payload: '' });
+    dispatch({ type: 'SET_LOADING', payload: true });
     
-    console.log("🔵 FRONTEND - Guest Login: Initial form submitted with email:", email || "(none)");
+    console.log("🔵 FRONTEND - Initial form submitted with email:", email || "(none)");
     
     if (email) {
       try {
@@ -115,122 +128,122 @@ const GuestLogin = () => {
           email 
         });
         
-        console.log("🔵 FRONTEND - Guest Login: Email login response:", response);
+        console.log("🔵 FRONTEND - Email login response:", response);
         
-        // Special cases that we want to handle directly instead of through useEffect
         if (response.status === 'need_event') {
-          console.log("🔵 FRONTEND - Email login requires event selection");
-          setLoginStep('event-code');
+          dispatch({ type: 'SET_STEP', payload: 'event-code' });
         } else if (response.status === 'need_profile_info') {
-          console.log("🔵 FRONTEND - Email login requires profile completion");
-          // Handle profile completion
-          setLoginStep('user-info');
-          setSelectedEvent({ id: response.event_id });
+          dispatch({ 
+            type: 'HANDLE_NEED_USER_INFO', 
+            payload: { 
+              event_id: response.event_id,
+              event_title: response.event_title || 'Event'
+            } 
+          });
         } else {
-          // For other responses, use the loginResponse state to trigger useEffect
-          setLoginResponse(response);
+          dispatch({ type: 'SET_LOGIN_RESPONSE', payload: response });
         }
       } catch (err) {
         console.error("Email login error:", err);
-        setError(err.response?.data?.error || 'Login failed. Please try again.');
+        dispatch({ 
+          type: 'SET_ERROR', 
+          payload: err.response?.data?.error || 'Login failed. Please try again.' 
+        });
       } finally {
-        setLoading(false);
+        dispatch({ type: 'SET_LOADING', payload: false });
       }
     } else {
       console.log("No email provided, proceeding to event code entry");
-      setLoginStep('event-code');
-      setLoading(false);
+      dispatch({ type: 'SET_STEP', payload: 'event-code' });
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
   const handleEventCodeSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    dispatch({ type: 'SET_ERROR', payload: '' });
+    dispatch({ type: 'SET_LOADING', payload: true });
     
-    console.log("Event code submitted:", eventCode);
+    console.log("🔵 FRONTEND - Event code submitted:", eventCode);
     
     try {
-      // Skip the findEventByCode step and go directly to login with event code
-      // This prevents the two-step process that was causing issues
-      console.log("🔵 FRONTEND - Guest Login: Attempting login with event code:", eventCode);
+      console.log("🔵 FRONTEND - Attempting login with event code:", eventCode);
       const response = await loginGuest({
         login_type: 'event_code',
         event_code: eventCode,
         email
       });
       
-      console.log("🔵 FRONTEND - Guest Login: Event code login response:", response);
-      console.log("🔵 FRONTEND - Guest Login: Response status:", response.status);
-      console.log("🔵 FRONTEND - Guest Login: Response type:", typeof response.status);
+      console.log("🔵 FRONTEND - Event code login response:", response);
       
-      // Handle the response based on status
+      // Process the response based on status
       if (response.status === 'need_name_only') {
-        console.log("🔵 FRONTEND - Name-only form required, using standalone component");
+        console.log("🔵 FRONTEND - Got need_name_only status, dispatching action");
         
-        // Immediately render the NameOnlyForm as a standalone component
-        // instead of managing form state in this component
-        setSelectedEvent({ 
-          id: response.event_id,
-          title: response.event_title
+        dispatch({
+          type: 'HANDLE_NEED_NAME_ONLY',
+          payload: {
+            event_id: response.event_id,
+            event_title: response.event_title
+          }
         });
         
-        // Important: Use setTimeout to ensure state updates happen in separate cycles
-        // This prevents state batching issues that might be causing the form not to update
-        setTimeout(() => {
-          setLoginStep('name-only');
-          console.log("🔵 FRONTEND - Login step set to name-only with timeout");
-        }, 0);
+        console.log("🔵 FRONTEND - State after dispatch:", state);
       } else {
-        // For other responses, use the loginResponse state
-        setLoginResponse(response);
+        dispatch({ type: 'SET_LOGIN_RESPONSE', payload: response });
       }
     } catch (err) {
       console.error("Event code login error:", err);
-      setError(err.response?.data?.error || 'Event not found. Please check the code.');
+      dispatch({ 
+        type: 'SET_ERROR', 
+        payload: err.response?.data?.error || 'Event not found. Please check the code.' 
+      });
     } finally {
-      setLoading(false);
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
   const handleMotherSearchSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    dispatch({ type: 'SET_ERROR', payload: '' });
+    dispatch({ type: 'SET_LOADING', payload: true });
     
     try {
       const response = await searchEventByMother(searchTerm);
       
       if (response.status === 'events_found') {
-        setEvents(response.events);
+        dispatch({ type: 'SET_EVENTS', payload: response.events });
       } else if (response.error) {
-        setError(response.error);
+        dispatch({ type: 'SET_ERROR', payload: response.error });
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'No events found with that name.');
+      dispatch({ 
+        type: 'SET_ERROR', 
+        payload: err.response?.data?.error || 'No events found with that name.' 
+      });
     } finally {
-      setLoading(false);
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
   const handleSelectEvent = (event) => {
-    setSelectedEvent(event);
-    setLoginStep('user-info');
+    dispatch({ type: 'SET_SELECTED_EVENT', payload: event });
+    dispatch({ type: 'SET_STEP', payload: 'user-info' });
   };
 
   const handleNameOnlySubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    dispatch({ type: 'SET_ERROR', payload: '' });
+    dispatch({ type: 'SET_LOADING', payload: true });
     
     if (!nameOnly.trim()) {
-      setError('Please enter your name');
-      setLoading(false);
+      dispatch({ type: 'SET_ERROR', payload: 'Please enter your name' });
+      dispatch({ type: 'SET_LOADING', payload: false });
       return;
     }
     
     try {
-      console.log("🔵 FRONTEND - Guest Login: Submitting name-only form:", { 
+      console.log("🔵 FRONTEND - Submitting name-only form:", { 
         event_id: selectedEvent.id, 
         nickname: nameOnly 
       });
@@ -240,40 +253,46 @@ const GuestLogin = () => {
         nickname: nameOnly
       });
       
-      console.log("🔵 FRONTEND - Guest Login: Name-only response:", response);
+      console.log("🔵 FRONTEND - Name-only response:", response);
       
-      // Special case for need_name_only status - we want to show error immediately
       if (response.status === 'need_name_only') {
-        // Still in name-only mode, but need a different name
-        setError(response.message || 'Please provide a more specific name');
+        dispatch({ 
+          type: 'SET_ERROR', 
+          payload: response.message || 'Please provide a more specific name' 
+        });
       } else if (response.error) {
-        setError(response.error);
+        dispatch({ type: 'SET_ERROR', payload: response.error });
       } else {
-        // For other responses like logged_in or need_user_info, use the loginResponse state
-        setLoginResponse(response);
+        dispatch({ type: 'SET_LOGIN_RESPONSE', payload: response });
       }
     } catch (err) {
       console.error("Name-only form error:", err);
-      setError(err.response?.data?.error || 'Login failed. Please try again.');
+      dispatch({ 
+        type: 'SET_ERROR', 
+        payload: err.response?.data?.error || 'Login failed. Please try again.' 
+      });
     } finally {
-      setLoading(false);
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
   const handleUserInfoSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    dispatch({ type: 'SET_ERROR', payload: '' });
+    dispatch({ type: 'SET_LOADING', payload: true });
     
     if (!firstName || !lastName) {
-      setError('Please enter your first and last name');
-      setLoading(false);
+      dispatch({ type: 'SET_ERROR', payload: 'Please enter your first and last name' });
+      dispatch({ type: 'SET_LOADING', payload: false });
       return;
     }
     
     if (!email && !phone) {
-      setError('Please enter either your email or phone number');
-      setLoading(false);
+      dispatch({ 
+        type: 'SET_ERROR', 
+        payload: 'Please enter either your email or phone number' 
+      });
+      dispatch({ type: 'SET_LOADING', payload: false });
       return;
     }
     
@@ -288,18 +307,20 @@ const GuestLogin = () => {
         payment_method: paymentMethod
       });
       
-      console.log("🔵 FRONTEND - Guest Login: User info response:", response);
+      console.log("🔵 FRONTEND - User info response:", response);
       
       if (response.error) {
-        setError(response.error);
+        dispatch({ type: 'SET_ERROR', payload: response.error });
       } else {
-        // Use the loginResponse state for all other responses
-        setLoginResponse(response);
+        dispatch({ type: 'SET_LOGIN_RESPONSE', payload: response });
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed. Please try again.');
+      dispatch({ 
+        type: 'SET_ERROR', 
+        payload: err.response?.data?.error || 'Login failed. Please try again.' 
+      });
     } finally {
-      setLoading(false);
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
@@ -315,7 +336,7 @@ const GuestLogin = () => {
             type="email"
             id="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'email', payload: e.target.value })}
             placeholder="Enter your email"
           />
         </div>
@@ -333,7 +354,7 @@ const GuestLogin = () => {
         <button 
           type="button" 
           className="btn btn-secondary"
-          onClick={() => setLoginStep('event-code')}
+          onClick={() => dispatch({ type: 'SET_STEP', payload: 'event-code' })}
         >
           Enter Event Code
         </button>
@@ -341,7 +362,7 @@ const GuestLogin = () => {
         <button 
           type="button" 
           className="btn btn-secondary"
-          onClick={() => setLoginStep('search-mother')}
+          onClick={() => dispatch({ type: 'SET_STEP', payload: 'search-mother' })}
         >
           Search by Mother's Name
         </button>
@@ -361,7 +382,7 @@ const GuestLogin = () => {
             type="text"
             id="eventCode"
             value={eventCode}
-            onChange={(e) => setEventCode(e.target.value)}
+            onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'eventCode', payload: e.target.value })}
             placeholder="4-digit code"
             required
           />
@@ -378,7 +399,7 @@ const GuestLogin = () => {
         <button 
           type="button" 
           className="btn btn-link"
-          onClick={() => setLoginStep('initial')}
+          onClick={() => dispatch({ type: 'SET_STEP', payload: 'initial' })}
         >
           Back
         </button>
@@ -398,7 +419,7 @@ const GuestLogin = () => {
             type="text"
             id="searchTerm"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'searchTerm', payload: e.target.value })}
             placeholder="Enter name"
             required
             minLength={2}
@@ -416,7 +437,7 @@ const GuestLogin = () => {
         <button 
           type="button" 
           className="btn btn-link"
-          onClick={() => setLoginStep('initial')}
+          onClick={() => dispatch({ type: 'SET_STEP', payload: 'initial' })}
         >
           Back
         </button>
@@ -449,27 +470,29 @@ const GuestLogin = () => {
   const renderNameOnlyForm = () => {
     console.log("🔵 FRONTEND - Rendering NameOnlyForm with selectedEvent:", selectedEvent);
     
-    // Use our standalone component instead of an inline form
-    // This helps isolate the state management and prevent React batching issues
     if (selectedEvent) {
       return (
         <NameOnlyForm 
           eventId={selectedEvent.id} 
           eventTitle={selectedEvent.title}
-          onBack={() => setLoginStep('event-code')}
+          onBack={() => dispatch({ type: 'SET_STEP', payload: 'event-code' })}
           onError={(error, response) => {
             if (error) {
-              setError(error);
+              dispatch({ type: 'SET_ERROR', payload: error });
             } else if (response && response.status === 'need_user_info') {
-              // Handle transition to full user info form
-              setLoginResponse(response);
+              dispatch({ 
+                type: 'HANDLE_NEED_USER_INFO', 
+                payload: {
+                  event_id: response.event_id,
+                  event_title: response.event_title
+                } 
+              });
             }
           }}
         />
       );
     }
     
-    // Fallback rendering if selectedEvent is not available yet
     return (
       <>
         <h1>Who Are You?</h1>
@@ -482,7 +505,7 @@ const GuestLogin = () => {
               type="text"
               id="nameOnly"
               value={nameOnly}
-              onChange={(e) => setNameOnly(e.target.value)}
+              onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'nameOnly', payload: e.target.value })}
               placeholder="Enter your name"
               required
               autoFocus
@@ -500,7 +523,7 @@ const GuestLogin = () => {
           <button 
             type="button" 
             className="btn btn-link"
-            onClick={() => setLoginStep('event-code')}
+            onClick={() => dispatch({ type: 'SET_STEP', payload: 'event-code' })}
           >
             Back
           </button>
@@ -521,7 +544,7 @@ const GuestLogin = () => {
             type="text"
             id="firstName"
             value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
+            onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'firstName', payload: e.target.value })}
             placeholder="Enter your first name"
             required
           />
@@ -533,7 +556,7 @@ const GuestLogin = () => {
             type="text"
             id="lastName"
             value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
+            onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'lastName', payload: e.target.value })}
             placeholder="Enter your last name"
             required
           />
@@ -545,7 +568,7 @@ const GuestLogin = () => {
             type="text"
             id="nickname"
             value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
+            onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'nickname', payload: e.target.value })}
             placeholder="Enter a nickname"
           />
         </div>
@@ -557,7 +580,7 @@ const GuestLogin = () => {
               type="email"
               id="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'email', payload: e.target.value })}
               placeholder="Enter your email"
             />
           </div>
@@ -569,7 +592,7 @@ const GuestLogin = () => {
             type="tel"
             id="phone"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'phone', payload: e.target.value })}
             placeholder="Enter your phone number"
             required={!email}
           />
@@ -584,7 +607,7 @@ const GuestLogin = () => {
                 name="paymentMethod"
                 value="venmo"
                 checked={paymentMethod === 'venmo'}
-                onChange={() => setPaymentMethod('venmo')}
+                onChange={() => dispatch({ type: 'SET_FIELD', field: 'paymentMethod', payload: 'venmo' })}
               />
               Venmo
             </label>
@@ -594,7 +617,7 @@ const GuestLogin = () => {
                 name="paymentMethod"
                 value="cash"
                 checked={paymentMethod === 'cash'}
-                onChange={() => setPaymentMethod('cash')}
+                onChange={() => dispatch({ type: 'SET_FIELD', field: 'paymentMethod', payload: 'cash' })}
               />
               Cash
             </label>
@@ -612,7 +635,7 @@ const GuestLogin = () => {
         <button 
           type="button" 
           className="btn btn-link"
-          onClick={() => setLoginStep('initial')}
+          onClick={() => dispatch({ type: 'SET_STEP', payload: 'initial' })}
         >
           Cancel
         </button>
@@ -620,22 +643,20 @@ const GuestLogin = () => {
     </>
   );
 
-  // Create a debug indicator to show current login step
-  const debugCurrentStep = () => {
-    return (
-      <div className="debug-info" style={{fontSize: '10px', color: '#666', marginTop: '10px', textAlign: 'center'}}>
-        Current step: {loginStep} 
-        {selectedEvent && ` | Event ID: ${selectedEvent.id}`}
-        {loginResponse && ` | Response status: ${loginResponse.status}`}
-      </div>
-    );
-  };
+  // Debug indicator
+  const debugCurrentStep = () => (
+    <div className="debug-info" style={{fontSize: '10px', color: '#666', marginTop: '10px', textAlign: 'center'}}>
+      Current step: {step} 
+      {selectedEvent && ` | Event ID: ${selectedEvent.id}`}
+      {loginResponse && ` | Response status: ${loginResponse.status}`}
+    </div>
+  );
 
-  // Determine which form to render based on loginStep
+  // Render current form based on step
   const renderCurrentForm = () => {
-    console.log("🔵 FRONTEND - Rendering current form for step:", loginStep);
+    console.log("🔵 FRONTEND - Rendering current form for step:", step);
     
-    switch(loginStep) {
+    switch(step) {
       case 'initial':
         return renderInitialForm();
       case 'event-code':
