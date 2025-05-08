@@ -8,7 +8,14 @@ const isAuthenticated = () => {
 };
 
 const isHost = () => {
-    const userData = localStorage.getItem('user');
+    // Check different localStorage keys where host status might be stored
+    const isHostFlag = localStorage.getItem('isHost');
+    if (isHostFlag === 'true') {
+        return true;
+    }
+    
+    // Check in currentUser object
+    const userData = localStorage.getItem('currentUser');
     if (userData) {
         try {
             const user = JSON.parse(userData);
@@ -18,6 +25,19 @@ const isHost = () => {
             return false;
         }
     }
+    
+    // Legacy support for 'user' key
+    const legacyUserData = localStorage.getItem('user');
+    if (legacyUserData) {
+        try {
+            const user = JSON.parse(legacyUserData);
+            return user.is_host === true;
+        } catch (e) {
+            console.error('Error parsing legacy user data:', e);
+            return false;
+        }
+    }
+    
     return false;
 };
 
