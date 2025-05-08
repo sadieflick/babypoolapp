@@ -147,16 +147,12 @@ def get_events():
 
 
 @api.route('/events/<int:event_id>', methods=['GET'])
+@jwt_required()
 def get_event(event_id):
     event = Event.query.get_or_404(event_id)
-    user = None
     
-    # Try to get user from JWT if present
-    try:
-        user = get_user_from_jwt()
-    except:
-        # No JWT token or invalid token
-        pass
+    # Get user from JWT
+    user = get_user_from_jwt()
         
     # If user is not the host and not a guest, only return limited info
     if not user or (
