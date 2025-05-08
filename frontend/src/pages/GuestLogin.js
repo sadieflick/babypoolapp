@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { loginGuest, findEventByCode, searchEventByMother } from '../utils/api';
+import { loginGuest, findEventByCode, searchEventByMother, selectEvent } from '../utils/api';
 import { useAuth } from '../components/AuthContext';
 
 const GuestLogin = () => {
-  const [loginStep, setLoginStep] = useState('initial'); // 'initial', 'event-code', 'search-mother', 'user-info'
+  const [loginStep, setLoginStep] = useState('initial'); // 'initial', 'event-code', 'search-mother', 'name-only', 'user-info'
   const [email, setEmail] = useState('');
   const [eventCode, setEventCode] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [nickname, setNickname] = useState('');
+  const [nameOnly, setNameOnly] = useState(''); // For name-only step
   const [phone, setPhone] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('venmo');
   const [events, setEvents] = useState([]);
@@ -152,6 +153,13 @@ const GuestLogin = () => {
           login(userData, access_token, refresh_token);
           
           // Login method will handle the redirect, so we don't need to navigate here
+        } else if (response.status === 'need_name_only') {
+          console.log("Event code login requires name only");
+          setLoginStep('name-only');
+          setSelectedEvent({ 
+            id: response.event_id,
+            title: response.event_title
+          });
         } else if (response.status === 'need_user_info') {
           console.log("Event code login requires user info");
           setLoginStep('user-info');
@@ -192,6 +200,70 @@ const GuestLogin = () => {
   const handleSelectEvent = (event) => {
     setSelectedEvent(event);
     setLoginStep('user-info');
+  };
+
+  const handleNameOnlySubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    
+    if (!nameOnly.trim()) {
+      setError('Please enter your name');
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      console.log("🔵 FRONTEND - Guest Login: Submitting name-only form:", { 
+        event_id: selectedEvent.id, 
+        nickname: nameOnly 
+      });
+      
+      const response = await selectEvent({
+        event_id: selectedEvent.id,
+        nickname: nameOnly
+      });
+      
+      console.log("🔵 FRONTEND - Guest Login: Name-only response:", response);
+      
+      if (response.status === 'logged_in') {
+        // Extract tokens from response
+        const { access_token, refresh_token } = response;
+        
+        console.log("Name-only login successful:", { 
+          status: response.status, 
+          event_id: response.event_id,
+          has_access_token: !!access_token,
+          has_refresh_token: !!refresh_token
+        });
+        
+        // Remove tokens from user data before passing it to AuthContext
+        const userData = { ...response };
+        delete userData.access_token;
+        delete userData.refresh_token;
+        
+        // Ensure event_id is a number
+        if (userData.event_id && typeof userData.event_id === 'string') {
+          userData.event_id = parseInt(userData.event_id, 10);
+        }
+        
+        // Pass both tokens to the login method - this will handle the redirect
+        login(userData, access_token, refresh_token);
+      } else if (response.status === 'need_user_info') {
+        // Need more information, go to full form
+        setLoginStep('user-info');
+      } else if (response.status === 'need_name_only') {
+        // Still in name-only mode, but need a different name
+        setError(response.message || 'Please provide a more specific name');
+      } else if (response.error) {
+        setError(response.error);
+      }
+    } catch (err) {
+      console.error("Name-only form error:", err);
+      setError(err.response?.data?.error || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleUserInfoSubmit = async (e) => {
@@ -402,6 +474,45 @@ const GuestLogin = () => {
           </ul>
         </div>
       )}
+    </>
+  );
+
+  const renderNameOnlyForm = () => (
+    <>
+      <h1>Who Are You?</h1>
+      {selectedEvent && <p>For: {selectedEvent.title || 'Baby Shower Event'}</p>}
+      <p>Just enter your name to get started</p>
+      
+      <form onSubmit={handleNameOnlySubmit} className="auth-form">
+        <div className="form-group">
+          <label htmlFor="nameOnly">Your Name</label>
+          <input
+            type="text"
+            id="nameOnly"
+            value={nameOnly}
+            onChange={(e) => setNameOnly(e.target.value)}
+            placeholder="Enter your name"
+            required
+            autoFocus
+          />
+        </div>
+        
+        <button 
+          type="submit" 
+          className="btn btn-primary"
+          disabled={loading}
+        >
+          {loading ? 'Joining...' : 'Continue'}
+        </button>
+        
+        <button 
+          type="button" 
+          className="btn btn-link"
+          onClick={() => setLoginStep('event-code')}
+        >
+          Back
+        </button>
+      </form>
     </>
   );
 
