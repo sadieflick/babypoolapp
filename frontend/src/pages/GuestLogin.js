@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginGuest, findEventByCode, searchEventByMother, selectEvent } from '../utils/api';
 import { useAuth } from '../components/AuthContext';
@@ -21,6 +21,47 @@ const GuestLogin = () => {
   
   const { login } = useAuth();
   const navigate = useNavigate();
+  
+  // State for storing the login response
+  const [loginResponse, setLoginResponse] = useState(null);
+
+  // Use effect to respond to login response changes
+  useEffect(() => {
+    if (!loginResponse) return;
+    
+    console.log("🔵 FRONTEND - useEffect triggered with loginResponse", loginResponse);
+    
+    if (loginResponse.status === 'need_name_only') {
+      console.log("🔵 FRONTEND - Setting login step to name-only from useEffect");
+      setLoginStep('name-only');
+      setSelectedEvent({ 
+        id: loginResponse.event_id,
+        title: loginResponse.event_title
+      });
+    } else if (loginResponse.status === 'need_user_info') {
+      console.log("🔵 FRONTEND - Setting login step to user-info from useEffect");
+      setLoginStep('user-info');
+      setSelectedEvent({ 
+        id: loginResponse.event_id,
+        title: loginResponse.event_title
+      });
+    } else if (loginResponse.status === 'logged_in') {
+      const { access_token, refresh_token } = loginResponse;
+      
+      // Remove tokens from user data before passing it to AuthContext
+      const userData = { ...loginResponse };
+      delete userData.access_token;
+      delete userData.refresh_token;
+      
+      // Ensure event_id is a number
+      if (userData.event_id && typeof userData.event_id === 'string') {
+        userData.event_id = parseInt(userData.event_id, 10);
+      }
+      
+      // Pass both tokens to the login method - this will handle the redirect
+      login(userData, access_token, refresh_token);
+    }
+  }, [loginResponse, login]);
 
   const handleInitialSubmit = async (e) => {
     e.preventDefault();
@@ -39,48 +80,18 @@ const GuestLogin = () => {
         
         console.log("🔵 FRONTEND - Guest Login: Email login response:", response);
         
-        if (response.status === 'logged_in') {
-          console.log("🔵 FRONTEND - Guest Login: Successfully logged in, proceeding to redirect");
-          // Extract tokens from response
-          const { access_token, refresh_token } = response;
-          
-          console.log("Email login successful:", { 
-            status: response.status, 
-            user_id: response.user_id,
-            has_access_token: !!access_token,
-            has_refresh_token: !!refresh_token
-          });
-          
-          // Remove tokens from user data before passing it to AuthContext
-          const userData = { ...response };
-          delete userData.access_token;
-          delete userData.refresh_token;
-          
-          console.log("Processing user data before login:", {
-            id: userData.user_id,
-            is_host: userData.is_host,
-            event_id: userData.event_id,
-            events_length: userData.events ? userData.events.length : 0
-          });
-          
-          // Ensure event_id is a number
-          if (userData.event_id && typeof userData.event_id === 'string') {
-            userData.event_id = parseInt(userData.event_id, 10);
-          }
-          
-          // Pass both tokens to the login method - this will handle the redirect inside login
-          login(userData, access_token, refresh_token);
-          
-          // Login method will handle the redirect, so we don't need to navigate here
-          // The duplicate navigation was causing race conditions
-        } else if (response.status === 'need_event') {
-          console.log("Email login requires event selection");
+        // Special cases that we want to handle directly instead of through useEffect
+        if (response.status === 'need_event') {
+          console.log("🔵 FRONTEND - Email login requires event selection");
           setLoginStep('event-code');
         } else if (response.status === 'need_profile_info') {
-          console.log("Email login requires profile completion");
+          console.log("🔵 FRONTEND - Email login requires profile completion");
           // Handle profile completion
           setLoginStep('user-info');
           setSelectedEvent({ id: response.event_id });
+        } else {
+          // For other responses, use the loginResponse state to trigger useEffect
+          setLoginResponse(response);
         }
       } catch (err) {
         console.error("Email login error:", err);
@@ -113,57 +124,18 @@ const GuestLogin = () => {
       });
       
       console.log("🔵 FRONTEND - Guest Login: Event code login response:", response);
+      console.log("🔵 FRONTEND - Guest Login: Response status:", response.status);
+      console.log("🔵 FRONTEND - Guest Login: Response type:", typeof response.status);
       
-      if (response.status === 'logged_in') {
-        // Extract tokens from response
-        const { access_token, refresh_token } = response;
-        
-        console.log("Event code login successful:", { 
-          status: response.status, 
-          event_id: response.event_id,
-          has_access_token: !!access_token,
-          has_refresh_token: !!refresh_token
-        });
-        
-        // Remove tokens from user data before passing it to AuthContext
-        const userData = { ...response };
-        delete userData.access_token;
-        delete userData.refresh_token;
-        
-        console.log("Processing user data before login:", {
-          id: userData.user_id,
-          is_host: userData.is_host,
-          event_id: userData.event_id,
-          events_length: userData.events ? userData.events.length : 0
-        });
-        
-        // Ensure event_id is a number
-        if (userData.event_id && typeof userData.event_id === 'string') {
-          userData.event_id = parseInt(userData.event_id, 10);
-        }
-        
-        // Pass both tokens to the login method - this will handle the redirect
-        login(userData, access_token, refresh_token);
-        
-        // Login method will handle the redirect, so we don't need to navigate here
-      } else if (response.status === 'need_name_only') {
-        console.log("Event code login requires name only");
-        setLoginStep('name-only');
-        setSelectedEvent({ 
-          id: response.event_id,
-          title: response.event_title
-        });
-      } else if (response.status === 'need_user_info') {
-        console.log("Event code login requires user info");
-        setLoginStep('user-info');
-        setSelectedEvent({ 
-          id: response.event_id,
-          title: response.event_title
-        });
-      } else if (response.error) {
-        console.error("Event code error:", response.error);
-        setError(response.error || 'Invalid event code. Please try again.');
+      // Debug the response object in more detail
+      for (const key in response) {
+        console.log(`🔵 FRONTEND - Response key: ${key}, value:`, response[key]);
       }
+      
+      // Set the login response which will trigger the useEffect
+      setLoginResponse(response);
+      
+      // We'll let the useEffect handle the state changes and redirects
     } catch (err) {
       console.error("Event code login error:", err);
       setError(err.response?.data?.error || 'Event not found. Please check the code.');
@@ -221,37 +193,15 @@ const GuestLogin = () => {
       
       console.log("🔵 FRONTEND - Guest Login: Name-only response:", response);
       
-      if (response.status === 'logged_in') {
-        // Extract tokens from response
-        const { access_token, refresh_token } = response;
-        
-        console.log("Name-only login successful:", { 
-          status: response.status, 
-          event_id: response.event_id,
-          has_access_token: !!access_token,
-          has_refresh_token: !!refresh_token
-        });
-        
-        // Remove tokens from user data before passing it to AuthContext
-        const userData = { ...response };
-        delete userData.access_token;
-        delete userData.refresh_token;
-        
-        // Ensure event_id is a number
-        if (userData.event_id && typeof userData.event_id === 'string') {
-          userData.event_id = parseInt(userData.event_id, 10);
-        }
-        
-        // Pass both tokens to the login method - this will handle the redirect
-        login(userData, access_token, refresh_token);
-      } else if (response.status === 'need_user_info') {
-        // Need more information, go to full form
-        setLoginStep('user-info');
-      } else if (response.status === 'need_name_only') {
+      // Special case for need_name_only status - we want to show error immediately
+      if (response.status === 'need_name_only') {
         // Still in name-only mode, but need a different name
         setError(response.message || 'Please provide a more specific name');
       } else if (response.error) {
         setError(response.error);
+      } else {
+        // For other responses like logged_in or need_user_info, use the loginResponse state
+        setLoginResponse(response);
       }
     } catch (err) {
       console.error("Name-only form error:", err);
@@ -289,38 +239,13 @@ const GuestLogin = () => {
         payment_method: paymentMethod
       });
       
-      if (response.status === 'logged_in') {
-        // Extract tokens from response
-        const { access_token, refresh_token } = response;
-        
-        console.log("Guest login successful:", { 
-          status: response.status, 
-          event_id: response.event_id,
-          has_access_token: !!access_token,
-          has_refresh_token: !!refresh_token
-        });
-        
-        // Remove tokens from user data before passing it to AuthContext
-        const userData = { ...response };
-        delete userData.access_token;
-        delete userData.refresh_token;
-        
-        console.log("Processing user data before login:", {
-          id: userData.user_id,
-          is_host: userData.is_host,
-          event_id: userData.event_id,
-          events_length: userData.events ? userData.events.length : 0
-        });
-        
-        // Ensure event_id is a number
-        if (userData.event_id && typeof userData.event_id === 'string') {
-          userData.event_id = parseInt(userData.event_id, 10);
-        }
-        
-        // Pass both tokens to the login method - this will handle the redirect
-        login(userData, access_token, refresh_token);
-      } else if (response.error) {
+      console.log("🔵 FRONTEND - Guest Login: User info response:", response);
+      
+      if (response.error) {
         setError(response.error);
+      } else {
+        // Use the loginResponse state for all other responses
+        setLoginResponse(response);
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Please try again.');
