@@ -203,9 +203,9 @@ def guest_login_page():
 def guest_login():
     # Handle GET requests (direct page access)
     if request.method == 'GET':
-        # Redirect to the frontend route to ensure our SPA component is rendered
-        print("API route: Redirecting GET /guest/login to /auth/guest_login")
-        return redirect('/auth/guest_login')
+        # Serve the SPA directly instead of redirecting to avoid circular redirects
+        print("API route: Serving SPA for GET /guest/login")
+        return render_template('index.html')
         
     # Standard API handling for POSTs
     data = request.json
