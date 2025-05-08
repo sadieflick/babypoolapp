@@ -57,15 +57,27 @@ const getUserData = () => {
 // Function to get the current user from local storage
 // Used by various components that need user information
 const getCurrentUser = () => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
+    // First check 'currentUser' (used by React components)
+    const currentUserData = localStorage.getItem('currentUser');
+    if (currentUserData) {
         try {
-            return JSON.parse(userData);
+            return JSON.parse(currentUserData);
         } catch (e) {
-            console.error('Error parsing user data:', e);
-            return { first_name: 'Guest' };
+            console.error('Error parsing currentUser data:', e);
         }
     }
+    
+    // Then check legacy 'user' key (used by older components)
+    const legacyUserData = localStorage.getItem('user');
+    if (legacyUserData) {
+        try {
+            return JSON.parse(legacyUserData);
+        } catch (e) {
+            console.error('Error parsing legacy user data:', e);
+        }
+    }
+    
+    // Default fallback
     return { first_name: 'Guest' };
 };
 
