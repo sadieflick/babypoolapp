@@ -103,71 +103,66 @@ const GuestLogin = () => {
     console.log("Event code submitted:", eventCode);
     
     try {
-      console.log("🔵 FRONTEND - Guest Login: Finding event by code:", eventCode);
-      const eventResponse = await findEventByCode(eventCode);
+      // Skip the findEventByCode step and go directly to login with event code
+      // This prevents the two-step process that was causing issues
+      console.log("🔵 FRONTEND - Guest Login: Attempting login with event code:", eventCode);
+      const response = await loginGuest({
+        login_type: 'event_code',
+        event_code: eventCode,
+        email
+      });
       
-      console.log("🔵 FRONTEND - Guest Login: Event search response:", eventResponse);
+      console.log("🔵 FRONTEND - Guest Login: Event code login response:", response);
       
-      if (eventResponse.error) {
-        console.error("Event code error:", eventResponse.error);
-        setError(eventResponse.error);
-      } else {
-        console.log("Event found, attempting login with event code");
-        const response = await loginGuest({
-          login_type: 'event_code',
-          event_code: eventCode,
-          email
+      if (response.status === 'logged_in') {
+        // Extract tokens from response
+        const { access_token, refresh_token } = response;
+        
+        console.log("Event code login successful:", { 
+          status: response.status, 
+          event_id: response.event_id,
+          has_access_token: !!access_token,
+          has_refresh_token: !!refresh_token
         });
         
-        console.log("Event code login response:", response);
+        // Remove tokens from user data before passing it to AuthContext
+        const userData = { ...response };
+        delete userData.access_token;
+        delete userData.refresh_token;
         
-        if (response.status === 'logged_in') {
-          // Extract tokens from response
-          const { access_token, refresh_token } = response;
-          
-          console.log("Event code login successful:", { 
-            status: response.status, 
-            event_id: response.event_id,
-            has_access_token: !!access_token,
-            has_refresh_token: !!refresh_token
-          });
-          
-          // Remove tokens from user data before passing it to AuthContext
-          const userData = { ...response };
-          delete userData.access_token;
-          delete userData.refresh_token;
-          
-          console.log("Processing user data before login:", {
-            id: userData.user_id,
-            is_host: userData.is_host,
-            event_id: userData.event_id,
-            events_length: userData.events ? userData.events.length : 0
-          });
-          
-          // Ensure event_id is a number
-          if (userData.event_id && typeof userData.event_id === 'string') {
-            userData.event_id = parseInt(userData.event_id, 10);
-          }
-          
-          // Pass both tokens to the login method - this will handle the redirect
-          login(userData, access_token, refresh_token);
-          
-          // Login method will handle the redirect, so we don't need to navigate here
-        } else if (response.status === 'need_name_only') {
-          console.log("Event code login requires name only");
-          setLoginStep('name-only');
-          setSelectedEvent({ 
-            id: response.event_id,
-            title: response.event_title
-          });
-        } else if (response.status === 'need_user_info') {
-          console.log("Event code login requires user info");
-          setLoginStep('user-info');
-          setSelectedEvent({ 
-            id: response.event_id,
-            title: response.event_title
-          });
+        console.log("Processing user data before login:", {
+          id: userData.user_id,
+          is_host: userData.is_host,
+          event_id: userData.event_id,
+          events_length: userData.events ? userData.events.length : 0
+        });
+        
+        // Ensure event_id is a number
+        if (userData.event_id && typeof userData.event_id === 'string') {
+          userData.event_id = parseInt(userData.event_id, 10);
         }
+        
+        // Pass both tokens to the login method - this will handle the redirect
+        login(userData, access_token, refresh_token);
+        
+        // Login method will handle the redirect, so we don't need to navigate here
+      } else if (response.status === 'need_name_only') {
+        console.log("Event code login requires name only");
+        setLoginStep('name-only');
+        setSelectedEvent({ 
+          id: response.event_id,
+          title: response.event_title
+        });
+      } else if (response.status === 'need_user_info') {
+        console.log("Event code login requires user info");
+        setLoginStep('user-info');
+        setSelectedEvent({ 
+          id: response.event_id,
+          title: response.event_title
+        });
+      } else if (response.error) {
+        console.error("Event code error:", response.error);
+        setError(response.error || 'Invalid event code. Please try again.');
       }
     } catch (err) {
       console.error("Event code login error:", err);
