@@ -54,16 +54,23 @@ const GuestLogin = () => {
           delete userData.access_token;
           delete userData.refresh_token;
           
-          // Pass both tokens to the login method
+          console.log("Processing user data before login:", {
+            id: userData.user_id,
+            is_host: userData.is_host,
+            event_id: userData.event_id,
+            events_length: userData.events ? userData.events.length : 0
+          });
+          
+          // Ensure event_id is a number
+          if (userData.event_id && typeof userData.event_id === 'string') {
+            userData.event_id = parseInt(userData.event_id, 10);
+          }
+          
+          // Pass both tokens to the login method - this will handle the redirect inside login
           login(userData, access_token, refresh_token);
           
-          if (response.event_id) {
-            console.log("Navigating to event page:", `/guest/event/${response.event_id}`);
-            navigate(`/guest/event/${response.event_id}`);
-          } else if (response.events && response.events.length > 0) {
-            console.log("Multiple events found, navigating to select event page");
-            navigate('/guest/select-event');
-          }
+          // Login method will handle the redirect, so we don't need to navigate here
+          // The duplicate navigation was causing race conditions
         } else if (response.status === 'need_event') {
           console.log("Email login requires event selection");
           setLoginStep('event-code');
@@ -128,13 +135,22 @@ const GuestLogin = () => {
           delete userData.access_token;
           delete userData.refresh_token;
           
-          // Pass both tokens to the login method
+          console.log("Processing user data before login:", {
+            id: userData.user_id,
+            is_host: userData.is_host,
+            event_id: userData.event_id,
+            events_length: userData.events ? userData.events.length : 0
+          });
+          
+          // Ensure event_id is a number
+          if (userData.event_id && typeof userData.event_id === 'string') {
+            userData.event_id = parseInt(userData.event_id, 10);
+          }
+          
+          // Pass both tokens to the login method - this will handle the redirect
           login(userData, access_token, refresh_token);
           
-          if (response.event_id) {
-            console.log("Navigating to event page:", `/guest/event/${response.event_id}`);
-            navigate(`/guest/event/${response.event_id}`);
-          }
+          // Login method will handle the redirect, so we don't need to navigate here
         } else if (response.status === 'need_user_info') {
           console.log("Event code login requires user info");
           setLoginStep('user-info');
@@ -221,11 +237,20 @@ const GuestLogin = () => {
         delete userData.access_token;
         delete userData.refresh_token;
         
-        // Pass both tokens to the login method
-        login(userData, access_token, refresh_token);
+        console.log("Processing user data before login:", {
+          id: userData.user_id,
+          is_host: userData.is_host,
+          event_id: userData.event_id,
+          events_length: userData.events ? userData.events.length : 0
+        });
         
-        console.log("Navigating to event page:", `/guest/event/${response.event_id}`);
-        navigate(`/guest/event/${response.event_id}`);
+        // Ensure event_id is a number
+        if (userData.event_id && typeof userData.event_id === 'string') {
+          userData.event_id = parseInt(userData.event_id, 10);
+        }
+        
+        // Pass both tokens to the login method - this will handle the redirect
+        login(userData, access_token, refresh_token);
       } else if (response.error) {
         setError(response.error);
       }
