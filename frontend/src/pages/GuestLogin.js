@@ -26,16 +26,28 @@ const GuestLogin = () => {
     setError('');
     setLoading(true);
     
+    console.log("Initial form submitted with email:", email || "(none)");
+    
     if (email) {
       try {
+        console.log("Attempting email login with:", { login_type: 'email', email });
         const response = await loginGuest({ 
           login_type: 'email',
           email 
         });
         
+        console.log("Email login response:", response);
+        
         if (response.status === 'logged_in') {
           // Extract tokens from response
           const { access_token, refresh_token } = response;
+          
+          console.log("Email login successful:", { 
+            status: response.status, 
+            user_id: response.user_id,
+            has_access_token: !!access_token,
+            has_refresh_token: !!refresh_token
+          });
           
           // Remove tokens from user data before passing it to AuthContext
           const userData = { ...response };
@@ -44,19 +56,31 @@ const GuestLogin = () => {
           
           // Pass both tokens to the login method
           login(userData, access_token, refresh_token);
+          
+          if (response.event_id) {
+            console.log("Navigating to event page:", `/guest/event/${response.event_id}`);
+            navigate(`/guest/event/${response.event_id}`);
+          } else if (response.events && response.events.length > 0) {
+            console.log("Multiple events found, navigating to select event page");
+            navigate('/guest/select-event');
+          }
         } else if (response.status === 'need_event') {
+          console.log("Email login requires event selection");
           setLoginStep('event-code');
         } else if (response.status === 'need_profile_info') {
+          console.log("Email login requires profile completion");
           // Handle profile completion
           setLoginStep('user-info');
           setSelectedEvent({ id: response.event_id });
         }
       } catch (err) {
+        console.error("Email login error:", err);
         setError(err.response?.data?.error || 'Login failed. Please try again.');
       } finally {
         setLoading(false);
       }
     } else {
+      console.log("No email provided, proceeding to event code entry");
       setLoginStep('event-code');
       setLoading(false);
     }
@@ -67,21 +91,37 @@ const GuestLogin = () => {
     setError('');
     setLoading(true);
     
+    console.log("Event code submitted:", eventCode);
+    
     try {
+      console.log("Finding event by code:", eventCode);
       const eventResponse = await findEventByCode(eventCode);
       
+      console.log("Event search response:", eventResponse);
+      
       if (eventResponse.error) {
+        console.error("Event code error:", eventResponse.error);
         setError(eventResponse.error);
       } else {
+        console.log("Event found, attempting login with event code");
         const response = await loginGuest({
           login_type: 'event_code',
           event_code: eventCode,
           email
         });
         
+        console.log("Event code login response:", response);
+        
         if (response.status === 'logged_in') {
           // Extract tokens from response
           const { access_token, refresh_token } = response;
+          
+          console.log("Event code login successful:", { 
+            status: response.status, 
+            event_id: response.event_id,
+            has_access_token: !!access_token,
+            has_refresh_token: !!refresh_token
+          });
           
           // Remove tokens from user data before passing it to AuthContext
           const userData = { ...response };
@@ -90,7 +130,13 @@ const GuestLogin = () => {
           
           // Pass both tokens to the login method
           login(userData, access_token, refresh_token);
+          
+          if (response.event_id) {
+            console.log("Navigating to event page:", `/guest/event/${response.event_id}`);
+            navigate(`/guest/event/${response.event_id}`);
+          }
         } else if (response.status === 'need_user_info') {
+          console.log("Event code login requires user info");
           setLoginStep('user-info');
           setSelectedEvent({ 
             id: response.event_id,
@@ -99,6 +145,7 @@ const GuestLogin = () => {
         }
       }
     } catch (err) {
+      console.error("Event code login error:", err);
       setError(err.response?.data?.error || 'Event not found. Please check the code.');
     } finally {
       setLoading(false);
@@ -162,6 +209,13 @@ const GuestLogin = () => {
         // Extract tokens from response
         const { access_token, refresh_token } = response;
         
+        console.log("Guest login successful:", { 
+          status: response.status, 
+          event_id: response.event_id,
+          has_access_token: !!access_token,
+          has_refresh_token: !!refresh_token
+        });
+        
         // Remove tokens from user data before passing it to AuthContext
         const userData = { ...response };
         delete userData.access_token;
@@ -169,6 +223,8 @@ const GuestLogin = () => {
         
         // Pass both tokens to the login method
         login(userData, access_token, refresh_token);
+        
+        console.log("Navigating to event page:", `/guest/event/${response.event_id}`);
         navigate(`/guest/event/${response.event_id}`);
       } else if (response.error) {
         setError(response.error);
