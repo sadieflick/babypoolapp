@@ -2361,7 +2361,7 @@ const renderGuestEventDashboard = (eventId) => {
                             <div class="calendar-info">
                                 <div class="due-date-info">
                                     <span class="due-date-marker"></span>
-                                    <span>Due Date: ${formattedDueDate}</span>
+                                    <span>Due Date: ${new Date(event.due_date).toLocaleDateString()}</span>
                                 </div>
                                 <div class="range-info">
                                     Available dates: 1 month before and after due date
@@ -2529,7 +2529,7 @@ const renderGuestEventDashboard = (eventId) => {
         document.getElementById('root').innerHTML = `
             <div style="text-align: center; padding: 3rem;">
                 <h2 style="color: #ff66b3;">Error Loading Dashboard</h2>
-                <p>${error.message || 'Failed to load event details. Please try again later.'}</p>
+                <p>Failed to load event details. Please try again later.</p>
                 <button onclick="window.location.href='/auth/guest_login'" style="background-color: #ff99cc; border: none; color: white; padding: 0.75rem 1.5rem; border-radius: 30px; cursor: pointer; margin-top: 1rem;">Return to Login</button>
             </div>
         `;
@@ -3177,7 +3177,7 @@ const renderGuestDateGuessPage = async (eventId) => {
                         <!-- Calendar info -->
                         <div class="calendar-info">
                             <div class="due-date-info">
-                                <span class="due-date-marker"></span> Due Date: ${formattedDueDate}
+                                <span class="due-date-marker"></span> Due Date: ${new Date(dueDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                             </div>
                             <div class="range-info">
                                 Valid guessing range: ${rangeStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - 
