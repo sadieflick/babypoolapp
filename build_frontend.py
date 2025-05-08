@@ -21,10 +21,8 @@ def create_main_js():
         print("Error: frontend/src/App.js not found. Skipping bundling.")
         return False
     
-    # If the main.js file already exists, keep it
-    if os.path.exists(main_js_path):
-        print(f"Not overwriting existing {main_js_path}")
-        return True
+    # Force rebuild to include our new components
+    print(f"Rebuilding {main_js_path} to include new components...")
     
     # Content for the main.js file
     js_content = """
