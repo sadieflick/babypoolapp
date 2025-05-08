@@ -2309,35 +2309,16 @@ const renderGuestEventDashboard = (eventId) => {
                         <h3 style="color: #333;">Guess the Birth Date</h3>
                         <p>Select a date when you think the baby will be born.</p>
                         
-                        <div id="date-guess-view">
+                        <div id="date-guess-view" style="display: none;">
                             ${guesses && guesses.date_guess ? `
                                 <div style="background-color: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
                                     <p style="margin: 0;"><strong>Your Guess:</strong> ${new Date(guesses.date_guess.guess_date).toLocaleDateString()}</p>
                                 </div>
-                                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                    <button id="show-calendar-edit-btn" style="background-color: #ff99cc; border: none; color: white; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer;">Edit with Calendar</button>
-                                    <button id="edit-date-guess-btn" style="background-color: #ff99cc; border: none; color: white; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer;">Quick Edit</button>
-                                </div>
-                            ` : `
-                                <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 1rem; max-width: 400px; margin-top: 1rem;">
-                                    <button id="show-calendar-btn" style="display: inline-block; background-color: #ff99cc; border: none; color: white; padding: 0.75rem 1.5rem; border-radius: 30px; cursor: pointer; text-align: center; width: 100%;">
-                                        Use Custom Calendar
-                                    </button>
-                                    <div style="width: 100%; text-align: center; margin: 0.5rem 0;">
-                                        <span style="background: white; padding: 0 10px; color: #666;">or</span>
-                                    </div>
-                                    <form id="date-guess-form" style="width: 100%;">
-                                        <div style="margin-bottom: 1rem;">
-                                            <label for="guess-date" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Select Date:</label>
-                                            <input type="date" id="guess-date" name="guess-date" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;" required>
-                                        </div>
-                                        <button type="submit" style="background-color: #ff99cc; border: none; color: white; padding: 0.75rem 1.5rem; border-radius: 30px; cursor: pointer; width: 100%;">Quick Submit</button>
-                                    </form>
-                                </div>
-                            `}
+                                <button id="edit-date-guess-btn" style="background-color: #ff99cc; border: none; color: white; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; margin-top: 0.5rem;">Edit Guess</button>
+                            ` : ``}
                         </div>
                         
-                        <div id="custom-calendar-view" class="custom-calendar" style="display: none;">
+                        <div id="custom-calendar-view" class="custom-calendar" style="display: block;">
                             <div class="calendar-header">
                                 <button class="month-nav" id="prev-month">&larr;</button>
                                 <h3 class="current-month">Loading...</h3>
@@ -2368,7 +2349,7 @@ const renderGuestEventDashboard = (eventId) => {
                                 </div>
                             </div>
                             
-                            <button id="cancel-calendar-btn" class="btn btn-secondary" style="margin-top: 20px; margin-right: 10px;">Cancel</button>
+
                         </div>
                         
                     </div>
@@ -2493,31 +2474,15 @@ const renderGuestEventDashboard = (eventId) => {
         // Setup form submissions
         setupGuessForms(eventId);
         
-        // Setup calendar toggle buttons
-        const showCalendarBtn = document.getElementById('show-calendar-btn');
-        const showCalendarEditBtn = document.getElementById('show-calendar-edit-btn');
-        const cancelCalendarBtn = document.getElementById('cancel-calendar-btn');
+        // Initialize the calendar directly
+        initCustomCalendar(eventId, dueDate, rangeStart, rangeEnd, dateGuessMap, currentDateGuess);
         
-        if (showCalendarBtn) {
-            showCalendarBtn.addEventListener('click', () => {
-                document.getElementById('date-guess-view').style.display = 'none';
-                document.getElementById('custom-calendar-view').style.display = 'block';
+        // Setup edit button if it exists
+        const editDateGuessBtn = document.getElementById('edit-date-guess-btn');
+        if (editDateGuessBtn) {
+            editDateGuessBtn.addEventListener('click', () => {
+                // Just refresh the calendar when editing an existing guess
                 initCustomCalendar(eventId, dueDate, rangeStart, rangeEnd, dateGuessMap, currentDateGuess);
-            });
-        }
-        
-        if (showCalendarEditBtn) {
-            showCalendarEditBtn.addEventListener('click', () => {
-                document.getElementById('date-guess-view').style.display = 'none';
-                document.getElementById('custom-calendar-view').style.display = 'block';
-                initCustomCalendar(eventId, dueDate, rangeStart, rangeEnd, dateGuessMap, currentDateGuess);
-            });
-        }
-        
-        if (cancelCalendarBtn) {
-            cancelCalendarBtn.addEventListener('click', () => {
-                document.getElementById('date-guess-view').style.display = 'block';
-                document.getElementById('custom-calendar-view').style.display = 'none';
             });
         }
         
