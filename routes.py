@@ -82,6 +82,10 @@ def get_events():
         raw_identity = get_jwt_identity()
         print(f"DEBUG: Raw JWT identity: {raw_identity}, type: {type(raw_identity)}")
         
+        # Debug print for request headers
+        auth_header = request.headers.get('Authorization')
+        print(f"DEBUG: Authorization header: {auth_header}")
+        
         user = get_user_from_jwt()
         print(f"DEBUG: User from JWT: {user}")
         
