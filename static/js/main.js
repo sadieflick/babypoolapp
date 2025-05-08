@@ -2690,20 +2690,7 @@ const setupGuessForms = (eventId) => {
 };
 
 // Generic logout handler
-const handleLogout = () => {
-    // Clear authentication data
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('isHost');
-    localStorage.removeItem('currentUser');
-    
-    // Call the server-side logout endpoint
-    fetch('/auth/logout', { method: 'POST' })
-        .finally(() => {
-            // Redirect to home
-            window.location.href = '/';
-        });
-};
+// This older implementation has been replaced by the async version
 
 // Guest Dashboard Implementation
 const renderGuestDashboard = () => {
