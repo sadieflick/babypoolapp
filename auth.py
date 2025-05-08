@@ -178,16 +178,17 @@ def host_login():
         'message': 'Login successful'
     }
     
-    # Create response with tokens
-    response = jsonify(user_data)
+    # Create response data with tokens included directly
+    response_data = user_data.copy()
+    response_data['access_token'] = access_token
+    response_data['refresh_token'] = refresh_token
+    
+    # Create response with tokens included in the JSON
+    response = jsonify(response_data)
     
     # Set JWT tokens in cookies for browser use
     set_access_cookies(response, access_token)
     set_refresh_cookies(response, refresh_token)
-    
-    # Also include tokens in JSON for client-side storage in localStorage
-    response.json['access_token'] = access_token
-    response.json['refresh_token'] = refresh_token
     
     return response
 
