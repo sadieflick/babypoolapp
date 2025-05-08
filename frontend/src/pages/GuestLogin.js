@@ -386,7 +386,7 @@ const GuestLogin = () => {
   const renderEventCodeForm = () => (
     <>
       <h1>Enter Event Code</h1>
-      <p>Enter the 4-digit code provided by the event host.</p>
+      <p>Enter the event code provided by the baby shower host.</p>
       
       <form onSubmit={handleEventCodeSubmit} className="auth-form">
         <div className="form-group">
@@ -396,9 +396,10 @@ const GuestLogin = () => {
             id="eventCode"
             value={eventCode}
             onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'eventCode', payload: e.target.value })}
-            placeholder="4-digit code"
+            placeholder="Enter the event code (e.g., TEST123)"
             required
           />
+          <small className="form-hint">The event code was provided by the host in your invitation</small>
         </div>
         
         <button 
