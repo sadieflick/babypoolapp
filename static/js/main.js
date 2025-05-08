@@ -1005,6 +1005,31 @@ const handleRouting = async () => {
     const searchParams = new URLSearchParams(window.location.search);
     console.log('Handling route:', path, 'Auth status:', isAuthenticated(), 'Is host:', isHost(), 'URL params:', window.location.search);
     
+    // Check guest event path pattern (e.g., /guest/event/123)
+    const guestEventMatch = path.match(/^\/guest\/event\/(\d+)$/);
+    if (guestEventMatch) {
+        const eventId = guestEventMatch[1];
+        if (isAuthenticated()) {
+            renderGuestEventDashboard(eventId);
+            return;
+        } else {
+            // Not authenticated, redirect to login
+            window.location.href = '/auth/guest_login';
+            return;
+        }
+    }
+    
+    if (path === '/guest/dashboard') {
+        if (isAuthenticated()) {
+            renderGuestDashboard();
+            return;
+        } else {
+            // Not authenticated, redirect to login
+            window.location.href = '/auth/guest_login';
+            return;
+        }
+    }
+    
     if (path === '/host/dashboard') {
         if (isAuthenticated() && isHost()) {
             await renderDashboard();
@@ -1953,6 +1978,642 @@ const renderGuestProfileForm = () => {
             console.error('Error updating profile:', err);
             showError('An error occurred. Please try again.');
         }
+    });
+};
+
+// Guest Event Dashboard Implementation
+const renderGuestEventDashboard = (eventId) => {
+    console.log('Rendering guest event dashboard for event:', eventId);
+    
+    // First fetch event details
+    fetch(`/api/events/${eventId}`, {
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to fetch event details');
+        }
+        return response.json();
+    })
+    .then(event => {
+        // Then fetch user's guesses
+        return fetch(`/api/events/${eventId}/guesses/current`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                // If there's an error fetching guesses, just continue with event data
+                return { event, guesses: null };
+            }
+            return response.json().then(guessesData => {
+                return { event, guesses: guessesData };
+            });
+        });
+    })
+    .then(data => {
+        const { event, guesses } = data;
+        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        
+        // Create dashboard HTML
+        document.getElementById('root').innerHTML = `
+            <div style="font-family: 'Poppins', sans-serif; padding: 1rem; max-width: 1200px; margin: 0 auto;">
+                <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h1 style="color: #ff66b3; margin: 0;">Baby Pool App</h1>
+                    <div>
+                        <span style="margin-right: 1rem;">Hello, ${user.first_name || 'Guest'}</span>
+                        <button id="logout-btn" style="background: none; border: none; color: #ff66b3; cursor: pointer; font-weight: 500;">Logout</button>
+                    </div>
+                </header>
+                
+                <div style="background-color: white; border-radius: 10px; padding: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+                    <h2 style="color: #ff66b3; margin-top: 0;">${event.title || `Baby Shower for ${event.mother_name}`}</h2>
+                    <div style="display: flex; flex-wrap: wrap; margin-bottom: 1rem;">
+                        <div style="flex: 1; min-width: 250px; margin-bottom: 1rem;">
+                            <p><strong>Mother-to-be:</strong> ${event.mother_name}</p>
+                            ${event.partner_name ? `<p><strong>Partner:</strong> ${event.partner_name}</p>` : ''}
+                            <p><strong>Due Date:</strong> ${new Date(event.due_date).toLocaleDateString()}</p>
+                        </div>
+                        <div style="flex: 1; min-width: 250px;">
+                            <p><strong>Event Date:</strong> ${new Date(event.event_date).toLocaleDateString()}</p>
+                            <p><strong>Event Code:</strong> ${event.event_code}</p>
+                            ${event.guess_price ? `<p><strong>Guess Price:</strong> $${event.guess_price.toFixed(2)}</p>` : ''}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tabs-container">
+                    <ul class="tabs" style="display: flex; list-style: none; padding: 0; margin-bottom: 1rem; border-bottom: 1px solid #ddd;">
+                        <li>
+                            <button id="date-tab" class="tab-btn active" style="background: none; border: none; padding: 0.75rem 1rem; color: #ff66b3; font-weight: 500; border-bottom: 2px solid #ff99cc; cursor: pointer;">Date Guess</button>
+                        </li>
+                        <li>
+                            <button id="time-tab" class="tab-btn" style="background: none; border: none; padding: 0.75rem 1rem; color: #666; border-bottom: 2px solid transparent; cursor: pointer;">Time Guess</button>
+                        </li>
+                        ${event.name_game_enabled ? `
+                        <li>
+                            <button id="name-tab" class="tab-btn" style="background: none; border: none; padding: 0.75rem 1rem; color: #666; border-bottom: 2px solid transparent; cursor: pointer;">Name Guess</button>
+                        </li>
+                        ` : ''}
+                        <li>
+                            <button id="leaderboard-tab" class="tab-btn" style="background: none; border: none; padding: 0.75rem 1rem; color: #666; border-bottom: 2px solid transparent; cursor: pointer;">Leaderboard</button>
+                        </li>
+                    </ul>
+                    
+                    <div id="date-content" class="tab-content" style="display: block;">
+                        <h3 style="color: #333;">Guess the Birth Date</h3>
+                        <p>Select a date when you think the baby will be born.</p>
+                        
+                        ${guesses && guesses.date_guess ? `
+                            <div style="background-color: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                <p style="margin: 0;"><strong>Your Guess:</strong> ${new Date(guesses.date_guess.guess_date).toLocaleDateString()}</p>
+                            </div>
+                            <button id="edit-date-guess-btn" style="background-color: #ff99cc; border: none; color: white; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer;">Edit Guess</button>
+                        ` : `
+                            <form id="date-guess-form" style="max-width: 400px; margin-top: 1rem;">
+                                <div style="margin-bottom: 1rem;">
+                                    <label for="guess-date" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Select Date:</label>
+                                    <input type="date" id="guess-date" name="guess-date" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;" required>
+                                </div>
+                                <button type="submit" style="background-color: #ff99cc; border: none; color: white; padding: 0.75rem 1.5rem; border-radius: 30px; cursor: pointer;">Submit Guess</button>
+                            </form>
+                        `}
+                    </div>
+                    
+                    <div id="time-content" class="tab-content" style="display: none;">
+                        <h3 style="color: #333;">Guess the Birth Time</h3>
+                        <p>Select the hour and minute when you think the baby will be born.</p>
+                        
+                        ${guesses && guesses.time_guess ? `
+                            <div style="background-color: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                <p style="margin: 0;"><strong>Your Guess:</strong> ${guesses.time_guess.hour}:${guesses.time_guess.minute.toString().padStart(2, '0')} ${guesses.time_guess.am_pm}</p>
+                            </div>
+                            <button id="edit-time-guess-btn" style="background-color: #ff99cc; border: none; color: white; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer;">Edit Guess</button>
+                        ` : `
+                            <form id="time-guess-form" style="max-width: 400px; margin-top: 1rem;">
+                                <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                                    <div style="flex: 1;">
+                                        <label for="guess-hour" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Hour:</label>
+                                        <select id="guess-hour" name="guess-hour" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;" required>
+                                            ${Array.from({length: 12}, (_, i) => i + 1).map(hour => 
+                                                `<option value="${hour}">${hour}</option>`
+                                            ).join('')}
+                                        </select>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <label for="guess-minute" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Minute:</label>
+                                        <select id="guess-minute" name="guess-minute" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;" required>
+                                            ${Array.from({length: 60}, (_, i) => i).map(minute => 
+                                                `<option value="${minute}">${minute.toString().padStart(2, '0')}</option>`
+                                            ).join('')}
+                                        </select>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <label for="guess-ampm" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">AM/PM:</label>
+                                        <select id="guess-ampm" name="guess-ampm" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;" required>
+                                            <option value="AM">AM</option>
+                                            <option value="PM">PM</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="submit" style="background-color: #ff99cc; border: none; color: white; padding: 0.75rem 1.5rem; border-radius: 30px; cursor: pointer;">Submit Guess</button>
+                            </form>
+                        `}
+                    </div>
+                    
+                    ${event.name_game_enabled ? `
+                    <div id="name-content" class="tab-content" style="display: none;">
+                        <h3 style="color: #333;">Guess the Baby's Name</h3>
+                        <p>What do you think the baby will be named?</p>
+                        
+                        ${guesses && guesses.name_guess ? `
+                            <div style="background-color: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                <p style="margin: 0;"><strong>Your Guess:</strong> ${guesses.name_guess.name}</p>
+                            </div>
+                            <button id="edit-name-guess-btn" style="background-color: #ff99cc; border: none; color: white; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer;">Edit Guess</button>
+                        ` : `
+                            <form id="name-guess-form" style="max-width: 400px; margin-top: 1rem;">
+                                <div style="margin-bottom: 1rem;">
+                                    <label for="guess-name" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Baby Name:</label>
+                                    <input type="text" id="guess-name" name="guess-name" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;" required>
+                                </div>
+                                <button type="submit" style="background-color: #ff99cc; border: none; color: white; padding: 0.75rem 1.5rem; border-radius: 30px; cursor: pointer;">Submit Guess</button>
+                            </form>
+                        `}
+                    </div>
+                    ` : ''}
+                    
+                    <div id="leaderboard-content" class="tab-content" style="display: none;">
+                        <h3 style="color: #333;">Leaderboard & Results</h3>
+                        <p>See everyone's guesses and who's winning!</p>
+                        
+                        <div id="leaderboard-loading" style="text-align: center; padding: 2rem;">
+                            Loading leaderboard data...
+                        </div>
+                    </div>
+                </div>
+                
+                <footer style="margin-top: 3rem; text-align: center;">
+                    <div class="buy-coffee-footer">
+                        <img src="/static/images/coffee-icon.svg" alt="Coffee" class="buy-coffee-qr">
+                        <p class="buy-coffee-text">Like this app?</p>
+                        <a class="buy-coffee-link" onclick="window.showBuyCoffeeModal()">Buy me a coffee</a>
+                    </div>
+                </footer>
+            </div>
+        `;
+        
+        // Set up tab switching
+        const tabs = document.querySelectorAll('.tab-btn');
+        const contents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Deactivate all tabs
+                tabs.forEach(t => {
+                    t.classList.remove('active');
+                    t.style.color = '#666';
+                    t.style.borderBottom = '2px solid transparent';
+                });
+                
+                // Hide all contents
+                contents.forEach(content => {
+                    content.style.display = 'none';
+                });
+                
+                // Activate clicked tab
+                tab.classList.add('active');
+                tab.style.color = '#ff66b3';
+                tab.style.borderBottom = '2px solid #ff99cc';
+                
+                // Show corresponding content
+                const contentId = tab.id.replace('-tab', '-content');
+                document.getElementById(contentId).style.display = 'block';
+                
+                // Load leaderboard data if needed
+                if (tab.id === 'leaderboard-tab') {
+                    loadLeaderboardData(eventId);
+                }
+            });
+        });
+        
+        // Setup form submissions
+        setupGuessForms(eventId);
+        
+        // Setup logout
+        document.getElementById('logout-btn').addEventListener('click', handleLogout);
+    })
+    .catch(error => {
+        console.error('Error loading event dashboard:', error);
+        document.getElementById('root').innerHTML = `
+            <div style="text-align: center; padding: 3rem;">
+                <h2 style="color: #ff66b3;">Error Loading Dashboard</h2>
+                <p>${error.message || 'Failed to load event details. Please try again later.'}</p>
+                <button onclick="window.location.href='/auth/guest_login'" style="background-color: #ff99cc; border: none; color: white; padding: 0.75rem 1.5rem; border-radius: 30px; cursor: pointer; margin-top: 1rem;">Return to Login</button>
+            </div>
+        `;
+    });
+};
+
+// Helper for loading leaderboard data
+const loadLeaderboardData = (eventId) => {
+    const leaderboardContent = document.getElementById('leaderboard-content');
+    leaderboardContent.innerHTML = '<div style="text-align: center; padding: 2rem;">Loading leaderboard data...</div>';
+    
+    // Fetch all guesses for this event
+    fetch(`/api/events/${eventId}/guesses`, {
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to load leaderboard data');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Generate the leaderboard HTML
+        let html = `
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                    <thead>
+                        <tr style="background-color: #f8f9fa;">
+                            <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Name</th>
+                            <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Date Guess</th>
+                            <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Time Guess</th>
+                            ${data.name_guesses && data.name_guesses.length > 0 ? '<th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd;">Name Guess</th>' : ''}
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        // Create a map of user guesses
+        const userGuesses = {};
+        
+        if (data.date_guesses) {
+            data.date_guesses.forEach(guess => {
+                if (!userGuesses[guess.user_id]) {
+                    userGuesses[guess.user_id] = {
+                        user_id: guess.user_id,
+                        user_name: guess.user_name || 'Guest'
+                    };
+                }
+                userGuesses[guess.user_id].date_guess = new Date(guess.guess_date).toLocaleDateString();
+            });
+        }
+        
+        if (data.time_guesses) {
+            data.time_guesses.forEach(guess => {
+                if (!userGuesses[guess.user_id]) {
+                    userGuesses[guess.user_id] = {
+                        user_id: guess.user_id,
+                        user_name: guess.user_name || 'Guest'
+                    };
+                }
+                userGuesses[guess.user_id].time_guess = `${guess.hour}:${guess.minute.toString().padStart(2, '0')} ${guess.am_pm}`;
+            });
+        }
+        
+        if (data.name_guesses) {
+            data.name_guesses.forEach(guess => {
+                if (!userGuesses[guess.user_id]) {
+                    userGuesses[guess.user_id] = {
+                        user_id: guess.user_id,
+                        user_name: guess.user_name || 'Guest'
+                    };
+                }
+                userGuesses[guess.user_id].name_guess = guess.name;
+            });
+        }
+        
+        // Add rows for each user
+        Object.values(userGuesses).forEach(user => {
+            html += `
+                <tr>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">${user.user_name}</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">${user.date_guess || '-'}</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">${user.time_guess || '-'}</td>
+                    ${data.name_guesses && data.name_guesses.length > 0 ? `<td style="padding: 0.75rem; border-bottom: 1px solid #eee;">${user.name_guess || '-'}</td>` : ''}
+                </tr>
+            `;
+        });
+        
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        leaderboardContent.innerHTML = html;
+    })
+    .catch(error => {
+        console.error('Error fetching leaderboard data:', error);
+        leaderboardContent.innerHTML = `
+            <div style="text-align: center; padding: 2rem;">
+                <p>Failed to load leaderboard data. Please try again later.</p>
+                <button onclick="loadLeaderboardData(${eventId})" style="background-color: #ff99cc; border: none; color: white; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; margin-top: 1rem;">Retry</button>
+            </div>
+        `;
+    });
+};
+
+// Helper for setting up guess form submissions
+const setupGuessForms = (eventId) => {
+    // Date guess form
+    const dateGuessForm = document.getElementById('date-guess-form');
+    if (dateGuessForm) {
+        dateGuessForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const guessDate = document.getElementById('guess-date').value;
+            if (!guessDate) {
+                alert('Please select a date');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/events/${eventId}/guesses/date`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ 
+                        guess_date: guessDate 
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to submit date guess');
+                }
+                
+                // Reload the page to show the updated guess
+                window.location.reload();
+            } catch (error) {
+                console.error('Error submitting date guess:', error);
+                alert('Error submitting your guess. Please try again.');
+            }
+        });
+    }
+    
+    // Time guess form
+    const timeGuessForm = document.getElementById('time-guess-form');
+    if (timeGuessForm) {
+        timeGuessForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const hour = document.getElementById('guess-hour').value;
+            const minute = document.getElementById('guess-minute').value;
+            const amPm = document.getElementById('guess-ampm').value;
+            
+            try {
+                const response = await fetch(`/api/events/${eventId}/guesses/hour`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ 
+                        hour: parseInt(hour), 
+                        am_pm: amPm 
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to submit hour guess');
+                }
+                
+                // Also submit minute guess
+                const minuteResponse = await fetch(`/api/events/${eventId}/guesses/minute`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ 
+                        minute: parseInt(minute)
+                    })
+                });
+                
+                if (!minuteResponse.ok) {
+                    throw new Error('Failed to submit minute guess');
+                }
+                
+                // Reload the page to show the updated guesses
+                window.location.reload();
+            } catch (error) {
+                console.error('Error submitting time guess:', error);
+                alert('Error submitting your guess. Please try again.');
+            }
+        });
+    }
+    
+    // Name guess form
+    const nameGuessForm = document.getElementById('name-guess-form');
+    if (nameGuessForm) {
+        nameGuessForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('guess-name').value.trim();
+            if (!name) {
+                alert('Please enter a name');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/events/${eventId}/guesses/name`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ 
+                        name: name 
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to submit name guess');
+                }
+                
+                // Reload the page to show the updated guess
+                window.location.reload();
+            } catch (error) {
+                console.error('Error submitting name guess:', error);
+                alert('Error submitting your guess. Please try again.');
+            }
+        });
+    }
+    
+    // Setup edit buttons
+    const editDateGuessBtn = document.getElementById('edit-date-guess-btn');
+    if (editDateGuessBtn) {
+        editDateGuessBtn.addEventListener('click', () => {
+            const dateContent = document.getElementById('date-content');
+            // Replace the current content with a new form
+            dateContent.innerHTML = `
+                <h3 style="color: #333;">Edit Date Guess</h3>
+                <p>Select a new date when you think the baby will be born.</p>
+                
+                <form id="edit-date-guess-form" style="max-width: 400px; margin-top: 1rem;">
+                    <div style="margin-bottom: 1rem;">
+                        <label for="edit-guess-date" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Select Date:</label>
+                        <input type="date" id="edit-guess-date" name="edit-guess-date" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;" required>
+                    </div>
+                    <button type="submit" style="background-color: #ff99cc; border: none; color: white; padding: 0.75rem 1.5rem; border-radius: 30px; cursor: pointer;">Update Guess</button>
+                </form>
+            `;
+            
+            // Setup the new form's submit handler
+            document.getElementById('edit-date-guess-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const guessDate = document.getElementById('edit-guess-date').value;
+                if (!guessDate) {
+                    alert('Please select a date');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/api/events/${eventId}/guesses/date`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        },
+                        body: JSON.stringify({ 
+                            guess_date: guessDate 
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to update date guess');
+                    }
+                    
+                    // Reload the page to show the updated guess
+                    window.location.reload();
+                } catch (error) {
+                    console.error('Error updating date guess:', error);
+                    alert('Error updating your guess. Please try again.');
+                }
+            });
+        });
+    }
+};
+
+// Generic logout handler
+const handleLogout = () => {
+    // Clear authentication data
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('isHost');
+    localStorage.removeItem('currentUser');
+    
+    // Call the server-side logout endpoint
+    fetch('/auth/logout', { method: 'POST' })
+        .finally(() => {
+            // Redirect to home
+            window.location.href = '/';
+        });
+};
+
+// Guest Dashboard Implementation
+const renderGuestDashboard = () => {
+    // For users who are part of multiple events
+    // Fetch their events and let them choose
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    
+    // Create a loading state
+    document.getElementById('root').innerHTML = `
+        <div style="font-family: 'Poppins', sans-serif; padding: 2rem; text-align: center;">
+            <h1 style="color: #ff66b3; margin-bottom: 1rem;">Baby Pool App</h1>
+            <div style="display: flex; justify-content: center; align-items: center; height: 300px;">
+                <p>Loading your events...</p>
+            </div>
+        </div>
+    `;
+    
+    // Fetch the user's events
+    fetch('/api/user/events', {
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to fetch events');
+        }
+        return response.json();
+    })
+    .then(events => {
+        // If user has only one event, redirect to that event's page
+        if (events.length === 1) {
+            window.location.href = `/guest/event/${events[0].id}`;
+            return;
+        }
+        
+        // Otherwise, show a list of events to choose from
+        let eventsHtml = '';
+        events.forEach(event => {
+            eventsHtml += `
+                <div style="background-color: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h3 style="margin: 0 0 0.5rem 0; color: #333;">${event.title || `Baby Shower for ${event.mother_name}`}</h3>
+                            <p style="margin: 0; color: #666;">Mother: ${event.mother_name}</p>
+                        </div>
+                        <a href="/guest/event/${event.id}" style="background-color: #ff99cc; color: white; padding: 0.5rem 1rem; border-radius: 20px; text-decoration: none;">View Event</a>
+                    </div>
+                </div>
+            `;
+        });
+        
+        // Update the page with the events list
+        document.getElementById('root').innerHTML = `
+            <div style="font-family: 'Poppins', sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto;">
+                <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h1 style="color: #ff66b3; margin: 0;">Baby Pool App</h1>
+                    <div>
+                        <span style="margin-right: 1rem;">Hello, ${user.first_name || 'Guest'}</span>
+                        <button id="logout-btn" style="background: none; border: none; color: #ff66b3; cursor: pointer; font-weight: 500;">Logout</button>
+                    </div>
+                </header>
+                
+                <h2 style="color: #333; margin-bottom: 1.5rem;">Your Baby Shower Events</h2>
+                
+                ${events.length > 0 ? eventsHtml : `
+                    <div style="text-align: center; padding: 3rem; background-color: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <p>You're not participating in any baby shower events yet.</p>
+                        <a href="/auth/guest_login" style="display: inline-block; background-color: #ff99cc; color: white; padding: 0.75rem 1.5rem; border-radius: 30px; text-decoration: none; margin-top: 1rem;">Join an Event</a>
+                    </div>
+                `}
+                
+                <footer style="margin-top: 3rem; text-align: center;">
+                    <div class="buy-coffee-footer">
+                        <img src="/static/images/coffee-icon.svg" alt="Coffee" class="buy-coffee-qr">
+                        <p class="buy-coffee-text">Like this app?</p>
+                        <a class="buy-coffee-link" onclick="window.showBuyCoffeeModal()">Buy me a coffee</a>
+                    </div>
+                </footer>
+            </div>
+        `;
+        
+        // Setup logout
+        document.getElementById('logout-btn').addEventListener('click', handleLogout);
+    })
+    .catch(error => {
+        console.error('Error loading events:', error);
+        document.getElementById('root').innerHTML = `
+            <div style="text-align: center; padding: 3rem;">
+                <h2 style="color: #ff66b3;">Error Loading Events</h2>
+                <p>${error.message || 'Failed to load your events. Please try again later.'}</p>
+                <button onclick="window.location.href='/'" style="background-color: #ff99cc; border: none; color: white; padding: 0.75rem 1.5rem; border-radius: 30px; cursor: pointer; margin-top: 1rem;">Return to Home</button>
+            </div>
+        `;
     });
 };
 
