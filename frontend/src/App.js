@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './components/AuthContext';
+import { AuthProvider, useAuth } from './components/AuthContext';
 import { ThemeProvider } from './components/ThemeContext';
 
 // Pages
@@ -24,25 +24,56 @@ import Footer from './components/Footer';
 
 // Protected route component
 const ProtectedRoute = ({ children, requireHost }) => {
-  const token = localStorage.getItem('token');
-  const isHost = localStorage.getItem('isHost') === 'true';
-  const savedUser = localStorage.getItem('currentUser');
+  // Use useEffect to ensure this check happens after any redirects
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+  const [isHostUser, setIsHostUser] = useState(false);
   
-  // Add debug logging
-  console.log("ProtectedRoute check:", { 
-    token: !!token, 
-    isHost, 
-    requireHost, 
-    hasUser: !!savedUser,
-    path: window.location.pathname
-  });
+  // Use useAuth for consistent authentication state
+  const { currentUser, isAuthenticated: contextIsAuthenticated } = useAuth();
   
-  if (!token || !savedUser) {
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const isHost = localStorage.getItem('isHost') === 'true';
+    const savedUser = localStorage.getItem('currentUser');
+    
+    // Add debug logging
+    console.log("ProtectedRoute check:", { 
+      token: !!token, 
+      isHost, 
+      requireHost, 
+      hasUser: !!savedUser,
+      contextUser: !!currentUser,
+      contextAuth: contextIsAuthenticated,
+      path: window.location.pathname
+    });
+    
+    if (token && savedUser) {
+      console.log("Authentication confirmed from localStorage");
+      setIsAuthenticated(true);
+      setIsHostUser(isHost);
+    } else if (contextIsAuthenticated && currentUser) {
+      console.log("Authentication confirmed from context");
+      setIsAuthenticated(true);
+      setIsHostUser(currentUser.is_host);
+    } else {
+      console.log("Not authenticated");
+      setIsAuthenticated(false);
+    }
+    
+    setIsChecking(false);
+  }, [currentUser, contextIsAuthenticated, requireHost]);
+  
+  if (isChecking) {
+    return <div className="loading">Checking authentication...</div>;
+  }
+  
+  if (!isAuthenticated) {
     console.log("Not authenticated, redirecting to home");
     return <Navigate to="/" replace />;
   }
   
-  if (requireHost && !isHost) {
+  if (requireHost && !isHostUser) {
     console.log("Host access required but user is not a host, redirecting to home");
     return <Navigate to="/" replace />;
   }

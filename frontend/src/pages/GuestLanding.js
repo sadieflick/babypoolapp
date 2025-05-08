@@ -16,17 +16,33 @@ const GuestLanding = () => {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
+        console.log("GuestLanding - Fetching event with ID:", eventId);
+        const token = localStorage.getItem('token');
+        console.log("GuestLanding - Token exists:", !!token);
+        
         const data = await getEvent(eventId);
+        console.log("GuestLanding - Event data loaded:", data);
         setEvent(data);
       } catch (err) {
+        console.error("GuestLanding - Error loading event:", err);
         setError('Failed to load event details');
-        console.error(err);
+        
+        // Check for auth errors
+        if (err.response && err.response.status === 401) {
+          console.error("Authentication failed when loading event - token may be invalid");
+        }
       } finally {
         setLoading(false);
       }
     };
     
-    fetchEvent();
+    if (eventId) {
+      fetchEvent();
+    } else {
+      console.error("GuestLanding - No event ID found in URL params");
+      setError('No event ID provided');
+      setLoading(false);
+    }
   }, [eventId]);
   
   if (loading) {
