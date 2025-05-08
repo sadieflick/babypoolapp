@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app
 from flask_login import current_user, login_required
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
 from models import db, User, Event, DateGuess, HourGuess, MinuteGuess, NameGuess, Payment
 from werkzeug.utils import secure_filename
 import os
@@ -106,25 +106,33 @@ def allowed_file(filename):
 
 # Event routes
 @api.route('/events', methods=['GET'])
-@jwt_required()
 def get_events():
     try:
-        # Print raw JWT identity for debugging
-        raw_identity = get_jwt_identity()
-        print(f"DEBUG: Raw JWT identity: {raw_identity}, type: {type(raw_identity)}")
+        user = None
         
-        # Debug print for request headers
-        auth_header = request.headers.get('Authorization')
-        print(f"DEBUG: Authorization header: {auth_header}")
-        
-        user = get_user_from_jwt()
-        print(f"DEBUG: User from JWT: {user}")
+        # Try to get user from JWT if available
+        try:
+            verify_jwt_in_request(optional=True)
+            raw_identity = get_jwt_identity()
+            print(f"DEBUG: Raw JWT identity: {raw_identity}, type: {type(raw_identity)}")
+            
+            # Debug print for request headers
+            auth_header = request.headers.get('Authorization')
+            print(f"DEBUG: Authorization header: {auth_header}")
+            
+            user = get_user_from_jwt()
+            print(f"DEBUG: User from JWT: {user}")
+        except:
+            # If JWT verification fails, try to use session-based authentication
+            if current_user.is_authenticated:
+                user = current_user
+                print(f"DEBUG: User from session: {user}")
         
         if not user:
-            return jsonify({'error': 'User not found'}), 401
+            return jsonify({'error': 'User not authenticated'}), 401
     except Exception as e:
         print(f"ERROR in get_events: {str(e)}")
-        return jsonify({'error': f'JWT error: {str(e)}'}), 500
+        return jsonify({'error': f'Authentication error: {str(e)}'}), 500
         
     if user.is_host:
         events = Event.query.filter_by(host_id=user.id).all()
@@ -147,12 +155,18 @@ def get_events():
 
 
 @api.route('/events/<int:event_id>', methods=['GET'])
-@jwt_required()
 def get_event(event_id):
     event = Event.query.get_or_404(event_id)
+    user = None
     
-    # Get user from JWT
-    user = get_user_from_jwt()
+    # Try to get user from JWT if available
+    try:
+        verify_jwt_in_request(optional=True)
+        user = get_user_from_jwt()
+    except:
+        # If JWT verification fails, try to use session-based authentication
+        if current_user.is_authenticated:
+            user = current_user
         
     # If user is not the host and not a guest, only return limited info
     if not user or (
@@ -1146,11 +1160,20 @@ def update_current_user():
         return jsonify({'error': str(e)}), 400
 
 @api.route('/events/<int:event_id>/guesses/current', methods=['GET'])
-@jwt_required()
 def get_current_user_guesses(event_id):
-    user = get_user_from_jwt()
+    user = None
+    
+    # Try to get user from JWT if available
+    try:
+        verify_jwt_in_request(optional=True)
+        user = get_user_from_jwt()
+    except:
+        # If JWT verification fails, try to use session-based authentication
+        if current_user.is_authenticated:
+            user = current_user
+            
     if not user:
-        return jsonify({'error': 'User not found'}), 401
+        return jsonify({'error': 'User not authenticated'}), 401
     
     event = Event.query.get_or_404(event_id)
     
@@ -1184,11 +1207,20 @@ def get_current_user_guesses(event_id):
     return jsonify(result)
 
 @api.route('/events/<int:event_id>/guesses', methods=['GET'])
-@jwt_required()
 def get_all_event_guesses(event_id):
-    user = get_user_from_jwt()
+    user = None
+    
+    # Try to get user from JWT if available
+    try:
+        verify_jwt_in_request(optional=True)
+        user = get_user_from_jwt()
+    except:
+        # If JWT verification fails, try to use session-based authentication
+        if current_user.is_authenticated:
+            user = current_user
+            
     if not user:
-        return jsonify({'error': 'User not found'}), 401
+        return jsonify({'error': 'User not authenticated'}), 401
     
     event = Event.query.get_or_404(event_id)
     
@@ -1252,12 +1284,20 @@ def get_all_event_guesses(event_id):
     })
 
 @api.route('/events/<int:event_id>/user/guesses', methods=['GET'])
-@jwt_required()
 def get_user_guesses(event_id):
-    # Get user from JWT
-    user = get_user_from_jwt()
+    user = None
+    
+    # Try to get user from JWT if available
+    try:
+        verify_jwt_in_request(optional=True)
+        user = get_user_from_jwt()
+    except:
+        # If JWT verification fails, try to use session-based authentication
+        if current_user.is_authenticated:
+            user = current_user
+            
     if not user:
-        return jsonify({'error': 'User not found'}), 401
+        return jsonify({'error': 'User not authenticated'}), 401
     
     event = Event.query.get_or_404(event_id)
     
