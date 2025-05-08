@@ -2690,7 +2690,7 @@ const setupGuessForms = (eventId) => {
 };
 
 // Generic logout handler
-// This older implementation has been replaced by the async version
+// This older implementation has been replaced by the async version above
 
 // Guest Dashboard Implementation
 const renderGuestDashboard = () => {
