@@ -202,6 +202,8 @@ def guest_login():
     data = request.json
     login_type = data.get('login_type')
     
+    print(f"Guest login attempt with type: {login_type}, data: {json.dumps(data)}")
+    
     if login_type == 'email':
         email = data.get('email')
         
@@ -260,7 +262,14 @@ def guest_login():
                 'mother_name': event.mother_name
             })
         
-        # Prepare response with tokens
+        # Create event_id if there's only one event
+        event_id = None
+        if len(user_events) == 1:
+            event_id = user_events[0]['id']
+            
+        print(f"User {user.id} login successful, found {len(user_events)} events, event_id: {event_id}")
+            
+        # Prepare response with tokens and is_host flag
         response = jsonify({
             'status': 'logged_in',
             'user_id': user.id,
@@ -268,6 +277,8 @@ def guest_login():
             'first_name': user.first_name,
             'last_name': user.last_name,
             'nickname': user.nickname,
+            'is_host': user.is_host,
+            'event_id': event_id,
             'events': user_events,
             'access_token': access_token,
             'refresh_token': refresh_token,
@@ -382,10 +393,13 @@ def guest_login():
             expires_delta=timedelta(days=60)
         )
         
-        # Prepare response with tokens
+        print(f"User {user.id} successfully joined event {event.id} via event code")
+        
+        # Prepare response with tokens and is_host flag
         response = jsonify({
             'status': 'logged_in',
             'user_id': user.id,
+            'is_host': user.is_host,
             'event_id': event.id,
             'event_title': event.title,
             'first_name': user.first_name,
@@ -537,10 +551,13 @@ def guest_select_event():
         expires_delta=timedelta(days=60)
     )
     
-    # Prepare response with tokens
+    print(f"User {user.id} selected event {event.id}")
+    
+    # Prepare response with tokens and is_host flag
     response = jsonify({
         'status': 'logged_in',
         'user_id': user.id,
+        'is_host': user.is_host,
         'event_id': event.id,
         'event_title': event.title,
         'first_name': user.first_name,
