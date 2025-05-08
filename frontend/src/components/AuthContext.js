@@ -56,9 +56,9 @@ export const AuthProvider = ({ children }) => {
             const refreshToken = localStorage.getItem('refresh_token');
             if (refreshToken) {
               try {
-                const refreshResponse = await axios.post('/auth/refresh-token', {}, {
+                const refreshResponse = await axios.post('/auth/token/refresh', {}, {
                   headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${refreshToken}`
                   },
                   withCredentials: true
                 });

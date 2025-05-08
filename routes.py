@@ -36,6 +36,7 @@ def get_user_from_jwt():
 
 # User endpoints
 @api.route('/users/me', methods=['GET'])
+@api.route('/current-user', methods=['GET'])  # Add an alias that matches what the test is using
 @jwt_required()
 def get_current_user_info():
     """Return information about the currently logged-in user using JWT"""
