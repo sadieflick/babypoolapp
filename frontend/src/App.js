@@ -131,6 +131,14 @@ function App() {
                   }
                 />
                 <Route
+                  path="/guest/event/:eventId/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <GuestLanding />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/guest/event/:eventId/date-guess"
                   element={
                     <ProtectedRoute>

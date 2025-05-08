@@ -1284,6 +1284,21 @@ const handleRouting = async () => {
         return;
     }
     
+    // Guest dashboard route - match pattern /guest/event/:eventId/dashboard
+    if (path.match(/^\/guest\/event\/\d+\/dashboard$/)) {
+        if (isAuthenticated() && !isHost()) {
+            // Extract the event ID from the URL
+            const eventId = path.split('/')[3];
+            // Redirect to the regular event page which serves as the dashboard
+            window.location.href = `/guest/event/${eventId}`;
+            return;
+        } else {
+            // Not authenticated as guest, redirect to login
+            window.location.href = '/guest/login';
+            return;
+        }
+    }
+    
     // Default: render the home page for root or unhandled paths
     renderHomePage();
 };
