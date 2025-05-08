@@ -320,15 +320,23 @@ def guest_login():
                 'message': 'Please provide your contact information'
             }), 200
         
-        # Look for existing user with email if provided
+        # Look for existing user with provided credentials
         user = None
+        
+        # First check by email if provided
         if email:
             user = User.query.filter_by(email=email).first()
         
-        # If no user found by email, check for user with matching first/last name in this event
+        # Then check by phone if provided and still no user found
+        if not user and phone:
+            user = User.query.filter_by(phone=phone).first()
+        
+        # Finally check by name match in this specific event if both first and last name provided
         if not user and first_name and last_name:
             for guest in event.guests:
-                if guest.first_name == first_name and guest.last_name == last_name:
+                if guest.first_name and guest.last_name and \
+                   guest.first_name.lower() == first_name.lower() and \
+                   guest.last_name.lower() == last_name.lower():
                     user = guest
                     break
         
@@ -481,15 +489,23 @@ def guest_select_event():
             'message': 'Please provide your contact information'
         }), 200
     
-    # Look for existing user
+    # Look for existing user with provided credentials
     user = None
+    
+    # First check by email if provided
     if email:
         user = User.query.filter_by(email=email).first()
     
-    # If no user found by email, check for user with matching first/last name in this event
+    # Then check by phone if provided and still no user found
+    if not user and phone:
+        user = User.query.filter_by(phone=phone).first()
+    
+    # Finally check by name match in this specific event if both first and last name provided
     if not user and first_name and last_name:
         for guest in event.guests:
-            if guest.first_name == first_name and guest.last_name == last_name:
+            if guest.first_name and guest.last_name and \
+               guest.first_name.lower() == first_name.lower() and \
+               guest.last_name.lower() == last_name.lower():
                 user = guest
                 break
     

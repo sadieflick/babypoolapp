@@ -704,7 +704,7 @@ def create_date_guess(event_id):
         db.session.commit()
     
     data = request.json
-    guess_date = data.get('date')
+    guess_date = data.get('guess_date') or data.get('date')  # Support both parameter names
     
     if not guess_date:
         return jsonify({'error': 'Date is required'}), 400
