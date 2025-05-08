@@ -171,14 +171,6 @@ const renderHomePage = () => {
                     </div>
                 </div>
             </div>
-            
-            <!-- Buy Me a Coffee Section -->
-            <div class="buy-coffee-container" style="background-color: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px; margin: 30px auto; max-width: 500px; text-align: center;">
-                <h3 style="color: #ff66b3; font-size: 1.5rem; margin-bottom: 15px;">Like this app? Buy me a coffee!</h3>
-                <p style="color: #333; margin-bottom: 20px;">If you find this app useful, consider supporting my work with a small donation.</p>
-                <img src="/static/images/venmo-qr.svg" alt="Venmo QR Code" style="max-width: 200px; height: auto; margin: 0 auto 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <p style="font-weight: 500; color: #008CFF; margin-bottom: 10px;">Scan with Venmo app</p>
-            </div>
 
             <footer style="margin-top: 3rem; font-size: 0.9rem; color: #666;">
                 <div style="text-align: center;">
