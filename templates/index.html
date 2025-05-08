@@ -13,7 +13,43 @@
     <!-- React app root -->
     <div id="root"></div>
 
+    <!-- Buy me a coffee modal -->
+    <div id="buyCoffeeModal" class="buy-coffee-modal">
+        <div class="buy-coffee-modal-content">
+            <button id="closeCoffeeModal" class="buy-coffee-modal-close">&times;</button>
+            <h3 class="buy-coffee-modal-title">Like this app? Buy me a coffee!</h3>
+            <p class="buy-coffee-modal-text">If you find this app useful, consider supporting my work with a small donation.</p>
+            <img src="/static/images/venmo-qr.svg" alt="Venmo QR Code" class="buy-coffee-modal-qr">
+            <p style="font-weight: 500; color: #008CFF; margin-bottom: 10px;">Scan with Venmo app</p>
+        </div>
+    </div>
+
     <!-- Load the bundled React app -->
     <script src="/static/js/main.js"></script>
+    
+    <!-- Coffee modal script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('buyCoffeeModal');
+            const closeBtn = document.getElementById('closeCoffeeModal');
+            
+            // Close modal when close button is clicked
+            closeBtn.addEventListener('click', function() {
+                modal.classList.remove('show');
+            });
+            
+            // Close modal when clicking outside of it
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.classList.remove('show');
+                }
+            });
+            
+            // Expose a function to show the modal
+            window.showBuyCoffeeModal = function() {
+                modal.classList.add('show');
+            };
+        });
+    </script>
 </body>
 </html>
