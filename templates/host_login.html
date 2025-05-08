@@ -164,16 +164,21 @@
                         // Login successful
                         showSuccess('Login successful! Redirecting to dashboard...');
                         
-                        // Store authentication data in localStorage
-                        const token = Date.now().toString(); // Simple token based on timestamp
-                        localStorage.setItem('token', token);
+                        // Store authentication data in localStorage with proper JWT tokens
+                        localStorage.setItem('token', data.access_token); // Use JWT access_token from response
+                        localStorage.setItem('refresh_token', data.refresh_token); // Store refresh token
                         localStorage.setItem('isHost', data.is_host.toString());
-                        localStorage.setItem('currentUser', JSON.stringify(data));
+                        
+                        // Store user data without the tokens to avoid duplication
+                        const userData = { ...data };
+                        delete userData.access_token;
+                        delete userData.refresh_token;
+                        localStorage.setItem('currentUser', JSON.stringify(userData));
                         
                         console.log('Authentication data stored in localStorage:', {
-                            token: token,
+                            token: data.access_token,
                             isHost: data.is_host,
-                            userData: data
+                            userData: userData
                         });
                         
                         // Redirect after a short delay
