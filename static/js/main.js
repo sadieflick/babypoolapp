@@ -8,21 +8,20 @@ const isAuthenticated = () => {
 };
 
 const isHost = () => {
-    // Check different localStorage keys where host status might be stored
-    const isHostFlag = localStorage.getItem('isHost');
-    if (isHostFlag === 'true') {
-        return true;
-    }
+    // First check in user objects (most reliable source of truth)
     
-    // Check in currentUser object
+    // Check in currentUser object first (primary source)
     const userData = localStorage.getItem('currentUser');
     if (userData) {
         try {
             const user = JSON.parse(userData);
-            return user.is_host === true;
+            if (user.is_host !== undefined) {
+                // Synchronize the isHost flag with the user data for consistency
+                localStorage.setItem('isHost', user.is_host === true ? 'true' : 'false');
+                return user.is_host === true;
+            }
         } catch (e) {
             console.error('Error parsing user data:', e);
-            return false;
         }
     }
     
@@ -31,11 +30,26 @@ const isHost = () => {
     if (legacyUserData) {
         try {
             const user = JSON.parse(legacyUserData);
-            return user.is_host === true;
+            if (user.is_host !== undefined) {
+                // Synchronize the isHost flag with the user data for consistency
+                localStorage.setItem('isHost', user.is_host === true ? 'true' : 'false');
+                
+                // Also update currentUser for future consistency
+                if (!userData) {
+                    localStorage.setItem('currentUser', legacyUserData);
+                }
+                
+                return user.is_host === true;
+            }
         } catch (e) {
             console.error('Error parsing legacy user data:', e);
-            return false;
         }
+    }
+    
+    // Fallback to the direct flag (least reliable)
+    const isHostFlag = localStorage.getItem('isHost');
+    if (isHostFlag === 'true') {
+        return true;
     }
     
     return false;
@@ -71,7 +85,19 @@ const getCurrentUser = () => {
     const legacyUserData = localStorage.getItem('user');
     if (legacyUserData) {
         try {
-            return JSON.parse(legacyUserData);
+            const userData = JSON.parse(legacyUserData);
+            
+            // Also update currentUser for future consistency if it doesn't exist
+            if (!currentUserData) {
+                localStorage.setItem('currentUser', legacyUserData);
+                
+                // Also ensure isHost flag is consistent
+                if (userData.is_host !== undefined) {
+                    localStorage.setItem('isHost', userData.is_host === true ? 'true' : 'false');
+                }
+            }
+            
+            return userData;
         } catch (e) {
             console.error('Error parsing legacy user data:', e);
         }
