@@ -77,10 +77,19 @@ def allowed_file(filename):
 @api.route('/events', methods=['GET'])
 @jwt_required()
 def get_events():
-    user = get_user_from_jwt()
-    
-    if not user:
-        return jsonify({'error': 'User not found'}), 401
+    try:
+        # Print raw JWT identity for debugging
+        raw_identity = get_jwt_identity()
+        print(f"DEBUG: Raw JWT identity: {raw_identity}, type: {type(raw_identity)}")
+        
+        user = get_user_from_jwt()
+        print(f"DEBUG: User from JWT: {user}")
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 401
+    except Exception as e:
+        print(f"ERROR in get_events: {str(e)}")
+        return jsonify({'error': f'JWT error: {str(e)}'}), 500
         
     if user.is_host:
         events = Event.query.filter_by(host_id=user.id).all()
