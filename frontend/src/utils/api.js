@@ -41,7 +41,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     // If error is unauthorized and we haven't tried refreshing yet
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
@@ -55,17 +55,17 @@ api.interceptors.response.use(
           })
           .catch(err => Promise.reject(err));
       }
-      
+
       originalRequest._retry = true;
       isRefreshing = true;
-      
+
       try {
         // Try to refresh the token
         const refreshToken = localStorage.getItem('refresh_token');
         if (!refreshToken) {
           throw new Error('No refresh token available');
         }
-        
+
         const response = await axios.post('/auth/token/refresh', {}, {
           headers: {
             'Authorization': `Bearer ${refreshToken}`,
@@ -73,17 +73,17 @@ api.interceptors.response.use(
           },
           withCredentials: true
         });
-        
+
         const { access_token } = response.data;
         localStorage.setItem('token', access_token);
-        
+
         // Update authorization header
         api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
         originalRequest.headers['Authorization'] = `Bearer ${access_token}`;
-        
+
         // Process queued requests
         processQueue(null, access_token);
-        
+
         return api(originalRequest);
       } catch (err) {
         processQueue(err, null);
@@ -92,20 +92,20 @@ api.interceptors.response.use(
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('isHost');
         localStorage.removeItem('currentUser');
-        
+
         // Redirect to login on token refresh failure
         if (window.location.pathname !== '/' && 
             !window.location.pathname.includes('/auth/') && 
             !window.location.pathname.includes('/google_login')) {
           window.location.href = '/';
         }
-        
+
         return Promise.reject(err);
       } finally {
         isRefreshing = false;
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -165,6 +165,7 @@ export const logout = async () => {
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('isHost');
     localStorage.removeItem('currentUser');
+    console.log('🔵 FRONTEND: User logged out successfully.'); // Added console log for clarity
   } catch (error) {
     console.error('Logout error:', error);
     // Still clear local storage even if server logout fails
@@ -227,14 +228,14 @@ export const uploadEventImage = async (eventId, imageFile) => {
   try {
     const formData = new FormData();
     formData.append('image', imageFile);
-    
+
     const response = await axios.post(`/api/events/${eventId}/image`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
       withCredentials: true  // Ensure cookies are sent with the request
     });
-    
+
     return response.data;
   } catch (error) {
     throw error;
