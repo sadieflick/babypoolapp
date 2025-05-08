@@ -89,9 +89,13 @@ with app.app_context():
 # Removed non-SPA route for event creation since the React app handles it now
 
 @app.route('/dashboard')
-@login_required
 def dashboard():
-    """Redirect dashboard requests to the SPA host dashboard route"""
+    """Redirect dashboard requests to the SPA host dashboard route
+    
+    This handles both Flask-Login and JWT authentication methods
+    """
+    # For JWT auth, we don't need to check here since the SPA will handle it
+    # Just redirect to the SPA route and let the frontend handle auth state
     return redirect('/host/dashboard')
 
 @app.route('/test/auth')
