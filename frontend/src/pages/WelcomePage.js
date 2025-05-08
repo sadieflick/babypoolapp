@@ -62,6 +62,10 @@ const WelcomePage = () => {
             <Link to="/host/login" className="btn btn-secondary">
               Login as Host
             </Link>
+            <a href="/google_auth/google_login" className="btn btn-light google-btn">
+              <img src="/static/images/googleicon.png" alt="Google Logo" className="google-icon" />
+              Sign in with Google
+            </a>
           </div>
         )}
         
