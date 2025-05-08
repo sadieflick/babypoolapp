@@ -34,11 +34,21 @@ const HostLogin = () => {
       if (response.error) {
         setError(response.error);
       } else {
-        // Generate a simple token based on timestamp for frontend auth
-        const token = Date.now().toString();
-        console.log("Login successful, token generated, calling login function");
-        login(response, token);
-        // Navigate is handled in AuthContext.login method
+        // Extract tokens from response and store them
+        const { access_token, refresh_token } = response;
+        
+        // Delete tokens from user object before storing in AuthContext to avoid duplication
+        const userData = { ...response };
+        delete userData.access_token;
+        delete userData.refresh_token;
+        
+        // Store tokens in localStorage
+        localStorage.setItem('token', access_token);
+        localStorage.setItem('refresh_token', refresh_token);
+        
+        console.log("Login successful, tokens received, calling login function");
+        // Pass user data to auth context
+        login(userData, access_token);
         
         // Force navigation to dashboard as a backup
         setTimeout(() => {

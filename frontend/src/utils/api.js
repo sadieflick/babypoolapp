@@ -9,6 +9,21 @@ const api = axios.create({
   withCredentials: true,  // Include credentials in all requests
 });
 
+// Token refresh functionality
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 // Add auth token to all requests if available
 api.interceptors.request.use(
   (config) => {
@@ -19,6 +34,76 @@ api.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+// Handle token refresh on 401 errors
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // If error is unauthorized and we haven't tried refreshing yet
+    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // If already refreshing, add to queue
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(token => {
+            originalRequest.headers['Authorization'] = `Bearer ${token}`;
+            return api(originalRequest);
+          })
+          .catch(err => Promise.reject(err));
+      }
+      
+      originalRequest._retry = true;
+      isRefreshing = true;
+      
+      try {
+        // Try to refresh the token
+        const refreshToken = localStorage.getItem('refresh_token');
+        if (!refreshToken) {
+          throw new Error('No refresh token available');
+        }
+        
+        const response = await axios.post('/auth/refresh-token', {}, {
+          withCredentials: true
+        });
+        
+        const { access_token } = response.data;
+        localStorage.setItem('token', access_token);
+        
+        // Update authorization header
+        api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+        originalRequest.headers['Authorization'] = `Bearer ${access_token}`;
+        
+        // Process queued requests
+        processQueue(null, access_token);
+        
+        return api(originalRequest);
+      } catch (err) {
+        processQueue(err, null);
+        // Clear auth data as token refresh failed
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('isHost');
+        localStorage.removeItem('currentUser');
+        
+        // Redirect to login on token refresh failure
+        if (window.location.pathname !== '/' && 
+            !window.location.pathname.includes('/auth/') && 
+            !window.location.pathname.includes('/google_login')) {
+          window.location.href = '/';
+        }
+        
+        return Promise.reject(err);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+    
+    return Promise.reject(error);
+  }
 );
 
 // Auth API calls
@@ -71,10 +156,18 @@ export const logout = async () => {
     await axios.post('/auth/logout', {}, {
       withCredentials: true  // Ensure cookies are sent with the request
     });
+    // Clear all authentication data
     localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('isHost');
+    localStorage.removeItem('currentUser');
   } catch (error) {
     console.error('Logout error:', error);
+    // Still clear local storage even if server logout fails
+    localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('isHost');
+    localStorage.removeItem('currentUser');
   }
 };
 
