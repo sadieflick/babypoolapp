@@ -8,7 +8,17 @@ const isAuthenticated = () => {
 };
 
 const isHost = () => {
-    return localStorage.getItem('isHost') === 'true';
+    const userData = localStorage.getItem('user');
+    if (userData) {
+        try {
+            const user = JSON.parse(userData);
+            return user.is_host === true;
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+            return false;
+        }
+    }
+    return false;
 };
 
 const getUserData = () => {
@@ -22,6 +32,44 @@ const getUserData = () => {
         }
     }
     return null;
+};
+
+// Function to get the current user from local storage
+// Used by various components that need user information
+const getCurrentUser = () => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+        try {
+            return JSON.parse(userData);
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+            return { first_name: 'Guest' };
+        }
+    }
+    return { first_name: 'Guest' };
+};
+
+// Handle user logout
+const handleLogout = async () => {
+    try {
+        // Clear local storage data
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('isHost');
+        localStorage.removeItem('currentUser');
+        
+        // Call server logout endpoint
+        await fetch('/auth/logout', { 
+            method: 'POST',
+            credentials: 'include'
+        });
+        
+        // Redirect to home page
+        window.location.href = '/';
+    } catch (error) {
+        console.error('Logout failed:', error);
+        alert('Logout failed. Please try again.');
+    }
 };
 
 // API utility functions
