@@ -123,7 +123,7 @@ const renderHomePage = () => {
                         <span style="background: white; padding: 0 10px; position: relative; color: #888;">or</span>
                     </div>
                     <a href="/google_auth/google_login" style="text-decoration: none; display: flex; align-items: center; justify-content: center; background-color: white; border: 1px solid #ddd; color: #444; padding: 0.75rem 1.5rem; border-radius: 30px; font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s ease;">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Logo" style="height: 20px; margin-right: 10px;">
+                        <img src="/static/images/googleicon.png" alt="Google Logo" style="height: 20px; margin-right: 10px;">
                         Sign in with Google
                     </a>
                 </div>
