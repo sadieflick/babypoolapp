@@ -119,6 +119,7 @@ function App() {
                 <Route path="/host/login" element={<HostLogin />} />
                 <Route path="/host/register" element={<HostRegistration />} />
                 <Route path="/guest/login" element={<GuestLogin />} />
+                <Route path="/auth/guest_login" element={<GuestLogin />} />
 
                 {/* Protected guest routes */}
                 <Route
