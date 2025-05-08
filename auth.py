@@ -225,10 +225,6 @@ def guest_login():
         # User exists, log them in
         login_user(user)
         
-        # Set longer session expiry for guests (30 days)
-        session.permanent = True
-        current_app.permanent_session_lifetime = timedelta(days=30)
-        
         # Check if user has all required info
         if not user.first_name or not user.last_name:
             return jsonify({
@@ -236,6 +232,24 @@ def guest_login():
                 'user_id': user.id,
                 'message': 'Please complete your profile'
             }), 200
+        
+        # Create tokens with 30-day expiration for guests (longer than hosts)
+        access_token = create_access_token(
+            identity=user.id,
+            additional_claims={
+                'is_host': user.is_host,
+                'email': user.email
+            },
+            expires_delta=timedelta(days=30)
+        )
+        refresh_token = create_refresh_token(
+            identity=user.id,
+            additional_claims={
+                'is_host': user.is_host,
+                'email': user.email
+            },
+            expires_delta=timedelta(days=60)
+        )
         
         # Return user's events
         user_events = []
@@ -246,7 +260,8 @@ def guest_login():
                 'mother_name': event.mother_name
             })
         
-        return jsonify({
+        # Prepare response with tokens
+        response = jsonify({
             'status': 'logged_in',
             'user_id': user.id,
             'email': user.email,
@@ -254,8 +269,16 @@ def guest_login():
             'last_name': user.last_name,
             'nickname': user.nickname,
             'events': user_events,
+            'access_token': access_token,
+            'refresh_token': refresh_token,
             'message': 'Login successful'
         })
+        
+        # Set JWT cookies for cookie-based auth as backup
+        set_access_cookies(response, access_token)
+        set_refresh_cookies(response, refresh_token)
+        
+        return response
         
     elif login_type == 'event_code':
         event_code = data.get('event_code')
@@ -341,7 +364,26 @@ def guest_login():
                 'message': 'Please complete your profile'
             }), 200
         
-        return jsonify({
+        # Create tokens with 30-day expiration for guests (longer than hosts)
+        access_token = create_access_token(
+            identity=user.id,
+            additional_claims={
+                'is_host': user.is_host,
+                'email': user.email
+            },
+            expires_delta=timedelta(days=30)
+        )
+        refresh_token = create_refresh_token(
+            identity=user.id,
+            additional_claims={
+                'is_host': user.is_host,
+                'email': user.email
+            },
+            expires_delta=timedelta(days=60)
+        )
+        
+        # Prepare response with tokens
+        response = jsonify({
             'status': 'logged_in',
             'user_id': user.id,
             'event_id': event.id,
@@ -349,8 +391,16 @@ def guest_login():
             'first_name': user.first_name,
             'last_name': user.last_name,
             'nickname': user.nickname,
+            'access_token': access_token,
+            'refresh_token': refresh_token,
             'message': 'Successfully joined event'
         })
+        
+        # Set JWT cookies for cookie-based auth as backup
+        set_access_cookies(response, access_token)
+        set_refresh_cookies(response, refresh_token)
+        
+        return response
         
     elif login_type == 'mother_search':
         search_term = data.get('search_term')
@@ -469,7 +519,26 @@ def guest_select_event():
     session.permanent = True
     current_app.permanent_session_lifetime = timedelta(days=30)
     
-    return jsonify({
+    # Create tokens with 30-day expiration for guests (longer than hosts)
+    access_token = create_access_token(
+        identity=user.id,
+        additional_claims={
+            'is_host': user.is_host,
+            'email': user.email
+        },
+        expires_delta=timedelta(days=30)
+    )
+    refresh_token = create_refresh_token(
+        identity=user.id,
+        additional_claims={
+            'is_host': user.is_host,
+            'email': user.email
+        },
+        expires_delta=timedelta(days=60)
+    )
+    
+    # Prepare response with tokens
+    response = jsonify({
         'status': 'logged_in',
         'user_id': user.id,
         'event_id': event.id,
@@ -477,8 +546,16 @@ def guest_select_event():
         'first_name': user.first_name,
         'last_name': user.last_name,
         'nickname': user.nickname,
+        'access_token': access_token,
+        'refresh_token': refresh_token,
         'message': 'Successfully joined event'
     })
+    
+    # Set JWT cookies for cookie-based auth as backup
+    set_access_cookies(response, access_token)
+    set_refresh_cookies(response, refresh_token)
+    
+    return response
 
 @auth_blueprint.route('/logout', methods=['GET', 'POST'])
 @login_required
