@@ -1,7 +1,7 @@
 import os
 import logging
 from datetime import timedelta
-from flask import Flask, render_template, send_from_directory, redirect, jsonify
+from flask import Flask, render_template, send_from_directory, redirect, jsonify, request
 from flask_cors import CORS
 from flask_login import LoginManager, login_required, current_user
 from flask_bcrypt import Bcrypt
