@@ -107,15 +107,29 @@ def serve(path):
     if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
         return send_from_directory(app.static_folder, path)
 
+    # Define SPA routes that should always return index.html
+    spa_routes = [
+        'host/dashboard', 
+        'host/event/create',
+        'host/event/',
+        'guest/dashboard',
+        'guest/event/',
+        'auth/guest_login'
+    ]
+    
+    # Check if path matches any SPA route pattern
+    is_spa_route = any(path.startswith(route) for route in spa_routes)
+    
     # Check if this is an API or auth endpoint that should not return index.html
-    if path.startswith('api/') or \
-       path == 'api' or \
-       path.startswith('auth/token/') or \
-       path == 'auth/verify-token' or \
-       path == 'auth/refresh-token':
-        # Don't handle API routes here - let them 404 if not defined elsewhere
+    # Only handle API endpoints if they're not already defined (to avoid 404)
+    is_api_route = path.startswith('api/') or \
+                  path == 'api' or \
+                  path.startswith('auth/') and not is_spa_route
+    
+    if is_api_route and request.method != 'GET':
+        # Don't catch POST/PUT/DELETE API requests here - let them be handled by their blueprints
         return jsonify({"error": f"API endpoint not found: /{path}"}), 404
-
+    
     # Handle old URL patterns to ensure proper redirection to SPA routes
     if path == 'guest-info' and request.args.get('event_id'):
         event_id = request.args.get('event_id')
@@ -124,8 +138,18 @@ def serve(path):
     if path.startswith('event/') and path.split('/')[1].isdigit():
         event_id = path.split('/')[1]
         return redirect(f'/guest/event/{event_id}')
-
-    # Otherwise, serve the index.html template to handle SPA routing
+    
+    # For SPA routes or the root path, serve index.html to let the React router handle it
+    if is_spa_route or path == '':
+        # Log for debugging in test environment
+        logger.debug(f"Serving SPA index.html for path: /{path}")
+        return render_template('index.html')
+        
+    # For unmatched API routes, return 404
+    if is_api_route:
+        return jsonify({"error": f"API endpoint not found: /{path}"}), 404
+        
+    # For any other unmatched route, assume it's a frontend route and serve index.html
     return render_template('index.html')
 
 if __name__ == '__main__':
