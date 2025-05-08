@@ -2847,6 +2847,7 @@ const renderGuestDashboard = () => {
 };
 
 // Render guest date guess page with custom calendar grid
+// Enhanced renderGuestDateGuessPage using CustomCalendarGrid styles and functionality
 const renderGuestDateGuessPage = async (eventId) => {
     try {
         // Get event details
@@ -2873,116 +2874,93 @@ const renderGuestDateGuessPage = async (eventId) => {
             currentDateGuess = new Date(userGuesses.date_guess.guess_date);
         }
         
-        // Generate taken dates from all guesses
-        const takenDates = new Set();
+        // Calculate the date range (1 month before and after due date)
+        const rangeStart = new Date(dueDate);
+        rangeStart.setMonth(dueDate.getMonth() - 1);
+        
+        const rangeEnd = new Date(dueDate);
+        rangeEnd.setMonth(dueDate.getMonth() + 1);
+        
+        // Generate guest data map - map date string to user info
+        const dateGuessMap = {};
         if (allGuesses && allGuesses.date_guesses) {
             allGuesses.date_guesses.forEach(guess => {
-                // Skip the user's own guess
-                if (!currentDateGuess || new Date(guess.guess_date).getTime() !== currentDateGuess.getTime()) {
-                    takenDates.add(new Date(guess.guess_date).toISOString().split('T')[0]);
+                const dateStr = guess.guess_date;
+                if (!dateGuessMap[dateStr]) {
+                    dateGuessMap[dateStr] = [];
                 }
+                dateGuessMap[dateStr].push(guess);
             });
         }
         
-        // Calculate the date range (1 month before and after due date)
-        const startDate = new Date(dueDate);
-        startDate.setMonth(dueDate.getMonth() - 1);
-        
-        const endDate = new Date(dueDate);
-        endDate.setMonth(dueDate.getMonth() + 1);
-        
+        // Create HTML for the custom calendar page
         document.getElementById('root').innerHTML = `
-            <div class="page-container">
-                <header class="page-header">
-                    <div class="header-content">
-                        <h1 class="page-title">Date Guess</h1>
-                        <div class="user-nav">
-                            <span class="user-greeting">Hello, ${getCurrentUser().first_name || 'Guest'}</span>
-                            <button id="back-btn" class="back-button">Back</button>
-                            <button id="logout-btn" class="logout-button">Logout</button>
-                        </div>
-                    </div>
-                </header>
+            <div class="guest-date-guess-page">
+                <div class="page-header">
+                    <a href="/guest/event/${eventId}" class="back-button">&larr; Back to Event</a>
+                    <h1>Date Guess</h1>
+                    <button id="logout-btn" class="logout-button">Logout</button>
+                </div>
                 
-                <main class="main-content">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">When Will Baby Arrive?</h2>
-                            <p class="due-date-info">Due Date: <span class="due-date">${formattedDueDate}</span></p>
+                <div class="date-guess-instructions">
+                    <h2>When Will Baby Arrive?</h2>
+                    <p>Due Date: <strong>${formattedDueDate}</strong></p>
+                    <p>Choose the date you think the baby will be born. Green dates are available, blue is the due date.</p>
+                </div>
+                
+                <div class="calendar-container">
+                    <div class="custom-calendar">
+                        <!-- Calendar header with navigation -->
+                        <div class="calendar-header">
+                            <button id="prev-month" class="month-nav">&lt;</button>
+                            <h2 id="current-month-display" class="current-month"></h2>
+                            <button id="next-month" class="month-nav">&gt;</button>
                         </div>
                         
-                        <div class="card-body">
-                            <p class="guess-instructions">Choose the date you think the baby will arrive. Select an available date on the calendar below.</p>
-                            
-                            ${currentDateGuess ? `
-                                <div class="current-guess">
-                                    <p>Your current guess: <strong>${currentDateGuess.toLocaleDateString('en-US', { 
-                                        weekday: 'long', 
-                                        month: 'long', 
-                                        day: 'numeric', 
-                                        year: 'numeric' 
-                                    })}</strong></p>
-                                    <button id="change-guess-btn" class="button secondary">Change Guess</button>
-                                </div>
-                            ` : ''}
-                            
-                            <div id="calendar-container" class="calendar-container ${currentDateGuess ? 'hidden' : ''}">
-                                <div class="calendar-header">
-                                    <button id="prev-month" class="calendar-nav-btn">&laquo; Prev</button>
-                                    <h3 id="current-month" class="current-month"></h3>
-                                    <button id="next-month" class="calendar-nav-btn">Next &raquo;</button>
-                                </div>
-                                
-                                <div class="weekdays">
-                                    <div>Sun</div>
-                                    <div>Mon</div>
-                                    <div>Tue</div>
-                                    <div>Wed</div>
-                                    <div>Thu</div>
-                                    <div>Fri</div>
-                                    <div>Sat</div>
-                                </div>
-                                
-                                <div id="calendar-grid" class="calendar-grid"></div>
-                                
-                                <div class="calendar-footer">
-                                    <div class="calendar-legend">
-                                        <div class="legend-item">
-                                            <div class="legend-color available"></div>
-                                            <span>Available</span>
-                                        </div>
-                                        <div class="legend-item">
-                                            <div class="legend-color taken"></div>
-                                            <span>Taken</span>
-                                        </div>
-                                        <div class="legend-item">
-                                            <div class="legend-color due-date"></div>
-                                            <span>Due Date</span>
-                                        </div>
-                                        <div class="legend-item">
-                                            <div class="legend-color your-guess"></div>
-                                            <span>Your Guess</span>
-                                        </div>
-                                    </div>
-                                </div>
+                        <!-- Days of week header -->
+                        <div class="days-header">
+                            <div class="day-name">Sun</div>
+                            <div class="day-name">Mon</div>
+                            <div class="day-name">Tue</div>
+                            <div class="day-name">Wed</div>
+                            <div class="day-name">Thu</div>
+                            <div class="day-name">Fri</div>
+                            <div class="day-name">Sat</div>
+                        </div>
+                        
+                        <!-- Calendar days will be inserted here -->
+                        <div id="days-grid" class="days-grid"></div>
+                        
+                        <!-- Calendar info -->
+                        <div class="calendar-info">
+                            <div class="due-date-info">
+                                <span class="due-date-marker"></span> Due Date: ${formattedDueDate}
                             </div>
-                            
-                            <div id="confirmation-container" class="confirmation-container hidden">
-                                <p>You've selected: <span id="selected-date" class="selected-date"></span></p>
-                                <p>Confirm your guess?</p>
-                                <div class="button-group">
-                                    <button id="confirm-guess-btn" class="button primary">Confirm</button>
-                                    <button id="cancel-guess-btn" class="button secondary">Cancel</button>
-                                </div>
-                            </div>
-                            
-                            <div id="success-message" class="success-message hidden">
-                                <p>Your date guess has been saved!</p>
-                                <button id="continue-btn" class="button primary">Continue to Dashboard</button>
+                            <div class="range-info">
+                                Valid guessing range: ${rangeStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - 
+                                ${rangeEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </div>
                         </div>
                     </div>
-                </main>
+                </div>
+                
+                <div id="current-guesses" class="guess-info">
+                    <h3>Your Current Guesses</h3>
+                    <div id="user-guesses-list">
+                        ${currentDateGuess ? `
+                            <ul>
+                                <li>Date: ${currentDateGuess.toLocaleDateString('en-US', { 
+                                    weekday: 'long', 
+                                    month: 'long', 
+                                    day: 'numeric', 
+                                    year: 'numeric' 
+                                })}</li>
+                            </ul>
+                        ` : `
+                            <p class="no-guesses">You haven't made any date guesses yet.</p>
+                        `}
+                    </div>
+                </div>
                 
                 <footer class="page-footer">
                     <div class="buy-coffee-footer">
@@ -2992,28 +2970,25 @@ const renderGuestDateGuessPage = async (eventId) => {
                     </div>
                 </footer>
             </div>
+            
+            <!-- Confirmation modal (initially hidden) -->
+            <div id="confirmation-overlay" class="confirmation-overlay" style="display: none;">
+                <div class="confirmation-modal">
+                    <h3 id="confirmation-title">Confirm Your Guess</h3>
+                    <p id="confirmation-message"></p>
+                    <div class="confirmation-buttons">
+                        <button id="cancel-btn" class="btn btn-secondary">Cancel</button>
+                        <button id="confirm-btn" class="btn btn-primary">Confirm Guess</button>
+                    </div>
+                </div>
+            </div>
         `;
         
-        // Initialize calendar functionality
-        initializeCalendar(startDate, endDate, dueDate, takenDates, currentDateGuess, eventId);
+        // Initialize the enhanced calendar
+        initializeEnhancedCalendar(eventId, dueDate, rangeStart, rangeEnd, dateGuessMap, userGuesses);
         
         // Add event listeners for other buttons
-        document.getElementById('back-btn').addEventListener('click', () => {
-            window.location.href = `/guest/event/${eventId}`;
-        });
-        
         document.getElementById('logout-btn').addEventListener('click', handleLogout);
-        
-        if (currentDateGuess) {
-            document.getElementById('change-guess-btn').addEventListener('click', () => {
-                document.querySelector('.current-guess').classList.add('hidden');
-                document.getElementById('calendar-container').classList.remove('hidden');
-            });
-        }
-        
-        document.getElementById('continue-btn')?.addEventListener('click', () => {
-            window.location.href = `/guest/event/${eventId}`;
-        });
     } catch (error) {
         console.error('Error loading date guess page:', error);
         document.getElementById('root').innerHTML = `
@@ -3026,7 +3001,212 @@ const renderGuestDateGuessPage = async (eventId) => {
     }
 };
 
-// Initialize calendar functionality
+// Enhanced calendar initialization function based on CustomCalendarGrid component
+const initializeEnhancedCalendar = (eventId, dueDate, rangeStart, rangeEnd, dateGuessMap, userGuesses) => {
+    // Initialize with current month set to month containing due date
+    let currentMonth = new Date(dueDate);
+    
+    // Function to render the calendar grid
+    const renderCalendar = () => {
+        const daysGrid = document.getElementById('days-grid');
+        const currentMonthEl = document.getElementById('current-month-display');
+        
+        // Clear the grid
+        daysGrid.innerHTML = '';
+        
+        // Display current month and year
+        currentMonthEl.textContent = currentMonth.toLocaleDateString('en-US', { 
+            month: 'long', 
+            year: 'numeric' 
+        });
+        
+        // Generate days for current month
+        const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+        const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+        
+        // Calculate empty cells at the beginning (day of week for first day)
+        const startDayOfWeek = monthStart.getDay();
+        
+        // Add empty cells at beginning of month
+        for (let i = 0; i < startDayOfWeek; i++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.className = 'day empty';
+            daysGrid.appendChild(emptyCell);
+        }
+        
+        // Fill in the days of the month
+        for (let day = 1; day <= monthEnd.getDate(); day++) {
+            const currentDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+            const dateStr = currentDate.toISOString().split('T')[0];
+            
+            // Create the day cell
+            const dayCell = document.createElement('div');
+            dayCell.className = 'day';
+            
+            // Add the day number
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = day;
+            dayCell.appendChild(dayNumber);
+            
+            // Check various date conditions
+            const isInRange = currentDate >= rangeStart && currentDate <= rangeEnd;
+            const isDueDate = currentDate.getDate() === dueDate.getDate() && 
+                             currentDate.getMonth() === dueDate.getMonth() && 
+                             currentDate.getFullYear() === dueDate.getFullYear();
+                             
+            // Check if user has guessed this date
+            const isUserGuess = userGuesses && 
+                               userGuesses.date_guess && 
+                               userGuesses.date_guess.guess_date === dateStr;
+                               
+            // Check if another user has guessed this date
+            const isOtherGuess = dateGuessMap[dateStr] && dateGuessMap[dateStr].length > 0 && !isUserGuess;
+            
+            // Apply appropriate classes
+            if (!isInRange) {
+                dayCell.classList.add('out-of-range');
+            }
+            if (isDueDate) {
+                dayCell.classList.add('due-date');
+            }
+            if (isUserGuess) {
+                dayCell.classList.add('user-guessed');
+            }
+            if (isOtherGuess) {
+                dayCell.classList.add('other-guessed');
+            }
+            
+            // Add guess name if applicable
+            if (isUserGuess || isOtherGuess) {
+                const guessName = document.createElement('div');
+                guessName.className = 'guess-name';
+                
+                // Get display name of user who made the guess
+                if (dateGuessMap[dateStr] && dateGuessMap[dateStr].length > 0) {
+                    const guess = dateGuessMap[dateStr][0];
+                    let displayName = 'Unknown';
+                    
+                    if (guess.user) {
+                        if (guess.user.nickname) {
+                            displayName = guess.user.nickname;
+                        } else {
+                            const firstName = guess.user.first_name || '';
+                            const lastInitial = guess.user.last_name ? guess.user.last_name.charAt(0) + '.' : '';
+                            displayName = `${firstName} ${lastInitial}`;
+                        }
+                    }
+                    
+                    guessName.textContent = displayName;
+                } else if (isUserGuess) {
+                    guessName.textContent = 'You';
+                }
+                
+                dayCell.appendChild(guessName);
+            }
+            
+            // Add click event for available dates (in range, not guessed by anyone)
+            if (isInRange && !isOtherGuess && !isUserGuess) {
+                dayCell.addEventListener('click', () => handleDateSelect(currentDate));
+            } else if (isUserGuess) {
+                // Allow users to click their own guess to delete it
+                dayCell.addEventListener('click', () => handleDateSelect(currentDate, true));
+            }
+            
+            daysGrid.appendChild(dayCell);
+        }
+    };
+    
+    // Handle date selection
+    const handleDateSelect = (date, isDelete = false) => {
+        const dateStr = date.toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            month: 'long', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+        
+        // Show confirmation modal
+        const confirmationOverlay = document.getElementById('confirmation-overlay');
+        const confirmationTitle = document.getElementById('confirmation-title');
+        const confirmationMessage = document.getElementById('confirmation-message');
+        const confirmBtn = document.getElementById('confirm-btn');
+        
+        confirmationOverlay.style.display = 'flex';
+        
+        if (isDelete) {
+            confirmationTitle.textContent = 'Remove Your Guess?';
+            confirmationMessage.textContent = `Do you want to remove your guess for ${dateStr}?`;
+            confirmBtn.textContent = 'Remove Guess';
+            confirmBtn.className = 'btn btn-danger';
+        } else {
+            confirmationTitle.textContent = 'Confirm Your Guess';
+            confirmationMessage.textContent = `Are you sure you want to guess that the baby will be born on ${dateStr}?`;
+            confirmBtn.textContent = 'Confirm Guess';
+            confirmBtn.className = 'btn btn-primary';
+        }
+        
+        // Set up one-time event listeners for the buttons
+        const cancelBtn = document.getElementById('cancel-btn');
+        const handleCancel = () => {
+            confirmationOverlay.style.display = 'none';
+            cancelBtn.removeEventListener('click', handleCancel);
+            confirmBtn.removeEventListener('click', handleConfirm);
+        };
+        
+        const handleConfirm = async () => {
+            try {
+                // Format date as YYYY-MM-DD for the API
+                const formattedDate = date.toISOString().split('T')[0];
+                
+                if (isDelete) {
+                    // Find the guess ID to delete
+                    if (userGuesses && userGuesses.date_guess) {
+                        const guessId = userGuesses.date_guess.id;
+                        await api.deleteGuess(eventId, 'date', guessId);
+                    }
+                } else {
+                    // Create new guess
+                    await api.createDateGuess(eventId, formattedDate);
+                }
+                
+                // Hide confirmation modal
+                confirmationOverlay.style.display = 'none';
+                
+                // Refresh the page to show updated data
+                window.location.reload();
+                
+            } catch (error) {
+                console.error('Error with date guess:', error);
+                alert(`Failed to process your guess: ${error.message || 'Unknown error'}`);
+                confirmationOverlay.style.display = 'none';
+            }
+            
+            // Remove event listeners
+            cancelBtn.removeEventListener('click', handleCancel);
+            confirmBtn.removeEventListener('click', handleConfirm);
+        };
+        
+        cancelBtn.addEventListener('click', handleCancel);
+        confirmBtn.addEventListener('click', handleConfirm);
+    };
+    
+    // Set up month navigation
+    document.getElementById('prev-month').addEventListener('click', () => {
+        currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+        renderCalendar();
+    });
+    
+    document.getElementById('next-month').addEventListener('click', () => {
+        currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+        renderCalendar();
+    });
+    
+    // Render initial calendar
+    renderCalendar();
+};
+
+// Old implementation kept for reference
 const initializeCalendar = (startDate, endDate, dueDate, takenDates, currentDateGuess, eventId) => {
     let currentMonth = new Date(dueDate);
     
