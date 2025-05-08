@@ -26,7 +26,7 @@ const GuestLogin = () => {
     setError('');
     setLoading(true);
     
-    console.log("Initial form submitted with email:", email || "(none)");
+    console.log("🔵 FRONTEND - Guest Login: Initial form submitted with email:", email || "(none)");
     
     if (email) {
       try {
@@ -36,9 +36,10 @@ const GuestLogin = () => {
           email 
         });
         
-        console.log("Email login response:", response);
+        console.log("🔵 FRONTEND - Guest Login: Email login response:", response);
         
         if (response.status === 'logged_in') {
+          console.log("🔵 FRONTEND - Guest Login: Successfully logged in, proceeding to redirect");
           // Extract tokens from response
           const { access_token, refresh_token } = response;
           
@@ -101,10 +102,10 @@ const GuestLogin = () => {
     console.log("Event code submitted:", eventCode);
     
     try {
-      console.log("Finding event by code:", eventCode);
+      console.log("🔵 FRONTEND - Guest Login: Finding event by code:", eventCode);
       const eventResponse = await findEventByCode(eventCode);
       
-      console.log("Event search response:", eventResponse);
+      console.log("🔵 FRONTEND - Guest Login: Event search response:", eventResponse);
       
       if (eventResponse.error) {
         console.error("Event code error:", eventResponse.error);
