@@ -616,8 +616,12 @@ def remove_guest(event_id, user_id):
 
 # Guess routes
 @api.route('/events/<int:event_id>/guesses/date', methods=['GET'])
+@jwt_required(optional=True)
 def get_date_guesses(event_id):
     event = Event.query.get_or_404(event_id)
+    
+    # Get current user from JWT if available
+    current_jwt_user = get_user_from_jwt()
     
     guesses = DateGuess.query.filter_by(event_id=event_id).all()
     
@@ -632,6 +636,13 @@ def get_date_guesses(event_id):
         
         payment_status = 'paid' if total_paid >= amount_owed else 'pending'
         
+        # Check if this guess belongs to the current user
+        is_current_user = False
+        if current_jwt_user and current_jwt_user.id == user.id:
+            is_current_user = True
+        elif current_user.is_authenticated and current_user.id == user.id:
+            is_current_user = True
+        
         guesses_data.append({
             'id': guess.id,
             'date': guess.guess_date.strftime('%Y-%m-%d'),
@@ -640,7 +651,7 @@ def get_date_guesses(event_id):
                 'display_name': user.get_display_name()
             },
             'payment_status': payment_status,
-            'is_current_user': current_user.is_authenticated and current_user.id == user.id
+            'is_current_user': is_current_user
         })
     
     return jsonify(guesses_data)
@@ -708,8 +719,12 @@ def create_date_guess(event_id):
         return jsonify({'error': str(e)}), 400
 
 @api.route('/events/<int:event_id>/guesses/hour', methods=['GET'])
+@jwt_required(optional=True)
 def get_hour_guesses(event_id):
     event = Event.query.get_or_404(event_id)
+    
+    # Get current user from JWT if available
+    current_jwt_user = get_user_from_jwt()
     
     guesses = HourGuess.query.filter_by(event_id=event_id).all()
     
@@ -724,6 +739,13 @@ def get_hour_guesses(event_id):
         
         payment_status = 'paid' if total_paid >= amount_owed else 'pending'
         
+        # Check if this guess belongs to the current user
+        is_current_user = False
+        if current_jwt_user and current_jwt_user.id == user.id:
+            is_current_user = True
+        elif current_user.is_authenticated and current_user.id == user.id:
+            is_current_user = True
+        
         guesses_data.append({
             'id': guess.id,
             'hour': guess.hour,
@@ -733,7 +755,7 @@ def get_hour_guesses(event_id):
                 'display_name': user.get_display_name()
             },
             'payment_status': payment_status,
-            'is_current_user': current_user.is_authenticated and current_user.id == user.id
+            'is_current_user': is_current_user
         })
     
     return jsonify(guesses_data)
@@ -810,8 +832,12 @@ def create_hour_guess(event_id):
         return jsonify({'error': str(e)}), 400
 
 @api.route('/events/<int:event_id>/guesses/minute', methods=['GET'])
+@jwt_required(optional=True)
 def get_minute_guesses(event_id):
     event = Event.query.get_or_404(event_id)
+    
+    # Get current user from JWT if available
+    current_jwt_user = get_user_from_jwt()
     
     guesses = MinuteGuess.query.filter_by(event_id=event_id).all()
     
@@ -826,6 +852,13 @@ def get_minute_guesses(event_id):
         
         payment_status = 'paid' if total_paid >= amount_owed else 'pending'
         
+        # Check if this guess belongs to the current user
+        is_current_user = False
+        if current_jwt_user and current_jwt_user.id == user.id:
+            is_current_user = True
+        elif current_user.is_authenticated and current_user.id == user.id:
+            is_current_user = True
+        
         guesses_data.append({
             'id': guess.id,
             'minute': guess.minute,
@@ -834,7 +867,7 @@ def get_minute_guesses(event_id):
                 'display_name': user.get_display_name()
             },
             'payment_status': payment_status,
-            'is_current_user': current_user.is_authenticated and current_user.id == user.id
+            'is_current_user': is_current_user
         })
     
     return jsonify(guesses_data)
@@ -903,11 +936,15 @@ def create_minute_guess(event_id):
         return jsonify({'error': str(e)}), 400
 
 @api.route('/events/<int:event_id>/guesses/name', methods=['GET'])
+@jwt_required(optional=True)
 def get_name_guesses(event_id):
     event = Event.query.get_or_404(event_id)
     
     if not event.name_game_enabled:
         return jsonify({'error': 'Name game is not enabled for this event'}), 400
+    
+    # Get current user from JWT if available
+    current_jwt_user = get_user_from_jwt()
     
     guesses = NameGuess.query.filter_by(event_id=event_id).all()
     
@@ -922,6 +959,13 @@ def get_name_guesses(event_id):
         
         payment_status = 'paid' if total_paid >= amount_owed else 'pending'
         
+        # Check if this guess belongs to the current user
+        is_current_user = False
+        if current_jwt_user and current_jwt_user.id == user.id:
+            is_current_user = True
+        elif current_user.is_authenticated and current_user.id == user.id:
+            is_current_user = True
+        
         guesses_data.append({
             'id': guess.id,
             'name': guess.name,
@@ -930,7 +974,7 @@ def get_name_guesses(event_id):
                 'display_name': user.get_display_name()
             },
             'payment_status': payment_status,
-            'is_current_user': current_user.is_authenticated and current_user.id == user.id
+            'is_current_user': is_current_user
         })
     
     return jsonify(guesses_data)
