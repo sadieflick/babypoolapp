@@ -647,21 +647,84 @@ def refresh_token():
     return response
 
 @auth_blueprint.route('/token/verify', methods=['GET'])
+@auth_blueprint.route('/verify-token', methods=['GET'])  # Add alias to match frontend expectations
 @jwt_required()
 def verify_token():
     """Verify if the current token is valid"""
-    current_user_identity = get_jwt_identity()
-    
-    # Fetch user data if needed
-    user_id = current_user_identity.get('id') if isinstance(current_user_identity, dict) else current_user_identity
-    user = User.query.get(user_id)
-    
-    if not user:
-        return jsonify({'valid': False, 'message': 'User not found'}), 401
-    
-    return jsonify({
-        'valid': True,
-        'user_id': user.id,
-        'email': user.email,
-        'is_host': user.is_host
-    })
+    try:
+        current_user_identity = get_jwt_identity()
+        
+        print(f"DEBUG: verify_token - Identity type and value: {type(current_user_identity).__name__}, {current_user_identity}")
+        
+        # Handle different formats of identity
+        if isinstance(current_user_identity, str):
+            # String identities need to be converted to int if possible
+            try:
+                user_id = int(current_user_identity)
+            except ValueError:
+                # If it's not a valid int string, use as is
+                user_id = current_user_identity
+        # Legacy support for dict format
+        elif isinstance(current_user_identity, dict):
+            # Get user_id from dict, might be int or string
+            user_id = current_user_identity.get('id')
+            print(f"DEBUG: ID from dict: {user_id}, type: {type(user_id).__name__}")
+            if isinstance(user_id, str):
+                # Convert string to int if possible
+                try:
+                    user_id = int(user_id)
+                except ValueError:
+                    # Keep as string if not convertible
+                    pass
+        else:
+            # Assume it's already an int or other format
+            user_id = current_user_identity
+            
+        if not user_id:
+            print("DEBUG: No user_id found in JWT")
+            return jsonify({
+                'valid': False,
+                'error': 'Invalid token format'
+            }), 200  # Still return 200 for token validation checks
+            
+        print(f"DEBUG: verify_token - Final user_id: {user_id}, type: {type(user_id).__name__}")
+        
+        # Query with explicit integer conversion for safety
+        try:
+            user_id_int = int(user_id)
+            user = User.query.get(user_id_int)
+            if user:
+                print(f"DEBUG: User found via direct lookup: {user.id}")
+        except (ValueError, TypeError):
+            # If int conversion fails, try string lookup
+            print(f"DEBUG: Int conversion failed, trying string comparison")
+            user = None
+            
+        # Fallback to filter if direct lookup failed
+        if not user:
+            user = User.query.filter(User.id == user_id).first()
+            if user:
+                print(f"DEBUG: User found via filter: {user.id}")
+            
+        if not user:
+            print(f"DEBUG: User not found for id: {user_id}")
+            return jsonify({
+                'valid': False,
+                'error': 'User not found'
+            }), 200  # Still return 200 for token validation checks
+            
+        print(f"DEBUG: verify_token - User found: {user.id}, is_host: {user.is_host}")
+        
+        return jsonify({
+            'valid': True,
+            'user_id': user.id,
+            'email': user.email,
+            'is_host': user.is_host
+        }), 200
+        
+    except Exception as e:
+        print(f"Token verification error: {str(e)}")
+        return jsonify({
+            'valid': False,
+            'error': str(e)
+        }), 200  # Still return 200 for token validation checks
