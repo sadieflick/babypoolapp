@@ -25,26 +25,62 @@ const GuestLogin = () => {
   // State for storing the login response
   const [loginResponse, setLoginResponse] = useState(null);
 
-  // Use effect to respond to login response changes
+  // Keep track of mount status to avoid state updates on unmounted component
+  const isMounted = React.useRef(true);
+
+  // Component lifecycle tracking
+  useEffect(() => {
+    console.log("🔵 FRONTEND - GuestLogin component mounted");
+    
+    // Set mounted flag
+    isMounted.current = true;
+    
+    // Cleanup when component unmounts
+    return () => {
+      console.log("🔵 FRONTEND - GuestLogin component unmounting");
+      isMounted.current = false;
+    };
+  }, []);
+
+  // Use effect to respond to login response changes - this will only run when loginResponse changes
   useEffect(() => {
     if (!loginResponse) return;
     
     console.log("🔵 FRONTEND - useEffect triggered with loginResponse", loginResponse);
+    console.log("🔵 FRONTEND - Current loginStep before update:", loginStep);
+    
+    // Make sure component is still mounted
+    if (!isMounted.current) {
+      console.log("🔵 FRONTEND - Skipping state update on unmounted component");
+      return;
+    }
     
     if (loginResponse.status === 'need_name_only') {
       console.log("🔵 FRONTEND - Setting login step to name-only from useEffect");
-      setLoginStep('name-only');
+      
+      // Make state update synchronously one at a time to ensure proper order
       setSelectedEvent({ 
         id: loginResponse.event_id,
         title: loginResponse.event_title
       });
+      
+      // Use direct setter to force name-only step
+      setLoginStep('name-only');
+      
+      console.log("🔵 FRONTEND - Name-only step applied");
     } else if (loginResponse.status === 'need_user_info') {
       console.log("🔵 FRONTEND - Setting login step to user-info from useEffect");
-      setLoginStep('user-info');
+      
+      // Make state update synchronously one at a time to ensure proper order
       setSelectedEvent({ 
         id: loginResponse.event_id,
         title: loginResponse.event_title
       });
+      
+      // Use direct setter to force user-info step
+      setLoginStep('user-info');
+      
+      console.log("🔵 FRONTEND - User-info step applied");
     } else if (loginResponse.status === 'logged_in') {
       const { access_token, refresh_token } = loginResponse;
       
@@ -61,7 +97,7 @@ const GuestLogin = () => {
       // Pass both tokens to the login method - this will handle the redirect
       login(userData, access_token, refresh_token);
     }
-  }, [loginResponse, login]);
+  }, [loginResponse, login, loginStep]);
 
   const handleInitialSubmit = async (e) => {
     e.preventDefault();
@@ -132,10 +168,22 @@ const GuestLogin = () => {
         console.log(`🔵 FRONTEND - Response key: ${key}, value:`, response[key]);
       }
       
-      // Set the login response which will trigger the useEffect
-      setLoginResponse(response);
-      
-      // We'll let the useEffect handle the state changes and redirects
+      // Handle name-only case immediately to avoid race conditions
+      if (response.status === 'need_name_only') {
+        console.log("🔵 FRONTEND - Directly setting name-only form from handler");
+        
+        // First set the selected event
+        setSelectedEvent({ 
+          id: response.event_id,
+          title: response.event_title
+        });
+        
+        // Then directly set the login step to force rendering the name-only form
+        setLoginStep('name-only');
+      } else {
+        // For other responses, use the loginResponse state which will trigger the useEffect
+        setLoginResponse(response);
+      }
     } catch (err) {
       console.error("Event code login error:", err);
       setError(err.response?.data?.error || 'Event not found. Please check the code.');
@@ -547,20 +595,49 @@ const GuestLogin = () => {
     </>
   );
 
+  // Create a debug indicator to show current login step
+  const debugCurrentStep = () => {
+    return (
+      <div className="debug-info" style={{fontSize: '10px', color: '#666', marginTop: '10px', textAlign: 'center'}}>
+        Current step: {loginStep} 
+        {selectedEvent && ` | Event ID: ${selectedEvent.id}`}
+        {loginResponse && ` | Response status: ${loginResponse.status}`}
+      </div>
+    );
+  };
+
+  // Determine which form to render based on loginStep
+  const renderCurrentForm = () => {
+    console.log("🔵 FRONTEND - Rendering current form for step:", loginStep);
+    
+    switch(loginStep) {
+      case 'initial':
+        return renderInitialForm();
+      case 'event-code':
+        return renderEventCodeForm();
+      case 'search-mother':
+        return renderMotherSearchForm();
+      case 'name-only':
+        return renderNameOnlyForm();
+      case 'user-info':
+        return renderUserInfoForm();
+      default:
+        return renderInitialForm();
+    }
+  };
+  
   return (
     <div className="auth-container">
       <div className="auth-form-container">
         {error && <div className="error-message">{error}</div>}
         
-        {loginStep === 'initial' && renderInitialForm()}
-        {loginStep === 'event-code' && renderEventCodeForm()}
-        {loginStep === 'search-mother' && renderMotherSearchForm()}
-        {loginStep === 'name-only' && renderNameOnlyForm()}
-        {loginStep === 'user-info' && renderUserInfoForm()}
+        {renderCurrentForm()}
         
         <div className="auth-links">
           <Link to="/">Back to Home</Link>
         </div>
+        
+        {debugCurrentStep()}
       </div>
     </div>
   );
