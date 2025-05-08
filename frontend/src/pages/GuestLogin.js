@@ -113,6 +113,11 @@ const GuestLogin = () => {
     }
   }, [loginResponse, login]);
 
+  // Debug state changes
+  useEffect(() => {
+    console.log("🔵 FRONTEND - GuestLogin state changed:", { step, selectedEvent });
+  }, [step, selectedEvent]);
+
   const handleInitialSubmit = async (e) => {
     e.preventDefault();
     dispatch({ type: 'SET_ERROR', payload: '' });
@@ -180,17 +185,26 @@ const GuestLogin = () => {
       if (response.status === 'need_name_only') {
         console.log("🔵 FRONTEND - Got need_name_only status, dispatching action");
         
-        dispatch({
-          type: 'HANDLE_NEED_NAME_ONLY',
-          payload: {
-            event_id: response.event_id,
-            event_title: response.event_title
-          }
-        });
+        // Important: First set loading to false to prevent race conditions
+        dispatch({ type: 'SET_LOADING', payload: false });
         
-        console.log("🔵 FRONTEND - State after dispatch:", state);
+        // Force this update to be processed before moving on
+        setTimeout(() => {
+          dispatch({
+            type: 'HANDLE_NEED_NAME_ONLY',
+            payload: {
+              event_id: response.event_id,
+              event_title: response.event_title
+            }
+          });
+          
+          // Force React to re-render by updating state directly
+          // This ensures the component sees the state change
+          console.log("🔵 FRONTEND - Forced update after need_name_only status. New step:", step);
+        }, 0);
       } else {
         dispatch({ type: 'SET_LOGIN_RESPONSE', payload: response });
+        dispatch({ type: 'SET_LOADING', payload: false });
       }
     } catch (err) {
       console.error("Event code login error:", err);
@@ -198,7 +212,6 @@ const GuestLogin = () => {
         type: 'SET_ERROR', 
         payload: err.response?.data?.error || 'Event not found. Please check the code.' 
       });
-    } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
@@ -469,12 +482,20 @@ const GuestLogin = () => {
 
   const renderNameOnlyForm = () => {
     console.log("🔵 FRONTEND - Rendering NameOnlyForm with selectedEvent:", selectedEvent);
-    
-    if (selectedEvent) {
+    console.log("🔵 FRONTEND - Current step:", step);
+
+    // Force-render the name-only form without relying on selectedEvent
+    if (step === 'name-only') {
+      // Double-check selectedEvent exists, if not, create a backup
+      const eventId = selectedEvent?.id || parseInt(eventCode, 10) || 1;
+      const eventTitle = selectedEvent?.title || 'Baby Shower Event';
+      
+      console.log("🔵 FRONTEND - Forced rendering NameOnlyForm with:", { eventId, eventTitle });
+      
       return (
         <NameOnlyForm 
-          eventId={selectedEvent.id} 
-          eventTitle={selectedEvent.title}
+          eventId={eventId} 
+          eventTitle={eventTitle}
           onBack={() => dispatch({ type: 'SET_STEP', payload: 'event-code' })}
           onError={(error, response) => {
             if (error) {
@@ -493,41 +514,61 @@ const GuestLogin = () => {
       );
     }
     
+    // If not in name-only step but have selectedEvent, fall back to inline form
+    if (selectedEvent) {
+      return (
+        <>
+          <h1>Who Are You?</h1>
+          <p>For: {selectedEvent.title || 'Baby Shower Event'}</p>
+          <p>Just enter your name to get started</p>
+          
+          <form onSubmit={handleNameOnlySubmit} className="auth-form">
+            <div className="form-group">
+              <label htmlFor="nameOnly">Your Name</label>
+              <input
+                type="text"
+                id="nameOnly"
+                value={nameOnly}
+                onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'nameOnly', payload: e.target.value })}
+                placeholder="Enter your name"
+                required
+                autoFocus
+              />
+            </div>
+            
+            <button 
+              type="submit" 
+              className="btn btn-primary"
+              disabled={loading}
+            >
+              {loading ? 'Joining...' : 'Continue'}
+            </button>
+            
+            <button 
+              type="button" 
+              className="btn btn-link"
+              onClick={() => dispatch({ type: 'SET_STEP', payload: 'event-code' })}
+            >
+              Back
+            </button>
+          </form>
+        </>
+      );
+    }
+    
+    // Fallback for unexpected state
     return (
       <>
         <h1>Who Are You?</h1>
         <p>Just enter your name to get started</p>
-        
-        <form onSubmit={handleNameOnlySubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="nameOnly">Your Name</label>
-            <input
-              type="text"
-              id="nameOnly"
-              value={nameOnly}
-              onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'nameOnly', payload: e.target.value })}
-              placeholder="Enter your name"
-              required
-              autoFocus
-            />
-          </div>
-          
-          <button 
-            type="submit" 
-            className="btn btn-primary"
-            disabled={loading}
-          >
-            {loading ? 'Joining...' : 'Continue'}
-          </button>
-          
-          <button 
-            type="button" 
-            className="btn btn-link"
-            onClick={() => dispatch({ type: 'SET_STEP', payload: 'event-code' })}
-          >
-            Back
-          </button>
-        </form>
+        <p className="error-message">Error: Missing event information. Please go back and try again.</p>
+        <button 
+          type="button" 
+          className="btn btn-primary"
+          onClick={() => dispatch({ type: 'SET_STEP', payload: 'event-code' })}
+        >
+          Back to Event Code
+        </button>
       </>
     );
   };
