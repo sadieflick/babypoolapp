@@ -2923,6 +2923,173 @@ const renderGuestDashboard = () => {
 };
 
 // Render guest date guess page with custom calendar grid
+// Calendar Initialization Function
+const initCustomCalendar = (eventId, dueDate, rangeStart, rangeEnd, dateGuessMap, currentDateGuess) => {
+    console.log('Initializing custom calendar');
+    const daysGrid = document.getElementById('days-grid');
+    const currentMonthElement = document.querySelector('.current-month');
+    const prevMonthButton = document.getElementById('prev-month');
+    const nextMonthButton = document.getElementById('next-month');
+    
+    let currentDate = new Date();
+    // If user has a current guess, initialize calendar to that month
+    if (currentDateGuess) {
+        currentDate = new Date(currentDateGuess);
+    } else {
+        // Otherwise use due date as starting point
+        currentDate = new Date(dueDate);
+    }
+    
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    
+    const user = getCurrentUser();
+    
+    // Initialize calendar with current month/year
+    renderCalendarMonth(currentYear, currentMonth);
+    
+    // Add event listeners for navigation
+    prevMonthButton.addEventListener('click', () => {
+        let newMonth = currentDate.getMonth() - 1;
+        let newYear = currentDate.getFullYear();
+        
+        if (newMonth < 0) {
+            newMonth = 11;
+            newYear--;
+        }
+        
+        currentDate.setMonth(newMonth);
+        currentDate.setFullYear(newYear);
+        
+        renderCalendarMonth(newYear, newMonth);
+    });
+    
+    nextMonthButton.addEventListener('click', () => {
+        let newMonth = currentDate.getMonth() + 1;
+        let newYear = currentDate.getFullYear();
+        
+        if (newMonth > 11) {
+            newMonth = 0;
+            newYear++;
+        }
+        
+        currentDate.setMonth(newMonth);
+        currentDate.setFullYear(newYear);
+        
+        renderCalendarMonth(newYear, newMonth);
+    });
+    
+    // Function to render calendar month
+    function renderCalendarMonth(year, month) {
+        // Update month name display
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                           'July', 'August', 'September', 'October', 'November', 'December'];
+        currentMonthElement.textContent = `${monthNames[month]} ${year}`;
+        
+        // Clear grid
+        daysGrid.innerHTML = '';
+        
+        // Get first day of month and last day of month
+        const firstDayOfMonth = new Date(year, month, 1);
+        const lastDayOfMonth = new Date(year, month + 1, 0);
+        
+        // Get day of week of first day (0 = Sunday, 6 = Saturday)
+        const firstDayWeekday = firstDayOfMonth.getDay();
+        
+        // Fill in empty cells for days before first day of month
+        for (let i = 0; i < firstDayWeekday; i++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.className = 'day empty';
+            daysGrid.appendChild(emptyCell);
+        }
+        
+        // Fill in cells for each day of the month
+        for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
+            const dayCell = document.createElement('div');
+            dayCell.className = 'day';
+            
+            const dateObj = new Date(year, month, day);
+            const dateStr = dateObj.toISOString().split('T')[0]; // 'YYYY-MM-DD' format
+            
+            // Check if date is due date
+            if (dateObj.toDateString() === new Date(dueDate).toDateString()) {
+                dayCell.classList.add('due-date');
+            }
+            
+            // Check if date is in valid range
+            const isInRange = dateObj >= rangeStart && dateObj <= rangeEnd;
+            if (!isInRange) {
+                dayCell.classList.add('out-of-range');
+            } else {
+                // Check if user already guessed this date
+                if (currentDateGuess && dateObj.toDateString() === currentDateGuess.toDateString()) {
+                    dayCell.classList.add('user-guessed');
+                }
+                
+                // Check if other users guessed this date
+                if (dateGuessMap[dateStr] && dateGuessMap[dateStr].length > 0) {
+                    // If it's not the current user's guess
+                    const otherGuesses = dateGuessMap[dateStr].filter(guess => 
+                        !currentDateGuess || guess.user_id !== user.id
+                    );
+                    
+                    if (otherGuesses.length > 0) {
+                        dayCell.classList.add('other-guessed');
+                        
+                        // Add indicator for multiple guesses
+                        if (otherGuesses.length > 0) {
+                            const guessIndicator = document.createElement('span');
+                            guessIndicator.className = 'guess-name';
+                            guessIndicator.textContent = otherGuesses.length > 1 ? 
+                                `${otherGuesses.length} guesses` : 
+                                (otherGuesses[0].user_name || 'Guest');
+                            dayCell.appendChild(guessIndicator);
+                        }
+                    }
+                }
+                
+                // Add click handler for valid dates
+                dayCell.addEventListener('click', async () => {
+                    try {
+                        // Confirm selection
+                        if (confirm(`Are you sure you want to guess ${dateObj.toLocaleDateString()}?`)) {
+                            // Submit guess
+                            const response = await fetch(`/api/events/${eventId}/guesses/date`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                },
+                                body: JSON.stringify({ 
+                                    guess_date: dateStr
+                                })
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error('Failed to submit date guess');
+                            }
+                            
+                            // Reload the page to show updated guess
+                            window.location.reload();
+                        }
+                    } catch (error) {
+                        console.error('Error submitting date guess:', error);
+                        alert('Error submitting your guess. Please try again.');
+                    }
+                });
+            }
+            
+            // Add day number to cell
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = day;
+            dayCell.appendChild(dayNumber);
+            
+            daysGrid.appendChild(dayCell);
+        }
+    }
+};
+
 // Enhanced renderGuestDateGuessPage using CustomCalendarGrid styles and functionality
 const renderGuestDateGuessPage = async (eventId) => {
     try {
