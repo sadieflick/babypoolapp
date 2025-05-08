@@ -199,8 +199,15 @@ def guest_login_page():
     # The React router will handle displaying the GuestLogin component
     return render_template('index.html')
 
-@auth_blueprint.route('/guest/login', methods=['POST'])
+@auth_blueprint.route('/guest/login', methods=['POST', 'GET'])
 def guest_login():
+    # Handle GET requests (direct page access)
+    if request.method == 'GET':
+        # Redirect to the frontend route to ensure our SPA component is rendered
+        print("API route: Redirecting GET /guest/login to /auth/guest_login")
+        return redirect('/auth/guest_login')
+        
+    # Standard API handling for POSTs
     data = request.json
     login_type = data.get('login_type')
     
