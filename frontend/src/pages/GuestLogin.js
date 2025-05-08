@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginGuest, findEventByCode, searchEventByMother, selectEvent } from '../utils/api';
 import { useAuth } from '../components/AuthContext';
+import NameOnlyForm from '../components/NameOnlyForm';
 
 const GuestLogin = () => {
   const [loginStep, setLoginStep] = useState('initial'); // 'initial', 'event-code', 'search-mother', 'name-only', 'user-info'
@@ -163,25 +164,25 @@ const GuestLogin = () => {
       console.log("🔵 FRONTEND - Guest Login: Response status:", response.status);
       console.log("🔵 FRONTEND - Guest Login: Response type:", typeof response.status);
       
-      // Debug the response object in more detail
-      for (const key in response) {
-        console.log(`🔵 FRONTEND - Response key: ${key}, value:`, response[key]);
-      }
-      
-      // Handle name-only case immediately to avoid race conditions
+      // Handle the response based on status
       if (response.status === 'need_name_only') {
-        console.log("🔵 FRONTEND - Directly setting name-only form from handler");
+        console.log("🔵 FRONTEND - Name-only form required, using standalone component");
         
-        // First set the selected event
+        // Immediately render the NameOnlyForm as a standalone component
+        // instead of managing form state in this component
         setSelectedEvent({ 
           id: response.event_id,
           title: response.event_title
         });
         
-        // Then directly set the login step to force rendering the name-only form
-        setLoginStep('name-only');
+        // Important: Use setTimeout to ensure state updates happen in separate cycles
+        // This prevents state batching issues that might be causing the form not to update
+        setTimeout(() => {
+          setLoginStep('name-only');
+          console.log("🔵 FRONTEND - Login step set to name-only with timeout");
+        }, 0);
       } else {
-        // For other responses, use the loginResponse state which will trigger the useEffect
+        // For other responses, use the loginResponse state
         setLoginResponse(response);
       }
     } catch (err) {
@@ -445,44 +446,68 @@ const GuestLogin = () => {
     </>
   );
 
-  const renderNameOnlyForm = () => (
-    <>
-      <h1>Who Are You?</h1>
-      {selectedEvent && <p>For: {selectedEvent.title || 'Baby Shower Event'}</p>}
-      <p>Just enter your name to get started</p>
-      
-      <form onSubmit={handleNameOnlySubmit} className="auth-form">
-        <div className="form-group">
-          <label htmlFor="nameOnly">Your Name</label>
-          <input
-            type="text"
-            id="nameOnly"
-            value={nameOnly}
-            onChange={(e) => setNameOnly(e.target.value)}
-            placeholder="Enter your name"
-            required
-            autoFocus
-          />
-        </div>
+  const renderNameOnlyForm = () => {
+    console.log("🔵 FRONTEND - Rendering NameOnlyForm with selectedEvent:", selectedEvent);
+    
+    // Use our standalone component instead of an inline form
+    // This helps isolate the state management and prevent React batching issues
+    if (selectedEvent) {
+      return (
+        <NameOnlyForm 
+          eventId={selectedEvent.id} 
+          eventTitle={selectedEvent.title}
+          onBack={() => setLoginStep('event-code')}
+          onError={(error, response) => {
+            if (error) {
+              setError(error);
+            } else if (response && response.status === 'need_user_info') {
+              // Handle transition to full user info form
+              setLoginResponse(response);
+            }
+          }}
+        />
+      );
+    }
+    
+    // Fallback rendering if selectedEvent is not available yet
+    return (
+      <>
+        <h1>Who Are You?</h1>
+        <p>Just enter your name to get started</p>
         
-        <button 
-          type="submit" 
-          className="btn btn-primary"
-          disabled={loading}
-        >
-          {loading ? 'Joining...' : 'Continue'}
-        </button>
-        
-        <button 
-          type="button" 
-          className="btn btn-link"
-          onClick={() => setLoginStep('event-code')}
-        >
-          Back
-        </button>
-      </form>
-    </>
-  );
+        <form onSubmit={handleNameOnlySubmit} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="nameOnly">Your Name</label>
+            <input
+              type="text"
+              id="nameOnly"
+              value={nameOnly}
+              onChange={(e) => setNameOnly(e.target.value)}
+              placeholder="Enter your name"
+              required
+              autoFocus
+            />
+          </div>
+          
+          <button 
+            type="submit" 
+            className="btn btn-primary"
+            disabled={loading}
+          >
+            {loading ? 'Joining...' : 'Continue'}
+          </button>
+          
+          <button 
+            type="button" 
+            className="btn btn-link"
+            onClick={() => setLoginStep('event-code')}
+          >
+            Back
+          </button>
+        </form>
+      </>
+    );
+  };
 
   const renderUserInfoForm = () => (
     <>
