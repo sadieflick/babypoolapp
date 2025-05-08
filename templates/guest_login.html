@@ -77,6 +77,32 @@
             document.getElementById('success-message').style.display = 'none';
         }
         
+        // Helper function to handle guest selection response
+        function handleGuestSelectResponse(data, eventId) {
+            if (data.status === 'need_name_only') {
+                // Still need more name info
+                alert(data.message || 'Please provide a more specific name');
+            } else if (data.status === 'need_user_info') {
+                // Need more user info
+                window.location.href = `/guest-info?event_id=${eventId}`;
+            } else if (data.status === 'need_profile_info') {
+                // Need to complete profile
+                window.location.href = `/profile?event_id=${eventId}`;
+            } else if (data.status === 'logged_in') {
+                // Save auth tokens to localStorage
+                localStorage.setItem('accessToken', data.access_token);
+                localStorage.setItem('refreshToken', data.refresh_token);
+                localStorage.setItem('userId', data.user_id);
+                localStorage.setItem('isHost', data.is_host);
+                
+                // Login successful
+                window.location.href = `/event/${eventId}`;
+            } else {
+                // Something went wrong
+                alert(data.error || 'An error occurred');
+            }
+        }
+        
         const root = document.getElementById('root');
         
         // Render guest login form
