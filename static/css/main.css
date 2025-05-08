@@ -498,6 +498,286 @@ body {
     padding: 15px 20px;
 }
 
+/* New Custom Calendar Grid styles based on React component */
+.guest-date-guess-page {
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+    font-family: 'Poppins', sans-serif;
+}
+
+.guest-date-guess-page .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    position: relative;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 15px 20px;
+}
+
+.guest-date-guess-page .page-header h1 {
+    margin: 0;
+    text-align: center;
+    flex: 1;
+    font-size: 1.8rem;
+    color: var(--primary-dark);
+}
+
+.guest-date-guess-page .back-button {
+    color: var(--primary-dark);
+    text-decoration: none;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.guest-date-guess-page .logout-button {
+    background-color: transparent;
+    border: none;
+    color: var(--primary-dark);
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.date-guess-instructions {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.date-guess-instructions h2 {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+    color: var(--dark);
+}
+
+.date-guess-instructions p {
+    font-size: 1rem;
+    color: #666;
+    margin: 5px 0;
+}
+
+.custom-calendar {
+    margin-bottom: 30px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 20px;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.month-nav {
+    background-color: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--primary-dark);
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.month-nav:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+.current-month {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--dark);
+}
+
+.days-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 5px;
+}
+
+.day-name {
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #666;
+    padding: 5px;
+}
+
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.day {
+    position: relative;
+    height: 60px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.day:hover:not(.empty):not(.out-of-range) {
+    background-color: #f5f5f5;
+}
+
+.day.empty {
+    cursor: default;
+}
+
+.day.out-of-range {
+    color: #ccc;
+    cursor: default;
+}
+
+.day.due-date {
+    background-color: var(--secondary-light);
+    color: var(--secondary-dark);
+    font-weight: bold;
+}
+
+.day.user-guessed {
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+    font-weight: bold;
+}
+
+.day.other-guessed {
+    background-color: #f0f0f0;
+    color: #888;
+}
+
+.day-number {
+    font-size: 1rem;
+    margin-bottom: 2px;
+}
+
+.guess-name {
+    font-size: 0.7rem;
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.calendar-info {
+    margin-top: 15px;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.due-date-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.due-date-marker {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background-color: var(--secondary-light);
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.range-info {
+    margin-top: 5px;
+}
+
+.guess-info {
+    background-color: #f8f8f8;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.guess-info h3 {
+    font-size: 1.2rem;
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--dark);
+}
+
+.guess-info ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.guess-info li {
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.no-guesses {
+    text-align: center;
+    color: #888;
+    font-style: italic;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Button styles */
+.btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+    background-color: var(--light);
+    color: var(--dark);
+    border: 1px solid #ddd;
+}
+
+.btn-secondary:hover {
+    background-color: #eee;
+}
+
+.btn-danger {
+    background-color: var(--danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #bd2130;
+}
+
 .header-content {
     width: 100%;
     display: flex;
