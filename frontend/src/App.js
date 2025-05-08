@@ -25,46 +25,59 @@ import Footer from './components/Footer';
 // Protected route component
 const ProtectedRoute = ({ children, requireHost }) => {
   // Use useEffect to ensure this check happens after any redirects
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(null); // Use null for initial state
   const [isChecking, setIsChecking] = useState(true);
   const [isHostUser, setIsHostUser] = useState(false);
   
   // Use useAuth for consistent authentication state
-  const { currentUser, isAuthenticated: contextIsAuthenticated } = useAuth();
+  const { currentUser, isAuthenticated: contextIsAuthenticated, loading: authLoading } = useAuth();
   
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const isHost = localStorage.getItem('isHost') === 'true';
-    const savedUser = localStorage.getItem('currentUser');
+    const checkAuth = () => {
+      // Don't make decisions until AuthContext has finished loading
+      if (authLoading) {
+        console.log("AuthContext still loading, waiting...");
+        return;
+      }
+      
+      const token = localStorage.getItem('token');
+      const isHost = localStorage.getItem('isHost') === 'true';
+      const savedUser = localStorage.getItem('currentUser');
+      
+      // Add debug logging
+      console.log("ProtectedRoute check:", { 
+        token: !!token, 
+        isHost, 
+        requireHost, 
+        hasUser: !!savedUser,
+        contextUser: !!currentUser,
+        contextAuth: contextIsAuthenticated,
+        path: window.location.pathname,
+        authLoading
+      });
+      
+      // Priority order: AuthContext state > localStorage
+      if (contextIsAuthenticated && currentUser) {
+        console.log("Authentication confirmed from context");
+        setIsAuthenticated(true);
+        setIsHostUser(currentUser.is_host);
+        setIsChecking(false);
+      } else if (token && savedUser) {
+        console.log("Authentication confirmed from localStorage");
+        setIsAuthenticated(true);
+        setIsHostUser(isHost);
+        setIsChecking(false);
+      } else {
+        console.log("Not authenticated");
+        setIsAuthenticated(false);
+        setIsChecking(false);
+      }
+    };
     
-    // Add debug logging
-    console.log("ProtectedRoute check:", { 
-      token: !!token, 
-      isHost, 
-      requireHost, 
-      hasUser: !!savedUser,
-      contextUser: !!currentUser,
-      contextAuth: contextIsAuthenticated,
-      path: window.location.pathname
-    });
-    
-    if (token && savedUser) {
-      console.log("Authentication confirmed from localStorage");
-      setIsAuthenticated(true);
-      setIsHostUser(isHost);
-    } else if (contextIsAuthenticated && currentUser) {
-      console.log("Authentication confirmed from context");
-      setIsAuthenticated(true);
-      setIsHostUser(currentUser.is_host);
-    } else {
-      console.log("Not authenticated");
-      setIsAuthenticated(false);
-    }
-    
-    setIsChecking(false);
-  }, [currentUser, contextIsAuthenticated, requireHost]);
+    checkAuth();
+  }, [currentUser, contextIsAuthenticated, requireHost, authLoading]);
   
-  if (isChecking) {
+  if (isChecking || authLoading || isAuthenticated === null) {
     return <div className="loading">Checking authentication...</div>;
   }
   
