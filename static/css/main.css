@@ -239,6 +239,11 @@ body {
     transform: translateY(-2px);
 }
 
+.google-icon {
+    height: 24px;
+    margin-right: 10px;
+}
+
 /* Divider styles */
 .divider {
     width: 100%;
@@ -334,6 +339,73 @@ body {
 .name-user {
     color: var(--primary-dark);
     font-size: 0.9rem;
+}
+
+/* Welcome page styles */
+.welcome-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.welcome-content {
+    background-color: var(--white);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    padding: 30px;
+    text-align: center;
+}
+
+.welcome-title {
+    color: var(--primary-dark);
+    margin-bottom: 15px;
+    font-size: 2.5rem;
+}
+
+.welcome-description {
+    color: var(--dark);
+    margin-bottom: 30px;
+    font-size: 1.1rem;
+}
+
+.welcome-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.welcome-info {
+    text-align: left;
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid #eee;
+}
+
+.welcome-events {
+    margin: 20px 0;
+}
+
+.events-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.event-link {
+    display: block;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    background-color: var(--light);
+    color: var(--primary-dark);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.event-link:hover {
+    background-color: var(--primary-light);
+    transform: translateY(-2px);
 }
 
 /* Dashboard styles */
