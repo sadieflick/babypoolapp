@@ -112,8 +112,17 @@ def host_login():
     
     user = User.query.filter_by(email=email).first()
     
-    if not user or not check_password_hash(user.password_hash, password):
-        return jsonify({'error': 'Invalid email or password'}), 401
+    if not user:
+        return jsonify({'error': 'Email not found'}), 401
+    
+    # Debug password hash checking
+    try:
+        print(f"DEBUG: Checking password hash: {user.password_hash[:20]}...")
+        if not check_password_hash(user.password_hash, password):
+            return jsonify({'error': 'Invalid password'}), 401
+    except Exception as e:
+        print(f"DEBUG: Password hash check error: {str(e)}")
+        return jsonify({'error': f'Password check error: {str(e)}'}), 500
     
     if not user.is_host:
         return jsonify({'error': 'This account is not registered as a host'}), 403
