@@ -195,7 +195,9 @@ def host_login():
 @auth_blueprint.route('/guest_login', methods=['GET'])
 def guest_login_page():
     """Render the guest login page"""
-    return render_template('guest_login.html')
+    # Return the index.html template which will load our React app
+    # The React router will handle displaying the GuestLogin component
+    return render_template('index.html')
 
 @auth_blueprint.route('/guest/login', methods=['POST'])
 def guest_login():

@@ -1026,8 +1026,459 @@ const handleRouting = async () => {
         }
     }
     
+    if (path === '/guest/login' || path === '/auth/guest_login') {
+        renderGuestLogin();
+        return;
+    }
+    
     // Default: render the home page for root or unhandled paths
     renderHomePage();
+};
+
+// Guest Login Form Implementation
+const renderGuestLogin = () => {
+    document.getElementById('root').innerHTML = `
+        <div style="font-family: 'Poppins', sans-serif; padding: 2rem; text-align: center;">
+            <h1 style="color: #ff66b3; margin-bottom: 1rem;">Baby Pool App</h1>
+            
+            <div style="max-width: 500px; margin: 40px auto; padding: 30px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h2 style="font-size: 2rem; color: #ff66b3; margin-bottom: 10px;">Join Baby Pool</h2>
+                    <p style="color: #666;">Join the fun and guess when the baby will arrive!</p>
+                </div>
+                
+                <div id="error-message" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px; margin-bottom: 20px; font-weight: 500;"></div>
+                <div id="success-message" style="padding: 15px; margin-bottom: 20px; border: 1px solid #c3e6cb; border-radius: 8px; color: #155724; background-color: #d4edda; display: none;"></div>
+                
+                <ul class="nav nav-tabs" id="loginTabs" role="tablist" style="border-bottom: 1px solid #ddd; margin-bottom: 20px;">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="code-tab" type="button" style="color: #ff66b3; border: none; border-bottom: 2px solid #ff99cc; padding: 10px 20px;">Event Code</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="search-tab" type="button" style="color: #666; border: none; border-bottom: 2px solid transparent; padding: 10px 20px;">Search Events</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="email-tab" type="button" style="color: #666; border: none; border-bottom: 2px solid transparent; padding: 10px 20px;">Email Login</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="loginTabsContent" style="padding-top: 10px;">
+                    <div class="tab-pane fade show active" id="code" role="tabpanel" style="text-align: left;">
+                        <form id="code-form" novalidate>
+                            <div style="margin-bottom: 20px;">
+                                <label for="event-code" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">Event Code</label>
+                                <input type="text" id="event-code" name="event-code" placeholder="Enter the event code" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+                                <div class="invalid-feedback" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px;"></div>
+                            </div>
+                            
+                            <button type="submit" style="background-color: #ff99cc; border: none; color: white; padding: 12px 30px; font-weight: 500; border-radius: 30px; box-shadow: 0 4px 8px rgba(255, 153, 204, 0.3); transition: all 0.3s ease; width: 100%; margin-top: 10px; cursor: pointer;">Join Event</button>
+                        </form>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="search" role="tabpanel" style="text-align: left; display: none;">
+                        <form id="search-form" novalidate>
+                            <div style="margin-bottom: 20px;">
+                                <label for="search-term" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">Search by Mother's Name</label>
+                                <input type="text" id="search-term" name="search-term" placeholder="Enter mother's name" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+                                <div class="invalid-feedback" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px;"></div>
+                            </div>
+                            
+                            <button type="submit" style="background-color: #ff99cc; border: none; color: white; padding: 12px 30px; font-weight: 500; border-radius: 30px; box-shadow: 0 4px 8px rgba(255, 153, 204, 0.3); transition: all 0.3s ease; width: 100%; margin-top: 10px; cursor: pointer;">Search Events</button>
+                        </form>
+                        
+                        <div id="search-results" style="margin-top: 1.5rem;"></div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="email" role="tabpanel" style="text-align: left; display: none;">
+                        <form id="email-form" novalidate>
+                            <div style="margin-bottom: 20px;">
+                                <label for="email-input" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">Email</label>
+                                <input type="email" id="email-input" name="email" placeholder="Enter your email" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+                                <div class="invalid-feedback" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px;"></div>
+                            </div>
+                            
+                            <button type="submit" style="background-color: #ff99cc; border: none; color: white; padding: 12px 30px; font-weight: 500; border-radius: 30px; box-shadow: 0 4px 8px rgba(255, 153, 204, 0.3); transition: all 0.3s ease; width: 100%; margin-top: 10px; cursor: pointer;">Continue</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div style="width: 100%; text-align: center; border-bottom: 1px solid #ddd; line-height: 0.1em; margin: 20px 0; color: #888;">
+                    <span style="background: white; padding: 0 10px;">or</span>
+                </div>
+                
+                <a href="/google_auth/google_login" style="background-color: white; color: #444; padding: 12px 20px; border-radius: 30px; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: 500; margin-top: 20px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s ease;">
+                    <img src="/static/images/googleicon.png" alt="Google Logo" style="height: 24px; margin-right: 10px;">
+                    Sign in with Google
+                </a>
+                
+                <div style="margin-top: 20px; text-align: center;">
+                    <a href="/" style="color: #ff66b3; text-decoration: none;">Back to Home</a>
+                </div>
+            </div>
+            
+            <footer style="margin-top: 3rem; text-align: center;">
+                <div class="buy-coffee-footer">
+                    <img src="/static/images/coffee-icon.svg" alt="Coffee" class="buy-coffee-qr">
+                    <p class="buy-coffee-text">Like this app?</p>
+                    <a class="buy-coffee-link" onclick="window.showBuyCoffeeModal()">Buy me a coffee</a>
+                </div>
+            </footer>
+        </div>
+    `;
+    
+    // Set up tab switching
+    document.getElementById('code-tab').addEventListener('click', () => {
+        // Update tab styles
+        document.getElementById('code-tab').style.color = '#ff66b3';
+        document.getElementById('code-tab').style.borderBottom = '2px solid #ff99cc';
+        document.getElementById('search-tab').style.color = '#666';
+        document.getElementById('search-tab').style.borderBottom = '2px solid transparent';
+        document.getElementById('email-tab').style.color = '#666';
+        document.getElementById('email-tab').style.borderBottom = '2px solid transparent';
+        
+        // Show/hide panes
+        document.getElementById('code').style.display = 'block';
+        document.getElementById('search').style.display = 'none';
+        document.getElementById('email').style.display = 'none';
+    });
+    
+    document.getElementById('search-tab').addEventListener('click', () => {
+        // Update tab styles
+        document.getElementById('search-tab').style.color = '#ff66b3';
+        document.getElementById('search-tab').style.borderBottom = '2px solid #ff99cc';
+        document.getElementById('code-tab').style.color = '#666';
+        document.getElementById('code-tab').style.borderBottom = '2px solid transparent';
+        document.getElementById('email-tab').style.color = '#666';
+        document.getElementById('email-tab').style.borderBottom = '2px solid transparent';
+        
+        // Show/hide panes
+        document.getElementById('search').style.display = 'block';
+        document.getElementById('code').style.display = 'none';
+        document.getElementById('email').style.display = 'none';
+    });
+    
+    document.getElementById('email-tab').addEventListener('click', () => {
+        // Update tab styles
+        document.getElementById('email-tab').style.color = '#ff66b3';
+        document.getElementById('email-tab').style.borderBottom = '2px solid #ff99cc';
+        document.getElementById('code-tab').style.color = '#666';
+        document.getElementById('code-tab').style.borderBottom = '2px solid transparent';
+        document.getElementById('search-tab').style.color = '#666';
+        document.getElementById('search-tab').style.borderBottom = '2px solid transparent';
+        
+        // Show/hide panes
+        document.getElementById('email').style.display = 'block';
+        document.getElementById('code').style.display = 'none';
+        document.getElementById('search').style.display = 'none';
+    });
+    
+    // Function to show error messages
+    const showError = (message) => {
+        const errorElement = document.getElementById('error-message');
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+        setTimeout(() => {
+            errorElement.style.display = 'none';
+        }, 5000);
+    };
+    
+    // Function to show success messages
+    const showSuccess = (message) => {
+        const successElement = document.getElementById('success-message');
+        successElement.textContent = message;
+        successElement.style.display = 'block';
+    };
+    
+    // Handle event code form submission
+    document.getElementById('code-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const eventCode = document.getElementById('event-code').value;
+        
+        if (!eventCode.trim()) {
+            showError('Please enter an event code');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/auth/guest/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    login_type: 'event_code',
+                    event_code: eventCode 
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+            
+            if (data.status === 'need_user_info') {
+                // Store event info and show a form to collect user info
+                showError('User info needed - redirecting...');
+                localStorage.setItem('pendingEventId', data.event_id);
+                localStorage.setItem('pendingEventTitle', data.event_title);
+                
+                // Here we would ideally show a form to collect user info
+                // For now, we'll redirect to a form path
+                window.location.href = `/auth/guest_login?event_id=${data.event_id}&need_info=true`;
+                return;
+            }
+            
+            if (data.status === 'logged_in') {
+                showSuccess('Login successful! Redirecting...');
+                
+                // Store the JWT token and user data in localStorage
+                localStorage.setItem('token', data.access_token);
+                localStorage.setItem('refreshToken', data.refresh_token);
+                localStorage.setItem('isHost', data.is_host);
+                localStorage.setItem('currentUser', JSON.stringify({
+                    id: data.user_id,
+                    email: data.email,
+                    first_name: data.first_name,
+                    last_name: data.last_name,
+                    nickname: data.nickname,
+                    is_host: data.is_host,
+                    event_id: data.event_id
+                }));
+                
+                // Redirect to the appropriate page
+                setTimeout(() => {
+                    window.location.href = `/guest/event/${data.event_id}`;
+                }, 1000);
+            }
+        } catch (err) {
+            console.error('Error during login:', err);
+            showError('An error occurred. Please try again.');
+        }
+    });
+    
+    // Handle search form submission
+    document.getElementById('search-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const searchTerm = document.getElementById('search-term').value;
+        
+        if (!searchTerm.trim() || searchTerm.trim().length < 2) {
+            showError('Please enter at least 2 characters to search');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/auth/guest/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    login_type: 'mother_search',
+                    search_term: searchTerm 
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+            
+            // Handle the found events
+            if (data.events && data.events.length > 0) {
+                const resultsContainer = document.getElementById('search-results');
+                
+                let resultsHTML = `<h3 style="margin-bottom: 1rem;">Search Results</h3><ul style="list-style: none; padding: 0;">`;
+                
+                data.events.forEach(event => {
+                    resultsHTML += `
+                        <li style="margin-bottom: 1rem; padding: 1rem; border: 1px solid #ddd; border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h4 style="margin: 0 0 0.5rem 0;">${event.title || `Baby Shower for ${event.mother_name}`}</h4>
+                                    <p style="margin: 0; font-size: 0.9rem;">Mother-to-be: ${event.mother_name}</p>
+                                    <p style="margin: 0; font-size: 0.9rem;">Hosted by: ${event.host_name}</p>
+                                </div>
+                                <button 
+                                    onclick="selectEvent(${event.id})" 
+                                    style="background-color: #ff99cc; border: none; color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer;"
+                                >
+                                    Select
+                                </button>
+                            </div>
+                        </li>
+                    `;
+                });
+                
+                resultsHTML += `</ul>`;
+                resultsContainer.innerHTML = resultsHTML;
+                
+                // Define the selectEvent function
+                window.selectEvent = async (eventId) => {
+                    try {
+                        const response = await fetch('/auth/guest/select-event', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ event_id: eventId })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.error) {
+                            showError(data.error);
+                            return;
+                        }
+                        
+                        if (data.status === 'need_user_info') {
+                            // Redirect to a form to collect user info
+                            window.location.href = `/auth/guest_login?event_id=${data.event_id}&need_info=true`;
+                            return;
+                        }
+                        
+                        if (data.status === 'logged_in') {
+                            showSuccess('Login successful! Redirecting...');
+                            
+                            // Store the JWT token and user data in localStorage
+                            localStorage.setItem('token', data.access_token);
+                            localStorage.setItem('refreshToken', data.refresh_token);
+                            localStorage.setItem('isHost', data.is_host);
+                            localStorage.setItem('currentUser', JSON.stringify({
+                                id: data.user_id,
+                                email: data.email,
+                                first_name: data.first_name,
+                                last_name: data.last_name,
+                                nickname: data.nickname,
+                                is_host: data.is_host,
+                                event_id: data.event_id
+                            }));
+                            
+                            // Redirect to the appropriate page
+                            setTimeout(() => {
+                                window.location.href = `/guest/event/${data.event_id}`;
+                            }, 1000);
+                        }
+                    } catch (err) {
+                        console.error('Error during event selection:', err);
+                        showError('An error occurred. Please try again.');
+                    }
+                };
+            } else {
+                document.getElementById('search-results').innerHTML = `
+                    <div style="padding: 1rem; text-align: center; color: #666;">
+                        No events found matching "${searchTerm}". Please try another search.
+                    </div>
+                `;
+            }
+        } catch (err) {
+            console.error('Error during search:', err);
+            showError('An error occurred during search. Please try again.');
+        }
+    });
+    
+    // Handle email form submission
+    document.getElementById('email-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email-input').value;
+        
+        if (!email.trim() || !email.includes('@')) {
+            showError('Please enter a valid email address');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/auth/guest/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    login_type: 'email',
+                    email 
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+            
+            if (data.status === 'need_event') {
+                showError('Please search for an event or enter an event code');
+                document.getElementById('code-tab').click();
+                return;
+            }
+            
+            if (data.status === 'need_profile_info') {
+                // Redirect to a form to collect profile info
+                window.location.href = `/auth/guest_login?user_id=${data.user_id}&need_profile=true`;
+                return;
+            }
+            
+            if (data.status === 'logged_in') {
+                showSuccess('Login successful!');
+                
+                // Store the JWT token and user data in localStorage
+                localStorage.setItem('token', data.access_token);
+                localStorage.setItem('refreshToken', data.refresh_token);
+                localStorage.setItem('isHost', data.is_host);
+                localStorage.setItem('currentUser', JSON.stringify({
+                    id: data.user_id,
+                    email: data.email,
+                    first_name: data.first_name,
+                    last_name: data.last_name,
+                    nickname: data.nickname,
+                    is_host: data.is_host,
+                    event_id: data.event_id
+                }));
+                
+                // If there's only one event, redirect to it directly
+                if (data.event_id) {
+                    showSuccess('Login successful! Redirecting to your event...');
+                    setTimeout(() => {
+                        window.location.href = `/guest/event/${data.event_id}`;
+                    }, 1000);
+                    return;
+                }
+                
+                // If there are multiple events, show a list to choose from
+                if (data.events && data.events.length > 0) {
+                    showSuccess('Please select an event to join:');
+                    const searchResults = document.getElementById('search-results');
+                    searchResults.innerHTML = `<h3>Your Events</h3><ul style="list-style: none; padding: 0;">`;
+                    
+                    data.events.forEach(event => {
+                        searchResults.innerHTML += `
+                            <li style="margin-bottom: 0.5rem;">
+                                <a href="/guest/event/${event.id}" style="display: block; padding: 0.75rem; background: #f8f9fa; border-radius: 4px; text-decoration: none; color: #333;">
+                                    ${event.title || `Baby Shower for ${event.mother_name}`}
+                                </a>
+                            </li>
+                        `;
+                    });
+                    
+                    searchResults.innerHTML += `</ul>`;
+                    document.getElementById('search').style.display = 'block';
+                    document.getElementById('email').style.display = 'none';
+                    
+                    // Update tabs
+                    document.getElementById('search-tab').style.color = '#ff66b3';
+                    document.getElementById('search-tab').style.borderBottom = '2px solid #ff99cc';
+                    document.getElementById('email-tab').style.color = '#666';
+                    document.getElementById('email-tab').style.borderBottom = '2px solid transparent';
+                }
+            }
+        } catch (err) {
+            console.error('Error during email login:', err);
+            showError('An error occurred. Please try again.');
+        }
+    });
 };
 
 // Call the routing handler when the DOM is loaded
