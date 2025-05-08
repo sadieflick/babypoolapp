@@ -14,7 +14,7 @@ import HostLogin from "./pages/HostLogin";
 import HostRegistration from "./pages/HostRegistration";
 import GuestLogin from "./pages/GuestLogin";
 import GuestLanding from "./pages/GuestLanding";
-import DateGuessing from "./pages/DateGuessing";
+import GuestDateGuessPage from "./pages/GuestDateGuessPage";
 import TimeGuessing from "./pages/TimeGuessing";
 import NameGuessing from "./pages/NameGuessing";
 import MyGuesses from "./pages/MyGuesses";
@@ -134,7 +134,7 @@ function App() {
                   path="/guest/event/:eventId/date-guess"
                   element={
                     <ProtectedRoute>
-                      <DateGuessing />
+                      <GuestDateGuessPage />
                     </ProtectedRoute>
                   }
                 />
