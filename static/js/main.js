@@ -1002,7 +1002,8 @@ const renderEventCreation = () => {
 // Routing
 const handleRouting = async () => {
     const path = window.location.pathname;
-    console.log('Handling route:', path, 'Auth status:', isAuthenticated(), 'Is host:', isHost());
+    const searchParams = new URLSearchParams(window.location.search);
+    console.log('Handling route:', path, 'Auth status:', isAuthenticated(), 'Is host:', isHost(), 'URL params:', window.location.search);
     
     if (path === '/host/dashboard') {
         if (isAuthenticated() && isHost()) {
@@ -1027,8 +1028,24 @@ const handleRouting = async () => {
     }
     
     if (path === '/guest/login' || path === '/auth/guest_login') {
-        renderGuestLogin();
-        return;
+        // Check for URL parameters that indicate what form to show
+        const eventId = searchParams.get('event_id');
+        const needInfo = searchParams.get('need_info');
+        const needProfile = searchParams.get('need_profile');
+        
+        if (eventId && needInfo === 'true') {
+            // Show user info form for the specified event
+            renderGuestUserInfoForm(eventId);
+            return;
+        } else if (needProfile === 'true') {
+            // Show profile completion form
+            renderGuestProfileForm();
+            return;
+        } else {
+            // Show standard guest login form
+            renderGuestLogin();
+            return;
+        }
     }
     
     // Default: render the home page for root or unhandled paths
@@ -1200,6 +1217,12 @@ const renderGuestLogin = () => {
         }
         
         try {
+            // Show loading state
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.textContent;
+            submitButton.textContent = 'Checking...';
+            submitButton.disabled = true;
+            
             const response = await fetch('/auth/guest/login', {
                 method: 'POST',
                 headers: {
@@ -1211,7 +1234,12 @@ const renderGuestLogin = () => {
                 })
             });
             
+            // Reset button
+            submitButton.textContent = originalButtonText;
+            submitButton.disabled = false;
+            
             const data = await response.json();
+            console.log('Event code response:', data);
             
             if (data.error) {
                 showError(data.error);
@@ -1219,14 +1247,30 @@ const renderGuestLogin = () => {
             }
             
             if (data.status === 'need_user_info') {
-                // Store event info and show a form to collect user info
-                showError('User info needed - redirecting...');
+                // Store event info in localStorage as a backup
                 localStorage.setItem('pendingEventId', data.event_id);
                 localStorage.setItem('pendingEventTitle', data.event_title);
                 
-                // Here we would ideally show a form to collect user info
-                // For now, we'll redirect to a form path
-                window.location.href = `/auth/guest_login?event_id=${data.event_id}&need_info=true`;
+                // Show a brief message before redirecting
+                showSuccess('Event found! Please provide your information to join.');
+                
+                // Use a small timeout to ensure the message is seen
+                setTimeout(() => {
+                    // Redirect to collect user info
+                    window.location.href = `/auth/guest_login?event_id=${data.event_id}&need_info=true`;
+                }, 800);
+                return;
+            }
+            
+            if (data.status === 'need_profile_info') {
+                // Show a brief message before redirecting
+                showSuccess('Please complete your profile.');
+                
+                // Use a small timeout to ensure the message is seen
+                setTimeout(() => {
+                    // Redirect to profile completion form
+                    window.location.href = `/auth/guest_login?need_profile=true`;
+                }, 800);
                 return;
             }
             
@@ -1476,6 +1520,437 @@ const renderGuestLogin = () => {
             }
         } catch (err) {
             console.error('Error during email login:', err);
+            showError('An error occurred. Please try again.');
+        }
+    });
+};
+
+// Guest User Info Form Implementation
+const renderGuestUserInfoForm = (eventId) => {
+    // First fetch event details to show event title
+    fetch(`/api/events/${eventId}`)
+        .then(response => {
+            if (!response.ok) {
+                return { error: 'Failed to fetch event details' };
+            }
+            return response.json();
+        })
+        .then(event => {
+            // If we have an error, show default form without event title
+            const eventTitle = event.error ? 'Baby Shower Event' : (event.title || `Baby Shower for ${event.mother_name}`);
+            
+            document.getElementById('root').innerHTML = `
+                <div style="font-family: 'Poppins', sans-serif; padding: 2rem; text-align: center;">
+                    <h1 style="color: #ff66b3; margin-bottom: 1rem;">Baby Pool App</h1>
+                    
+                    <div style="max-width: 500px; margin: 40px auto; padding: 30px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <h2 style="font-size: 2rem; color: #ff66b3; margin-bottom: 10px;">Complete Your Information</h2>
+                            <p style="color: #666;">For: ${eventTitle}</p>
+                        </div>
+                        
+                        <div id="error-message" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px; margin-bottom: 20px; font-weight: 500;"></div>
+                        <div id="success-message" style="padding: 15px; margin-bottom: 20px; border: 1px solid #c3e6cb; border-radius: 8px; color: #155724; background-color: #d4edda; display: none;"></div>
+                        
+                        <form id="user-info-form" novalidate>
+                            <div style="margin-bottom: 20px;">
+                                <label for="first-name" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">First Name*</label>
+                                <input 
+                                    type="text" 
+                                    id="first-name" 
+                                    name="first_name" 
+                                    placeholder="Enter your first name" 
+                                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;"
+                                    required
+                                >
+                                <div class="invalid-feedback" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px;"></div>
+                            </div>
+                            
+                            <div style="margin-bottom: 20px;">
+                                <label for="last-name" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">Last Name*</label>
+                                <input 
+                                    type="text" 
+                                    id="last-name" 
+                                    name="last_name" 
+                                    placeholder="Enter your last name" 
+                                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;"
+                                    required
+                                >
+                                <div class="invalid-feedback" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px;"></div>
+                            </div>
+                            
+                            <div style="margin-bottom: 20px;">
+                                <label for="nickname" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">Nickname (Optional)</label>
+                                <input 
+                                    type="text" 
+                                    id="nickname" 
+                                    name="nickname" 
+                                    placeholder="Enter a nickname" 
+                                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;"
+                                >
+                            </div>
+                            
+                            <div style="margin-bottom: 20px;">
+                                <label for="email" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">Email</label>
+                                <input 
+                                    type="email" 
+                                    id="email" 
+                                    name="email" 
+                                    placeholder="Enter your email" 
+                                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;"
+                                >
+                                <div class="invalid-feedback" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px;"></div>
+                            </div>
+                            
+                            <div style="margin-bottom: 20px;">
+                                <label for="phone" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">Phone Number (Required if no email)</label>
+                                <input 
+                                    type="tel" 
+                                    id="phone" 
+                                    name="phone" 
+                                    placeholder="Enter your phone number" 
+                                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;"
+                                >
+                                <div class="invalid-feedback" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px;"></div>
+                            </div>
+                            
+                            <div style="margin-bottom: 20px;">
+                                <label style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">Payment Method Preference</label>
+                                <div style="display: flex; gap: 20px;">
+                                    <label style="display: flex; align-items: center; cursor: pointer;">
+                                        <input 
+                                            type="radio" 
+                                            name="payment_method" 
+                                            value="venmo" 
+                                            checked 
+                                            style="margin-right: 8px;"
+                                        >
+                                        Venmo
+                                    </label>
+                                    <label style="display: flex; align-items: center; cursor: pointer;">
+                                        <input 
+                                            type="radio" 
+                                            name="payment_method" 
+                                            value="cash" 
+                                            style="margin-right: 8px;"
+                                        >
+                                        Cash
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <button 
+                                type="submit" 
+                                style="background-color: #ff99cc; border: none; color: white; padding: 12px 30px; font-weight: 500; border-radius: 30px; box-shadow: 0 4px 8px rgba(255, 153, 204, 0.3); transition: all 0.3s ease; width: 100%; margin-top: 10px; cursor: pointer;"
+                            >
+                                Join Event
+                            </button>
+                        </form>
+                        
+                        <div style="margin-top: 20px; text-align: center;">
+                            <a href="/auth/guest_login" style="color: #ff66b3; text-decoration: none;">Back to Login</a>
+                        </div>
+                    </div>
+                    
+                    <footer style="margin-top: 3rem; text-align: center;">
+                        <div class="buy-coffee-footer">
+                            <img src="/static/images/coffee-icon.svg" alt="Coffee" class="buy-coffee-qr">
+                            <p class="buy-coffee-text">Like this app?</p>
+                            <a class="buy-coffee-link" onclick="window.showBuyCoffeeModal()">Buy me a coffee</a>
+                        </div>
+                    </footer>
+                </div>
+            `;
+            
+            // Function to show error messages
+            const showError = (message) => {
+                const errorElement = document.getElementById('error-message');
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+                setTimeout(() => {
+                    errorElement.style.display = 'none';
+                }, 5000);
+            };
+            
+            // Function to show success messages
+            const showSuccess = (message) => {
+                const successElement = document.getElementById('success-message');
+                successElement.textContent = message;
+                successElement.style.display = 'block';
+            };
+            
+            // Function to show field validation errors
+            const showFieldError = (fieldId, message) => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.style.borderColor = '#dc3545';
+                    
+                    const feedbackElement = field.nextElementSibling;
+                    if (feedbackElement && feedbackElement.classList.contains('invalid-feedback')) {
+                        feedbackElement.textContent = message;
+                        feedbackElement.style.display = 'block';
+                    }
+                }
+            };
+            
+            // Handle form submission
+            document.getElementById('user-info-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Validate required fields
+                const firstName = document.getElementById('first-name').value.trim();
+                const lastName = document.getElementById('last-name').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                
+                let hasError = false;
+                
+                if (!firstName) {
+                    showFieldError('first-name', 'First name is required');
+                    hasError = true;
+                }
+                
+                if (!lastName) {
+                    showFieldError('last-name', 'Last name is required');
+                    hasError = true;
+                }
+                
+                if (!email && !phone) {
+                    showFieldError('email', 'Either email or phone is required');
+                    showFieldError('phone', 'Either email or phone is required');
+                    hasError = true;
+                }
+                
+                if (hasError) {
+                    return;
+                }
+                
+                // Get form data
+                const formData = {
+                    event_id: eventId,
+                    first_name: firstName,
+                    last_name: lastName,
+                    nickname: document.getElementById('nickname').value.trim(),
+                    email: email || null,
+                    phone: phone || null,
+                    payment_method: document.querySelector('input[name="payment_method"]:checked').value
+                };
+                
+                try {
+                    const response = await fetch('/auth/guest/select-event', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.error) {
+                        showError(data.error);
+                        return;
+                    }
+                    
+                    if (data.status === 'logged_in') {
+                        showSuccess('Login successful! Redirecting...');
+                        
+                        // Store the JWT token and user data
+                        localStorage.setItem('token', data.access_token);
+                        localStorage.setItem('refreshToken', data.refresh_token);
+                        localStorage.setItem('isHost', data.is_host);
+                        localStorage.setItem('currentUser', JSON.stringify({
+                            id: data.user_id,
+                            email: data.email,
+                            first_name: data.first_name,
+                            last_name: data.last_name,
+                            nickname: data.nickname,
+                            is_host: data.is_host,
+                            event_id: data.event_id
+                        }));
+                        
+                        // Redirect to the guest dashboard
+                        setTimeout(() => {
+                            window.location.href = `/guest/event/${data.event_id}`;
+                        }, 1000);
+                    }
+                } catch (err) {
+                    console.error('Error submitting user info:', err);
+                    showError('An error occurred. Please try again.');
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching event details:', error);
+            // Fallback to generic form
+            // This would be similar to the code above but without specific event details
+        });
+};
+
+// Guest Profile Form Implementation
+const renderGuestProfileForm = () => {
+    document.getElementById('root').innerHTML = `
+        <div style="font-family: 'Poppins', sans-serif; padding: 2rem; text-align: center;">
+            <h1 style="color: #ff66b3; margin-bottom: 1rem;">Baby Pool App</h1>
+            
+            <div style="max-width: 500px; margin: 40px auto; padding: 30px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h2 style="font-size: 2rem; color: #ff66b3; margin-bottom: 10px;">Complete Your Profile</h2>
+                    <p style="color: #666;">We need a bit more information to complete your profile.</p>
+                </div>
+                
+                <div id="error-message" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px; margin-bottom: 20px; font-weight: 500;"></div>
+                <div id="success-message" style="padding: 15px; margin-bottom: 20px; border: 1px solid #c3e6cb; border-radius: 8px; color: #155724; background-color: #d4edda; display: none;"></div>
+                
+                <form id="profile-form" novalidate>
+                    <div style="margin-bottom: 20px;">
+                        <label for="first-name" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">First Name*</label>
+                        <input 
+                            type="text" 
+                            id="first-name" 
+                            name="first_name" 
+                            placeholder="Enter your first name" 
+                            style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;"
+                            required
+                        >
+                        <div class="invalid-feedback" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px;"></div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label for="last-name" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">Last Name*</label>
+                        <input 
+                            type="text" 
+                            id="last-name" 
+                            name="last_name" 
+                            placeholder="Enter your last name" 
+                            style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;"
+                            required
+                        >
+                        <div class="invalid-feedback" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px;"></div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label for="nickname" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">Nickname (Optional)</label>
+                        <input 
+                            type="text" 
+                            id="nickname" 
+                            name="nickname" 
+                            placeholder="Enter a nickname" 
+                            style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;"
+                        >
+                    </div>
+                    
+                    <button 
+                        type="submit" 
+                        style="background-color: #ff99cc; border: none; color: white; padding: 12px 30px; font-weight: 500; border-radius: 30px; box-shadow: 0 4px 8px rgba(255, 153, 204, 0.3); transition: all 0.3s ease; width: 100%; margin-top: 10px; cursor: pointer;"
+                    >
+                        Update Profile
+                    </button>
+                </form>
+            </div>
+            
+            <footer style="margin-top: 3rem; text-align: center;">
+                <div class="buy-coffee-footer">
+                    <img src="/static/images/coffee-icon.svg" alt="Coffee" class="buy-coffee-qr">
+                    <p class="buy-coffee-text">Like this app?</p>
+                    <a class="buy-coffee-link" onclick="window.showBuyCoffeeModal()">Buy me a coffee</a>
+                </div>
+            </footer>
+        </div>
+    `;
+    
+    // Function to show error messages
+    const showError = (message) => {
+        const errorElement = document.getElementById('error-message');
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+        setTimeout(() => {
+            errorElement.style.display = 'none';
+        }, 5000);
+    };
+    
+    // Function to show success messages
+    const showSuccess = (message) => {
+        const successElement = document.getElementById('success-message');
+        successElement.textContent = message;
+        successElement.style.display = 'block';
+    };
+    
+    // Function to show field validation errors
+    const showFieldError = (fieldId, message) => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.style.borderColor = '#dc3545';
+            
+            const feedbackElement = field.nextElementSibling;
+            if (feedbackElement && feedbackElement.classList.contains('invalid-feedback')) {
+                feedbackElement.textContent = message;
+                feedbackElement.style.display = 'block';
+            }
+        }
+    };
+    
+    // Handle form submission
+    document.getElementById('profile-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Validate required fields
+        const firstName = document.getElementById('first-name').value.trim();
+        const lastName = document.getElementById('last-name').value.trim();
+        
+        let hasError = false;
+        
+        if (!firstName) {
+            showFieldError('first-name', 'First name is required');
+            hasError = true;
+        }
+        
+        if (!lastName) {
+            showFieldError('last-name', 'Last name is required');
+            hasError = true;
+        }
+        
+        if (hasError) {
+            return;
+        }
+        
+        // Get form data
+        const formData = {
+            first_name: firstName,
+            last_name: lastName,
+            nickname: document.getElementById('nickname').value.trim()
+        };
+        
+        try {
+            const response = await fetch('/auth/update-profile', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+            
+            if (data.success) {
+                showSuccess('Profile updated successfully! Redirecting...');
+                
+                // Redirect to the guest dashboard or event selection
+                setTimeout(() => {
+                    if (data.event_id) {
+                        window.location.href = `/guest/event/${data.event_id}`;
+                    } else {
+                        window.location.href = '/auth/guest_login';
+                    }
+                }, 1000);
+            }
+        } catch (err) {
+            console.error('Error updating profile:', err);
             showError('An error occurred. Please try again.');
         }
     });
