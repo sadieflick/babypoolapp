@@ -1149,6 +1149,112 @@ def update_current_user():
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
+@api.route('/events/<int:event_id>/guesses/current', methods=['GET'])
+@jwt_required()
+def get_current_user_guesses(event_id):
+    user = get_user_from_jwt()
+    if not user:
+        return jsonify({'error': 'User not found'}), 401
+    
+    event = Event.query.get_or_404(event_id)
+    
+    # Get all guesses for the user
+    date_guess = DateGuess.query.filter_by(user_id=user.id, event_id=event_id).first()
+    hour_guess = HourGuess.query.filter_by(user_id=user.id, event_id=event_id).first()
+    minute_guess = MinuteGuess.query.filter_by(user_id=user.id, event_id=event_id).first()
+    name_guess = NameGuess.query.filter_by(user_id=user.id, event_id=event_id).first()
+    
+    # Create combined time guess if both hour and minute exist
+    time_guess = None
+    if hour_guess and minute_guess:
+        time_guess = {
+            'hour': hour_guess.hour,
+            'minute': minute_guess.minute,
+            'am_pm': hour_guess.am_pm
+        }
+    
+    result = {
+        'date_guess': date_guess and {
+            'id': date_guess.id,
+            'guess_date': date_guess.guess_date.strftime('%Y-%m-%d')
+        },
+        'time_guess': time_guess,
+        'name_guess': name_guess and {
+            'id': name_guess.id,
+            'name': name_guess.name
+        }
+    }
+    
+    return jsonify(result)
+
+@api.route('/events/<int:event_id>/guesses', methods=['GET'])
+@jwt_required()
+def get_all_event_guesses(event_id):
+    user = get_user_from_jwt()
+    if not user:
+        return jsonify({'error': 'User not found'}), 401
+    
+    event = Event.query.get_or_404(event_id)
+    
+    # Check if user is authorized (either host or guest)
+    if user.id != event.host_id and user not in event.guests:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    # Get all guesses for the event
+    date_guesses = DateGuess.query.filter_by(event_id=event_id).all()
+    hour_guesses = HourGuess.query.filter_by(event_id=event_id).all()
+    minute_guesses = MinuteGuess.query.filter_by(event_id=event_id).all()
+    name_guesses = NameGuess.query.filter_by(event_id=event_id).all() if event.name_game_enabled else []
+    
+    # Format the guesses with user info
+    date_guesses_data = []
+    for guess in date_guesses:
+        guess_user = User.query.get(guess.user_id)
+        date_guesses_data.append({
+            'id': guess.id,
+            'guess_date': guess.guess_date.strftime('%Y-%m-%d'),
+            'user_id': guess.user_id,
+            'user_name': guess_user.get_display_name() if guess_user else 'Unknown User'
+        })
+    
+    hour_guesses_data = []
+    for guess in hour_guesses:
+        guess_user = User.query.get(guess.user_id)
+        hour_guesses_data.append({
+            'id': guess.id,
+            'hour': guess.hour,
+            'am_pm': guess.am_pm,
+            'user_id': guess.user_id,
+            'user_name': guess_user.get_display_name() if guess_user else 'Unknown User'
+        })
+    
+    minute_guesses_data = []
+    for guess in minute_guesses:
+        guess_user = User.query.get(guess.user_id)
+        minute_guesses_data.append({
+            'id': guess.id,
+            'minute': guess.minute,
+            'user_id': guess.user_id,
+            'user_name': guess_user.get_display_name() if guess_user else 'Unknown User'
+        })
+    
+    name_guesses_data = []
+    for guess in name_guesses:
+        guess_user = User.query.get(guess.user_id)
+        name_guesses_data.append({
+            'id': guess.id,
+            'name': guess.name,
+            'user_id': guess.user_id,
+            'user_name': guess_user.get_display_name() if guess_user else 'Unknown User'
+        })
+    
+    return jsonify({
+        'date_guesses': date_guesses_data,
+        'hour_guesses': hour_guesses_data,
+        'minute_guesses': minute_guesses_data,
+        'name_guesses': name_guesses_data
+    })
+
 @api.route('/events/<int:event_id>/user/guesses', methods=['GET'])
 @jwt_required()
 def get_user_guesses(event_id):
