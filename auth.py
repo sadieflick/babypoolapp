@@ -472,13 +472,92 @@ def guest_select_event():
     if not event:
         return jsonify({'error': 'Event not found'}), 404
     
-    # Check if we have email, first name, last name
-    email = session.get('temp_email') or data.get('email')
+    # Check if nickname/first name was provided
+    nickname = data.get('nickname')
     first_name = data.get('first_name')
+    search_name = nickname or first_name
+    
+    # If we have a name, check if this guest already exists
+    if search_name:
+        # Look for guests of this event with the given name/nickname
+        matching_guests = []
+        
+        # First check by nickname (if provided)
+        if nickname:
+            for guest in event.guests:
+                if guest.nickname and guest.nickname.lower() == nickname.lower():
+                    matching_guests.append(guest)
+        
+        # If no matches by nickname and first name was provided instead
+        if not matching_guests and first_name:
+            for guest in event.guests:
+                if guest.first_name and guest.first_name.lower() == first_name.lower():
+                    matching_guests.append(guest)
+        
+        # If exactly one match, log them in
+        if len(matching_guests) == 1:
+            user = matching_guests[0]
+            print(f"Single matching guest found for name {search_name}, logging in user {user.id}")
+            
+            # Login user
+            login_user(user)
+            
+            # Create JWT tokens
+            access_token = create_access_token(
+                identity=user.id,
+                additional_claims={
+                    'is_host': user.is_host,
+                    'email': user.email
+                },
+                expires_delta=timedelta(days=60)
+            )
+            
+            refresh_token = create_refresh_token(
+                identity=user.id,
+                additional_claims={
+                    'is_host': user.is_host,
+                    'email': user.email
+                },
+                expires_delta=timedelta(days=60)
+            )
+            
+            print(f"User {user.id} selected event {event.id}")
+            
+            # Prepare response with tokens and user info
+            response = jsonify({
+                'status': 'logged_in',
+                'user_id': user.id,
+                'is_host': user.is_host,
+                'event_id': event.id,
+                'event_title': event.title,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'nickname': user.nickname,
+                'access_token': access_token,
+                'refresh_token': refresh_token,
+                'message': 'Welcome back!'
+            })
+            
+            # Set JWT cookies for cookie-based auth as backup
+            set_access_cookies(response, access_token)
+            set_refresh_cookies(response, refresh_token)
+            
+            return response
+    
+    # Get other info if available
+    email = session.get('temp_email') or data.get('email')
     last_name = data.get('last_name')
     phone = data.get('phone')
-    nickname = data.get('nickname')
     payment_method = data.get('payment_method')
+    
+    # If we don't have a name yet or had multiple matches, ask for more info
+    if not search_name:
+        return jsonify({
+            'status': 'need_name_only',
+            'event_id': event.id,
+            'event_title': event.title,
+            'message': 'Please enter your first name or nickname to continue'
+        }), 200
     
     # Need either email or first/last name
     if not email and (not first_name or not last_name) and not phone:

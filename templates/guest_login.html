@@ -269,7 +269,74 @@
                     const data = await response.json();
                     
                     if (response.ok) {
-                        if (data.status === 'need_user_info') {
+                        if (data.status === 'need_name_only') {
+                            // Need to collect just a name
+                            // Show a minimal form asking for name/nickname only
+                            const formContainer = document.createElement('div');
+                            formContainer.className = 'name-form-container';
+                            formContainer.innerHTML = `
+                                <h3 style="font-size: 1.5rem; color: #ff66b3; margin-bottom: 15px;">
+                                    ${data.event_title}
+                                </h3>
+                                <p style="color: #666; margin-bottom: 20px;">
+                                    ${data.message || 'Please enter your first name or nickname to continue'}
+                                </p>
+                                <form id="name-only-form" novalidate>
+                                    <div style="margin-bottom: 20px;">
+                                        <label for="name-input" style="font-weight: 500; color: #444; display: block; margin-bottom: 8px;">Your Name</label>
+                                        <input type="text" id="name-input" name="nickname" placeholder="Enter your first name or nickname" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+                                        <div class="invalid-feedback" style="display: none; color: #dc3545; font-size: 14px; margin-top: 5px;"></div>
+                                    </div>
+                                    <input type="hidden" id="name-event-id" value="${data.event_id}">
+                                    <button type="submit" style="background-color: #ff99cc; border: none; color: white; padding: 12px 30px; font-weight: 500; border-radius: 30px; box-shadow: 0 4px 8px rgba(255, 153, 204, 0.3); transition: all 0.3s ease; width: 100%; margin-top: 10px; cursor: pointer;">Continue</button>
+                                </form>
+                            `;
+                            
+                            // Replace the tab content with our form
+                            document.querySelector('.tab-content').innerHTML = '';
+                            document.querySelector('.tab-content').appendChild(formContainer);
+                            
+                            // Add event listener for form submission
+                            document.getElementById('name-only-form').addEventListener('submit', async function(e) {
+                                e.preventDefault();
+                                
+                                const nickname = document.getElementById('name-input').value;
+                                const eventId = document.getElementById('name-event-id').value;
+                                
+                                if (!nickname.trim()) {
+                                    // Show validation error
+                                    showFieldError('name-input', 'Please enter your name');
+                                    return;
+                                }
+                                
+                                try {
+                                    const response = await fetch('/auth/guest/select-event', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({
+                                            event_id: eventId,
+                                            nickname: nickname
+                                        })
+                                    });
+                                    
+                                    const data = await response.json();
+                                    console.log('Name submit response:', data);
+                                    
+                                    // Handle response
+                                    handleGuestSelectResponse(data, eventId);
+                                } catch (error) {
+                                    console.error('Error:', error);
+                                    alert('An error occurred. Please try again.');
+                                }
+                            });
+                            
+                            // Add input event listener to clear validation error
+                            document.getElementById('name-input').addEventListener('input', function() {
+                                clearFieldError(this);
+                            });
+                        } else if (data.status === 'need_user_info') {
                             // Need to collect user info for this event
                             window.location.href = `/guest-info?event_id=${data.event_id}`;
                         } else if (data.status === 'need_profile_info') {
