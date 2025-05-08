@@ -152,7 +152,14 @@ const renderHomePage = () => {
             </div>
 
             <footer style="margin-top: 3rem; font-size: 0.9rem; color: #666;">
-                &copy; 2025 Baby Pool App
+                <div style="text-align: center;">
+                    &copy; 2025 Baby Pool App
+                </div>
+                <div class="buy-coffee-footer">
+                    <img src="/static/images/coffee-icon.svg" alt="Coffee" class="buy-coffee-qr">
+                    <p class="buy-coffee-text">Like this app?</p>
+                    <a class="buy-coffee-link" onclick="window.showBuyCoffeeModal()">Buy me a coffee</a>
+                </div>
             </footer>
         </div>
     `;
@@ -222,7 +229,12 @@ const renderDashboard = async () => {
             
             <!-- Footer -->
             <footer style="background-color: white; padding: 1.5rem; text-align: center; box-shadow: 0 -2px 4px rgba(0,0,0,0.05);">
-                <p style="color: #888; margin: 0;">&copy; 2025 Baby Pool App</p>
+                <p style="color: #888; margin: 0 0 10px 0;">&copy; 2025 Baby Pool App</p>
+                <div class="buy-coffee-footer">
+                    <img src="/static/images/coffee-icon.svg" alt="Coffee" class="buy-coffee-qr">
+                    <p class="buy-coffee-text">Like this app?</p>
+                    <a class="buy-coffee-link" onclick="window.showBuyCoffeeModal()">Buy me a coffee</a>
+                </div>
             </footer>
         </div>
     `;
@@ -374,7 +386,12 @@ const renderEventCreation = () => {
                 
                 <!-- Footer -->
                 <footer style="background-color: white; padding: 1.5rem; text-align: center; box-shadow: 0 -2px 4px rgba(0,0,0,0.05);">
-                    <p style="color: #888; margin: 0;">&copy; 2025 Baby Pool App</p>
+                    <p style="color: #888; margin: 0 0 10px 0;">&copy; 2025 Baby Pool App</p>
+                    <div class="buy-coffee-footer">
+                        <img src="/static/images/coffee-icon.svg" alt="Coffee" class="buy-coffee-qr">
+                        <p class="buy-coffee-text">Like this app?</p>
+                        <a class="buy-coffee-link" onclick="window.showBuyCoffeeModal()">Buy me a coffee</a>
+                    </div>
                 </footer>
             </div>
         `;
