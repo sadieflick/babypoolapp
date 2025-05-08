@@ -1141,6 +1141,20 @@ const handleRouting = async () => {
         }
     }
     
+    // Check date guess path pattern (e.g., /guest/event/123/date-guess)
+    const dateGuessMatch = path.match(/^\/guest\/event\/(\d+)\/date-guess$/);
+    if (dateGuessMatch) {
+        const eventId = dateGuessMatch[1];
+        if (isAuthenticated()) {
+            renderGuestDateGuessPage(eventId);
+            return;
+        } else {
+            // Not authenticated, redirect to login
+            window.location.href = '/auth/guest_login';
+            return;
+        }
+    }
+    
     if (path === '/guest/dashboard') {
         if (isAuthenticated()) {
             renderGuestDashboard();
@@ -2737,6 +2751,328 @@ const renderGuestDashboard = () => {
             </div>
         `;
     });
+};
+
+// Render guest date guess page with custom calendar grid
+const renderGuestDateGuessPage = async (eventId) => {
+    try {
+        // Get event details
+        const event = await api.getEvent(eventId);
+        
+        // Get current user guesses
+        const userGuesses = await api.getUserGuesses(eventId);
+        
+        // Get all guesses for this event
+        const allGuesses = await api.getAllGuesses(eventId);
+        
+        // Format the due date for display
+        const dueDate = new Date(event.due_date);
+        const formattedDueDate = dueDate.toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            month: 'long', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+        
+        // Parse the user's current date guess, if any
+        let currentDateGuess = null;
+        if (userGuesses && userGuesses.date_guess) {
+            currentDateGuess = new Date(userGuesses.date_guess.guess_date);
+        }
+        
+        // Generate taken dates from all guesses
+        const takenDates = new Set();
+        if (allGuesses && allGuesses.date_guesses) {
+            allGuesses.date_guesses.forEach(guess => {
+                // Skip the user's own guess
+                if (!currentDateGuess || new Date(guess.guess_date).getTime() !== currentDateGuess.getTime()) {
+                    takenDates.add(new Date(guess.guess_date).toISOString().split('T')[0]);
+                }
+            });
+        }
+        
+        // Calculate the date range (1 month before and after due date)
+        const startDate = new Date(dueDate);
+        startDate.setMonth(dueDate.getMonth() - 1);
+        
+        const endDate = new Date(dueDate);
+        endDate.setMonth(dueDate.getMonth() + 1);
+        
+        document.getElementById('root').innerHTML = `
+            <div class="page-container">
+                <header class="page-header">
+                    <div class="header-content">
+                        <h1 class="page-title">Date Guess</h1>
+                        <div class="user-nav">
+                            <span class="user-greeting">Hello, ${getCurrentUser().first_name || 'Guest'}</span>
+                            <button id="back-btn" class="back-button">Back</button>
+                            <button id="logout-btn" class="logout-button">Logout</button>
+                        </div>
+                    </div>
+                </header>
+                
+                <main class="main-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">When Will Baby Arrive?</h2>
+                            <p class="due-date-info">Due Date: <span class="due-date">${formattedDueDate}</span></p>
+                        </div>
+                        
+                        <div class="card-body">
+                            <p class="guess-instructions">Choose the date you think the baby will arrive. Select an available date on the calendar below.</p>
+                            
+                            ${currentDateGuess ? `
+                                <div class="current-guess">
+                                    <p>Your current guess: <strong>${currentDateGuess.toLocaleDateString('en-US', { 
+                                        weekday: 'long', 
+                                        month: 'long', 
+                                        day: 'numeric', 
+                                        year: 'numeric' 
+                                    })}</strong></p>
+                                    <button id="change-guess-btn" class="button secondary">Change Guess</button>
+                                </div>
+                            ` : ''}
+                            
+                            <div id="calendar-container" class="calendar-container ${currentDateGuess ? 'hidden' : ''}">
+                                <div class="calendar-header">
+                                    <button id="prev-month" class="calendar-nav-btn">&laquo; Prev</button>
+                                    <h3 id="current-month" class="current-month"></h3>
+                                    <button id="next-month" class="calendar-nav-btn">Next &raquo;</button>
+                                </div>
+                                
+                                <div class="weekdays">
+                                    <div>Sun</div>
+                                    <div>Mon</div>
+                                    <div>Tue</div>
+                                    <div>Wed</div>
+                                    <div>Thu</div>
+                                    <div>Fri</div>
+                                    <div>Sat</div>
+                                </div>
+                                
+                                <div id="calendar-grid" class="calendar-grid"></div>
+                                
+                                <div class="calendar-footer">
+                                    <div class="calendar-legend">
+                                        <div class="legend-item">
+                                            <div class="legend-color available"></div>
+                                            <span>Available</span>
+                                        </div>
+                                        <div class="legend-item">
+                                            <div class="legend-color taken"></div>
+                                            <span>Taken</span>
+                                        </div>
+                                        <div class="legend-item">
+                                            <div class="legend-color due-date"></div>
+                                            <span>Due Date</span>
+                                        </div>
+                                        <div class="legend-item">
+                                            <div class="legend-color your-guess"></div>
+                                            <span>Your Guess</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="confirmation-container" class="confirmation-container hidden">
+                                <p>You've selected: <span id="selected-date" class="selected-date"></span></p>
+                                <p>Confirm your guess?</p>
+                                <div class="button-group">
+                                    <button id="confirm-guess-btn" class="button primary">Confirm</button>
+                                    <button id="cancel-guess-btn" class="button secondary">Cancel</button>
+                                </div>
+                            </div>
+                            
+                            <div id="success-message" class="success-message hidden">
+                                <p>Your date guess has been saved!</p>
+                                <button id="continue-btn" class="button primary">Continue to Dashboard</button>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                
+                <footer class="page-footer">
+                    <div class="buy-coffee-footer">
+                        <img src="/static/images/coffee-icon.svg" alt="Coffee" class="buy-coffee-qr">
+                        <p class="buy-coffee-text">Like this app?</p>
+                        <a class="buy-coffee-link" onclick="window.showBuyCoffeeModal()">Buy me a coffee</a>
+                    </div>
+                </footer>
+            </div>
+        `;
+        
+        // Initialize calendar functionality
+        initializeCalendar(startDate, endDate, dueDate, takenDates, currentDateGuess, eventId);
+        
+        // Add event listeners for other buttons
+        document.getElementById('back-btn').addEventListener('click', () => {
+            window.location.href = `/guest/event/${eventId}`;
+        });
+        
+        document.getElementById('logout-btn').addEventListener('click', handleLogout);
+        
+        if (currentDateGuess) {
+            document.getElementById('change-guess-btn').addEventListener('click', () => {
+                document.querySelector('.current-guess').classList.add('hidden');
+                document.getElementById('calendar-container').classList.remove('hidden');
+            });
+        }
+        
+        document.getElementById('continue-btn')?.addEventListener('click', () => {
+            window.location.href = `/guest/event/${eventId}`;
+        });
+    } catch (error) {
+        console.error('Error loading date guess page:', error);
+        document.getElementById('root').innerHTML = `
+            <div class="error-container">
+                <h2 class="error-title">Error Loading Date Guess Page</h2>
+                <p class="error-message">${error.message || 'Failed to load date guess page. Please try again later.'}</p>
+                <button onclick="window.location.href='/guest/dashboard'" class="button primary">Return to Dashboard</button>
+            </div>
+        `;
+    }
+};
+
+// Initialize calendar functionality
+const initializeCalendar = (startDate, endDate, dueDate, takenDates, currentDateGuess, eventId) => {
+    let currentMonth = new Date(dueDate);
+    
+    const renderCalendar = () => {
+        const calendarGrid = document.getElementById('calendar-grid');
+        const currentMonthEl = document.getElementById('current-month');
+        
+        // Clear the grid
+        calendarGrid.innerHTML = '';
+        
+        // Display current month and year
+        currentMonthEl.textContent = currentMonth.toLocaleDateString('en-US', { 
+            month: 'long', 
+            year: 'numeric' 
+        });
+        
+        // Get the first day of the month (0 - Sunday, 6 - Saturday)
+        const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+        
+        // Get the last day of the month
+        const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+        
+        // Fill in the empty cells before the first day of the month
+        for (let i = 0; i < firstDay; i++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.classList.add('calendar-day', 'empty');
+            calendarGrid.appendChild(emptyCell);
+        }
+        
+        // Fill in the days of the month
+        for (let day = 1; day <= lastDay; day++) {
+            const dayCell = document.createElement('div');
+            dayCell.classList.add('calendar-day');
+            
+            const currentDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+            const dateString = currentDate.toISOString().split('T')[0];
+            
+            // Check if the date is within the allowed range
+            const isInRange = currentDate >= startDate && currentDate <= endDate;
+            
+            // Check if the date is the due date
+            const isDueDate = currentDate.getDate() === dueDate.getDate() && 
+                             currentDate.getMonth() === dueDate.getMonth() && 
+                             currentDate.getFullYear() === dueDate.getFullYear();
+            
+            // Check if the date is the user's current guess
+            const isCurrentGuess = currentDateGuess && 
+                                  currentDate.getDate() === currentDateGuess.getDate() && 
+                                  currentDate.getMonth() === currentDateGuess.getMonth() && 
+                                  currentDate.getFullYear() === currentDateGuess.getFullYear();
+            
+            // Check if the date is already taken
+            const isTaken = takenDates.has(dateString);
+            
+            // Apply appropriate classes
+            if (isDueDate) {
+                dayCell.classList.add('due-date');
+            } else if (isCurrentGuess) {
+                dayCell.classList.add('your-guess');
+            } else if (isTaken) {
+                dayCell.classList.add('taken');
+            } else if (isInRange) {
+                dayCell.classList.add('available');
+            } else {
+                dayCell.classList.add('disabled');
+            }
+            
+            dayCell.textContent = day;
+            
+            // Add click event for available dates
+            if (isInRange && !isTaken && !isCurrentGuess) {
+                dayCell.addEventListener('click', () => selectDate(currentDate));
+            }
+            
+            calendarGrid.appendChild(dayCell);
+        }
+    };
+    
+    // Handle navigation between months
+    document.getElementById('prev-month').addEventListener('click', () => {
+        currentMonth.setMonth(currentMonth.getMonth() - 1);
+        renderCalendar();
+    });
+    
+    document.getElementById('next-month').addEventListener('click', () => {
+        currentMonth.setMonth(currentMonth.getMonth() + 1);
+        renderCalendar();
+    });
+    
+    // Handle date selection
+    let selectedDate = null;
+    
+    const selectDate = (date) => {
+        selectedDate = date;
+        
+        // Show confirmation container
+        document.getElementById('calendar-container').classList.add('hidden');
+        document.getElementById('confirmation-container').classList.remove('hidden');
+        
+        // Display the selected date
+        document.getElementById('selected-date').textContent = date.toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            month: 'long', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+        
+        // Add event listeners for confirmation buttons
+        document.getElementById('confirm-guess-btn').addEventListener('click', () => submitDateGuess(date));
+        document.getElementById('cancel-guess-btn').addEventListener('click', () => {
+            document.getElementById('confirmation-container').classList.add('hidden');
+            document.getElementById('calendar-container').classList.remove('hidden');
+        });
+    };
+    
+    // Submit date guess
+    const submitDateGuess = async (date) => {
+        try {
+            // Format date as YYYY-MM-DD for the API
+            const formattedDate = date.toISOString().split('T')[0];
+            
+            // Submit the guess
+            await api.createDateGuess(eventId, formattedDate);
+            
+            // Show success message
+            document.getElementById('confirmation-container').classList.add('hidden');
+            document.getElementById('success-message').classList.remove('hidden');
+        } catch (error) {
+            console.error('Error submitting date guess:', error);
+            alert(`Failed to submit your guess: ${error.message || 'Unknown error'}`);
+            
+            // Go back to calendar view
+            document.getElementById('confirmation-container').classList.add('hidden');
+            document.getElementById('calendar-container').classList.remove('hidden');
+        }
+    };
+    
+    // Render initial calendar
+    renderCalendar();
 };
 
 // Call the routing handler when the DOM is loaded

@@ -480,36 +480,332 @@ body {
 }
 
 /* Guest date guess page styles */
-.guest-date-guess-page {
-    padding: 20px;
+.page-container {
     max-width: 1000px;
     margin: 0 auto;
+    padding: 20px;
+    font-family: 'Poppins', sans-serif;
 }
 
 .page-header {
     display: flex;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     position: relative;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 15px 20px;
 }
 
-.back-button {
-    position: absolute;
-    left: 0;
-    color: var(--primary-dark);
-    text-decoration: none;
-    font-weight: bold;
+.header-content {
+    width: 100%;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    font-size: 0.9rem;
 }
 
-.page-header h1 {
-    flex: 1;
-    text-align: center;
+.page-title {
     margin: 0;
     font-size: 1.8rem;
     color: var(--primary-dark);
+}
+
+.user-nav {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-greeting {
+    color: #555;
+    margin-right: 10px;
+}
+
+.back-button, .logout-button {
+    border: none;
+    background: none;
+    color: var(--primary-dark);
+    font-weight: 500;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: background-color 0.2s;
+}
+
+.back-button:hover, .logout-button:hover {
+    background-color: rgba(255, 102, 179, 0.1);
+}
+
+.main-content {
+    margin-bottom: 40px;
+}
+
+.card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+.card-header {
+    background-color: var(--primary-light);
+    padding: 20px;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.card-title {
+    margin: 0 0 5px 0;
+    color: var(--primary-dark);
+    font-size: 1.5rem;
+}
+
+.due-date-info {
+    margin: 0;
+    color: #555;
+}
+
+.due-date {
+    font-weight: 600;
+    color: #444;
+}
+
+.card-body {
+    padding: 25px;
+}
+
+.guess-instructions {
+    margin-top: 0;
+    margin-bottom: 25px;
+    color: #555;
+}
+
+.current-guess {
+    background-color: #f5f5f5;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.button {
+    border: none;
+    border-radius: 30px;
+    padding: 10px 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.primary {
+    background-color: var(--primary);
+    color: white;
+    box-shadow: 0 2px 4px rgba(255, 153, 204, 0.3);
+}
+
+.primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 153, 204, 0.4);
+}
+
+.secondary {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.secondary:hover {
+    background-color: #e5e5e5;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.confirmation-container, .success-message {
+    text-align: center;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.success-message {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.selected-date {
+    font-weight: 600;
+    color: var(--primary-dark);
+}
+
+.hidden {
+    display: none;
+}
+
+/* Calendar Styles */
+.calendar-container {
+    max-width: 100%;
+    overflow-x: auto;
+    margin-bottom: 30px;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.calendar-nav-btn {
+    background-color: transparent;
+    border: none;
+    color: var(--primary-dark);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: background-color 0.2s;
+}
+
+.calendar-nav-btn:hover {
+    background-color: rgba(255, 102, 179, 0.1);
+}
+
+.current-month {
+    font-size: 1.2rem;
+    margin: 0;
+    color: #444;
+}
+
+.weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.weekdays div {
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #777;
+    padding: 8px 0;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+    font-size: 1rem;
+    position: relative;
+}
+
+.calendar-day.empty {
+    background-color: transparent;
+    cursor: default;
+}
+
+.calendar-day.disabled {
+    color: #ccc;
+    background-color: #f9f9f9;
+    cursor: not-allowed;
+}
+
+.calendar-day.available {
+    background-color: #f0f8ff;
+    color: #444;
+}
+
+.calendar-day.available:hover {
+    background-color: #d0e8ff;
+    transform: scale(1.05);
+}
+
+.calendar-day.taken {
+    background-color: #f5f5f5;
+    color: #aaa;
+    cursor: not-allowed;
+}
+
+.calendar-day.due-date {
+    background-color: #fff0f5;
+    border: 2px solid var(--primary);
+    color: var(--primary-dark);
+    font-weight: 700;
+}
+
+.calendar-day.your-guess {
+    background-color: #d4edda;
+    border: 2px solid #28a745;
+    color: #155724;
+    font-weight: 700;
+}
+
+.calendar-footer {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #f5f5f5;
+}
+
+.calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.legend-color {
+    width: 15px;
+    height: 15px;
+    border-radius: 3px;
+}
+
+.legend-color.available {
+    background-color: #f0f8ff;
+    border: 1px solid #d0e8ff;
+}
+
+.legend-color.taken {
+    background-color: #f5f5f5;
+    border: 1px solid #e5e5e5;
+}
+
+.legend-color.due-date {
+    background-color: #fff0f5;
+    border: 2px solid var(--primary);
+}
+
+.legend-color.your-guess {
+    background-color: #d4edda;
+    border: 2px solid #28a745;
 }
 
 .date-guess-instructions {
