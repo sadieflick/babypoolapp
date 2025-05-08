@@ -1031,6 +1031,253 @@ const renderEventCreation = () => {
     }
 };
 
+// Guest Login Page Renderer
+const renderGuestLogin = () => {
+    document.getElementById('root').innerHTML = `
+        <div style="font-family: 'Poppins', sans-serif; min-height: 100vh; display: flex; flex-direction: column;">
+            <!-- Navigation Bar -->
+            <nav style="background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <a href="/" style="color: #ff66b3; text-decoration: none; font-size: 1.5rem; font-weight: bold;">Baby Pool</a>
+                </div>
+            </nav>
+            
+            <!-- Main Content -->
+            <main style="flex: 1; padding: 2rem; background-color: #f8f9fa;">
+                <div style="max-width: 500px; margin: 0 auto; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <h1 style="color: #99ccff; margin-bottom: 2rem; text-align: center;">Guest Login</h1>
+                    
+                    <div id="guest-login-form">
+                        <div style="margin-bottom: 1.5rem;">
+                            <label for="event-code" style="display: block; margin-bottom: 0.5rem; color: #555; font-weight: 500;">Event Code</label>
+                            <input 
+                                type="text" 
+                                id="event-code" 
+                                placeholder="Enter the event code" 
+                                style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 5px;"
+                            />
+                            <small style="color: #888; font-size: 0.8rem;">The host should have provided you with an event code</small>
+                        </div>
+                        
+                        <div style="margin-bottom: 1.5rem;">
+                            <label for="nickname" style="display: block; margin-bottom: 0.5rem; color: #555; font-weight: 500;">Your Name/Nickname</label>
+                            <input 
+                                type="text" 
+                                id="nickname" 
+                                placeholder="Enter your name or nickname" 
+                                style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 5px;"
+                            />
+                        </div>
+                        
+                        <button 
+                            id="guest-login-submit" 
+                            style="width: 100%; background-color: #99ccff; color: white; border: none; padding: 0.75rem; border-radius: 5px; font-weight: 500; cursor: pointer;"
+                        >
+                            Join Event
+                        </button>
+                        
+                        <div style="margin-top: 1.5rem; text-align: center;">
+                            <p style="color: #888; margin-bottom: 0.5rem;">Don't have an event code?</p>
+                            <button 
+                                id="search-by-name-btn" 
+                                style="background: none; border: none; color: #99ccff; cursor: pointer; text-decoration: underline;"
+                            >
+                                Search by mother's name
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            
+            <!-- Footer -->
+            <footer style="background-color: white; padding: 1.5rem; text-align: center; box-shadow: 0 -2px 4px rgba(0,0,0,0.05);">
+                <p style="color: #888; margin: 0 0 10px 0;">&copy; 2025 Baby Pool App</p>
+                <div class="buy-coffee-footer">
+                    <img src="/static/images/coffee-icon.svg" alt="Coffee" class="buy-coffee-qr">
+                    <p class="buy-coffee-text">Like this app?</p>
+                    <a class="buy-coffee-link" onclick="window.showBuyCoffeeModal()">Buy me a coffee</a>
+                </div>
+            </footer>
+        </div>
+    `;
+    
+    // Add event listeners for form submission
+    document.getElementById('guest-login-submit').addEventListener('click', async () => {
+        const eventCode = document.getElementById('event-code').value.trim();
+        const nickname = document.getElementById('nickname').value.trim();
+        
+        if (!eventCode) {
+            alert('Please enter an event code');
+            return;
+        }
+        
+        if (!nickname) {
+            alert('Please enter your name or nickname');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/auth/guest/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    login_type: 'event_code',
+                    event_code: eventCode,
+                    nickname: nickname
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                if (data.status === 'logged_in') {
+                    // Store auth tokens and user info
+                    localStorage.setItem('token', data.access_token);
+                    localStorage.setItem('refreshToken', data.refresh_token);
+                    localStorage.setItem('isHost', 'false');
+                    localStorage.setItem('currentUser', JSON.stringify({
+                        id: data.user_id,
+                        first_name: data.first_name,
+                        last_name: data.last_name,
+                        nickname: data.nickname,
+                        is_host: false
+                    }));
+                    
+                    // Redirect to guest dashboard
+                    window.location.href = `/guest/event/${data.event_id}/dashboard`;
+                } else {
+                    // Handle other status cases (need_user_info, etc.)
+                    alert(data.message);
+                }
+            } else {
+                alert(data.error || 'Error logging in. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error during guest login:', error);
+            alert('An unexpected error occurred. Please try again.');
+        }
+    });
+    
+    // Add event listener for search by name button
+    document.getElementById('search-by-name-btn').addEventListener('click', () => {
+        // Replace the form with a search form
+        document.getElementById('guest-login-form').innerHTML = `
+            <div style="margin-bottom: 1.5rem;">
+                <label for="mother-name" style="display: block; margin-bottom: 0.5rem; color: #555; font-weight: 500;">Mother's Name</label>
+                <input 
+                    type="text" 
+                    id="mother-name" 
+                    placeholder="Enter the mother's name" 
+                    style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 5px;"
+                />
+                <small style="color: #888; font-size: 0.8rem;">Enter the name of the mother-to-be</small>
+            </div>
+            
+            <button 
+                id="search-submit" 
+                style="width: 100%; background-color: #99ccff; color: white; border: none; padding: 0.75rem; border-radius: 5px; font-weight: 500; cursor: pointer;"
+            >
+                Search Events
+            </button>
+            
+            <div style="margin-top: 1.5rem; text-align: center;">
+                <button 
+                    id="back-to-code-btn" 
+                    style="background: none; border: none; color: #99ccff; cursor: pointer; text-decoration: underline;"
+                >
+                    Back to event code login
+                </button>
+            </div>
+        `;
+        
+        // Add event listener for search submit
+        document.getElementById('search-submit').addEventListener('click', async () => {
+            const motherName = document.getElementById('mother-name').value.trim();
+            
+            if (!motherName || motherName.length < 2) {
+                alert('Please enter at least 2 characters for the mother\'s name');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/auth/guest/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        login_type: 'mother_search',
+                        search_term: motherName
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'events_found') {
+                    // Display the list of events
+                    let eventsHtml = `
+                        <h3 style="color: #99ccff; margin-bottom: 1rem;">Events Found</h3>
+                        <p style="margin-bottom: 1rem;">Select an event to join:</p>
+                        <div style="margin-bottom: 1.5rem;">
+                    `;
+                    
+                    data.events.forEach(event => {
+                        eventsHtml += `
+                            <div style="padding: 1rem; border: 1px solid #eee; border-radius: 5px; margin-bottom: 0.5rem; cursor: pointer;" 
+                                 onclick="window.storeEventCode('${event.event_code}')">
+                                <h4 style="margin: 0 0 0.5rem 0;">${event.title}</h4>
+                                <p style="margin: 0; font-size: 0.9rem;">Mother: ${event.mother_name}</p>
+                                <p style="margin: 0; font-size: 0.9rem;">Host: ${event.host_name}</p>
+                                <p style="margin: 0; font-size: 0.9rem; color: #99ccff;">Event Code: ${event.event_code}</p>
+                            </div>
+                        `;
+                    });
+                    
+                    eventsHtml += `
+                        </div>
+                        <div style="margin-top: 1.5rem; text-align: center;">
+                            <button 
+                                id="back-to-search-btn" 
+                                style="background: none; border: none; color: #99ccff; cursor: pointer; text-decoration: underline;"
+                            >
+                                Back to search
+                            </button>
+                        </div>
+                    `;
+                    
+                    document.getElementById('guest-login-form').innerHTML = eventsHtml;
+                    
+                    // Add event listener for back button
+                    document.getElementById('back-to-search-btn').addEventListener('click', () => {
+                        renderGuestLogin();
+                    });
+                    
+                    // Add global function to handle event selection
+                    window.storeEventCode = (eventCode) => {
+                        // Redirect back to the event code form with the code pre-filled
+                        renderGuestLogin();
+                        setTimeout(() => {
+                            document.getElementById('event-code').value = eventCode;
+                        }, 100);
+                    };
+                } else {
+                    alert(data.error || 'No events found with that mother\'s name.');
+                }
+            } catch (error) {
+                console.error('Error searching for events:', error);
+                alert('An unexpected error occurred. Please try again.');
+            }
+        });
+        
+        // Add event listener for back button
+        document.getElementById('back-to-code-btn').addEventListener('click', () => {
+            renderGuestLogin();
+        });
+    });
+};
+
 // Routing
 const handleRouting = async () => {
     const path = window.location.pathname;
@@ -1056,6 +1303,12 @@ const handleRouting = async () => {
             window.location.href = '/auth/host_login';
             return;
         }
+    }
+    
+    // Guest login route
+    if (path === '/guest/login' || path === '/auth/guest_login') {
+        renderGuestLogin();
+        return;
     }
     
     // Default: render the home page for root or unhandled paths
