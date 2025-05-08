@@ -102,6 +102,128 @@ const api = {
             console.error('Error fetching events:', error);
             throw error;
         }
+    },
+    
+    // Get a specific event by ID
+    getEvent: async (eventId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/events/${eventId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch event');
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error(`Error fetching event ${eventId}:`, error);
+            throw error;
+        }
+    },
+    
+    // Get all guesses for an event
+    getAllGuesses: async (eventId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/events/${eventId}/guesses`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch guesses');
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error(`Error fetching guesses for event ${eventId}:`, error);
+            throw error;
+        }
+    },
+    
+    // Get current user's guesses for an event
+    getUserGuesses: async (eventId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/events/${eventId}/guesses/current`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch user guesses');
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error(`Error fetching user guesses for event ${eventId}:`, error);
+            throw error;
+        }
+    },
+    
+    // Create a date guess
+    createDateGuess: async (eventId, date) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/events/${eventId}/guesses/date`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                body: JSON.stringify({ guess_date: date }),
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to create date guess');
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error(`Error creating date guess for event ${eventId}:`, error);
+            throw error;
+        }
+    },
+    
+    // Delete a guess
+    deleteGuess: async (eventId, guessType, guessId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/events/${eventId}/guesses/${guessType}/${guessId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to delete guess');
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error(`Error deleting ${guessType} guess ${guessId} for event ${eventId}:`, error);
+            throw error;
+        }
     }
 };
 

@@ -283,6 +283,304 @@ body {
     color: var(--primary-dark);
 }
 
+/* Custom Calendar Grid Styles */
+.custom-calendar {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Calendar Header */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.current-month {
+    font-size: 1.4rem;
+    margin: 0;
+    color: #333;
+    text-align: center;
+    flex: 1;
+}
+
+.month-nav {
+    background-color: #f8f8f8;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.month-nav:hover {
+    background-color: #e0e0e0;
+}
+
+.month-nav:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+    background-color: #f8f8f8;
+}
+
+/* Days of week header */
+.days-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 10px;
+}
+
+.day-name {
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #666;
+    padding: 8px 0;
+}
+
+/* Days grid */
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+
+.day {
+    aspect-ratio: 1 / 1;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    border-radius: 8px;
+    cursor: pointer;
+    position: relative;
+    background-color: #f8f8f8;
+    transition: background-color 0.2s;
+    overflow: hidden;
+}
+
+.day:hover {
+    background-color: #e0e0e0;
+}
+
+.day.empty {
+    background-color: transparent;
+    cursor: default;
+}
+
+.day-number {
+    font-size: 1rem;
+    font-weight: bold;
+    padding: 5px 0;
+}
+
+.day.out-of-range {
+    color: #ccc;
+    background-color: #f8f8f8;
+    cursor: not-allowed;
+}
+
+.day.due-date {
+    background-color: #ffefd5;
+    border: 2px solid #ffa500;
+}
+
+.day.user-guessed {
+    background-color: #d4edda;
+    border: 2px solid #28a745;
+}
+
+.day.other-guessed {
+    background-color: #f8f8f8;
+    color: #333;
+}
+
+.guess-name {
+    font-size: 0.7rem;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+    margin-top: auto;
+    padding: 2px 0;
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
+/* Calendar info */
+.calendar-info {
+    margin-top: 20px;
+    font-size: 0.8rem;
+    color: #666;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.due-date-info {
+    display: flex;
+    align-items: center;
+}
+
+.due-date-marker {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background-color: #ffefd5;
+    border: 2px solid #ffa500;
+    border-radius: 3px;
+    margin-right: 8px;
+}
+
+/* Confirmation modal */
+.confirmation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.confirmation-modal {
+    background-color: white;
+    border-radius: 12px;
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.confirmation-modal h3 {
+    margin-top: 0;
+}
+
+.confirmation-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* Guest date guess page styles */
+.guest-date-guess-page {
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.page-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.back-button {
+    position: absolute;
+    left: 0;
+    color: var(--primary-dark);
+    text-decoration: none;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.page-header h1 {
+    flex: 1;
+    text-align: center;
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--primary-dark);
+}
+
+.date-guess-instructions {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.date-guess-instructions h2 {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.date-guess-instructions p {
+    font-size: 1rem;
+    color: #666;
+}
+
+.calendar-container {
+    margin-bottom: 30px;
+}
+
+.guess-info {
+    background-color: #f8f8f8;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.current-guesses h3 {
+    font-size: 1.2rem;
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.current-guesses ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.current-guesses li {
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.no-guesses {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+.loading-container, .error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+    font-size: 1.2rem;
+}
+
+.error-container {
+    color: var(--danger);
+}
+
 /* For time guessing components */
 .time-selector {
     display: grid;
