@@ -1197,7 +1197,7 @@ const renderGuestLogin = () => {
             const motherName = document.getElementById('mother-name').value.trim();
             
             if (!motherName || motherName.length < 2) {
-                alert('Please enter at least 2 characters for the mother\'s name');
+                alert("Please enter at least 2 characters for the mother's name");
                 return;
             }
             
@@ -1263,7 +1263,7 @@ const renderGuestLogin = () => {
                         }, 100);
                     };
                 } else {
-                    alert(data.error || 'No events found with that mother\'s name.');
+                    alert(data.error || "No events found with that mother's name");
                 }
             } catch (error) {
                 console.error('Error searching for events:', error);
