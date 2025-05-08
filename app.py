@@ -107,6 +107,24 @@ def serve(path):
     if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
         return send_from_directory(app.static_folder, path)
     
+    # Check if this is an API or auth endpoint that should not return index.html
+    if path.startswith('api/') or \
+       path == 'api' or \
+       path.startswith('auth/token/') or \
+       path == 'auth/verify-token' or \
+       path == 'auth/refresh-token':
+        # Don't handle API routes here - let them 404 if not defined elsewhere
+        return jsonify({"error": f"API endpoint not found: /{path}"}), 404
+    
+    # Handle old URL patterns to ensure proper redirection to SPA routes
+    if path == 'guest-info' and request.args.get('event_id'):
+        event_id = request.args.get('event_id')
+        return redirect(f'/guest/event/{event_id}')
+    
+    if path.startswith('event/') and path.split('/')[1].isdigit():
+        event_id = path.split('/')[1]
+        return redirect(f'/guest/event/{event_id}')
+    
     # Otherwise, serve the index.html template to handle SPA routing
     return render_template('index.html')
 
