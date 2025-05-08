@@ -1,0 +1,142 @@
+.guest-date-guess-page {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.back-button {
+  position: absolute;
+  left: 0;
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.page-header h1 {
+  flex: 1;
+  text-align: center;
+  margin: 0;
+  font-size: 1.8rem;
+  color: var(--primary-color);
+}
+
+.date-guess-instructions {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.date-guess-instructions h2 {
+  font-size: 1.4rem;
+  margin-bottom: 10px;
+  color: var(--text-color);
+}
+
+.date-guess-instructions p {
+  font-size: 1rem;
+  color: var(--text-color-secondary);
+}
+
+.calendar-container {
+  margin-bottom: 30px;
+}
+
+.guess-info {
+  background-color: #f8f8f8;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.current-guesses h3 {
+  font-size: 1.2rem;
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: var(--text-color);
+}
+
+.current-guesses ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.current-guesses li {
+  background-color: var(--accent-light);
+  color: var(--accent-color);
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.no-guesses {
+  text-align: center;
+  color: var(--text-color-secondary);
+  font-style: italic;
+}
+
+.loading-container, .error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  font-size: 1.2rem;
+}
+
+.error-container {
+  color: var(--error-color);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .guest-date-guess-page {
+    padding: 15px;
+  }
+  
+  .page-header h1 {
+    font-size: 1.5rem;
+    margin: 0 auto;
+  }
+  
+  .date-guess-instructions h2 {
+    font-size: 1.2rem;
+  }
+  
+  .date-guess-instructions p {
+    font-size: 0.9rem;
+  }
+  
+  .guess-info {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .back-button {
+    position: static;
+    margin-bottom: 10px;
+  }
+  
+  .current-guesses li {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+  }
+}

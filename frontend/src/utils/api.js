@@ -326,7 +326,29 @@ export const getDateGuesses = async (eventId) => {
 
 export const createDateGuess = async (eventId, date) => {
   try {
-    const response = await api.post(`/events/${eventId}/date-guesses`, { date });
+    // Support both formats - date and guess_date
+    const response = await api.post(`/events/${eventId}/guesses/date`, { 
+      date: date,
+      guess_date: date
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const deleteDateGuess = async (eventId, guessId) => {
+  try {
+    const response = await api.delete(`/events/${eventId}/guesses/date/${guessId}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const fetchAllGuesses = async (eventId) => {
+  try {
+    const response = await api.get(`/events/${eventId}/guesses`);
     return response.data;
   } catch (error) {
     throw error;

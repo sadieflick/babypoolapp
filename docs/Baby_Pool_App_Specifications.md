@@ -1,0 +1,198 @@
+# Baby Pool App
+
+This baby shower app uses flask, react and sqlite using responsive design with a simple, sleek and baby-shower appropriate design.
+
+Overview of the app: App is called "Baby Pool." Users will be able to choose guesses for when the baby will be born, each guess has a set price the user will pay to the host to contribute to the pool for the winner(s). They can choose guesses for the date, guesses for the hour of the day and guesses for the exact minute of the hour the baby will be born. Each guess type is its own 'pool' and will have individually 1 winner each. Host users for an event are the only users who need to register, guests can login with event code, search by email or full name of mother-to-be.
+
+## Specific feature behaviors of the app:
+
+### On All Pages (excluding login/entry page):
+
+* Toggle for light and dark mode, which toggles the appearance accordingly (is visible throughout app)  
+* Links (if exist) for external baby shower site and to email the host  
+* QR code to venmo developer with note, "Like this app? Buy me a coffee. Venmo Sadie Flick @Sadie-Flick" (QR image also here attached in prompt)
+
+### Login Page Elements (and behaviors):
+
+1. A button/link to log in as a host, that goes to the host sign-in/registration page  
+2. Field for guest login to enter their email, or enter the event code (given by host), or search for the first and last name of the mother-to-be.  
+   1. If enters email:  
+      1. Check if email/account exists, either from invite list or prior user creation  
+      2. If not in database save email in session and redirect to enter event code or search for mother-to-be  
+      3. If email exists but they have not already logged in before, they will be prompted to enter a nickname (optional) and their first and/or last name if the host did not provide that information initially  
+      4. Otherwise, return them to the primary guessing page for their associated event  
+   2. If searching by first and/or last name of the mother-to-be, query will show resulting events in the following format: "Mother-to-be: \[FULL NAME OF MOTHER-TO-BE\]" along with the name of the host, "Hosted by: \[FULL NAME OF HOST\]". The guest can choose from the results. If no results, tell them to ask the host for the event code, or try again.  
+   3. Guest-Event Login after selecting queried event:  
+      1. If email not in session: Guest should enter their email or first and last name if they don't possess an email.  
+      2. Log them in if account exists or if not, create a new user account using their email or full name and associate it with that event.  
+      3. Prompt them to enter any primary account info that they are missing \-- email, first and last name, and nickname (optional) and payment method preference (venmo or cash, "How do you want to pay \[HOST FIRST NAME\] for the pool?").   
+      4. If they do not enter an email, they should be prompted to enter their phone number, so the host can still contact them for payment.   
+      5. Note: payment will not be integrated into the app, as the host will conduct this separately.  
+      6. Users may be associated with many events.   
+      7. Email validations should apply if they enter an email, i.e. uniqueness, valid email format.  
+   4. Users whose sessions have not expired should be returned to the page they were on last time. Sessions should expire after a month, or once the date of the event has passed.
+
+### Main Guest Landing Page Elements/Feature-Behaviors:
+
+* Username/log-in display in an upper corner with nickname or if no nickname, first name and last initial  
+* Theme-choice banner with event title (chosen by the host of the event)  
+* Any picture uploaded by admin displayed with the event title within the theme banner (or maybe under event title for responsive mobile display)  
+* Day count-down to event date (smaller), and due date for pool-entry guesses  
+* Title for primary game: "When will the baby be born?"  
+* Big buttons to navigate to the guessing pages:  
+  * "Date"  
+  * "Time"  
+  * "My guesses" (if has guesses already logged)  
+* (New section) Title/Button to go to name-suggestion/guessing page, if the mother-to-be has not yet chosen or revealed a name: "Suggest a baby name\!", or "Guess the baby's name\!" if not revealed but already chosen by parents. If name game set to off by admin, omit section
+
+### Dates Guessing-Game Page Elements:
+
+* A back button or Link to go back to the main guest landing page  
+* Include the label prompt  "What date do you think the baby will be born?"  
+* Display the baby's due date (in text) for reference  
+* Pageable month calendar of dates between a range of 1 month before the due date, and 1 month following the due date.   
+  * Baby's due date should be highlighted  
+  * Users can pick dates, and it will prompt to confirm and save guess, and adds this to the owed amount.  
+  * Once a user has picked a date, the date/square on the calendar is greyed out and it should display the guesser's nick name or first name and last initial. This will show for all users. If the guess is this user's it shows an option to undo
+
+### Hours/minutes Guessing-Game Page Elements:
+
+* Text explaining that it is a separate pool for hours and minutes and if you get either right you win that pool, and pointing out that if anyone gets both right they win both pools (jackpot\!)  
+* A large time picker with a separate picker for hours (12) with an AM/PM choice and minutes (no am/pm indicated) any hours or minutes already taken will be greyed out and they will not be able to choose those that have been taken by other users, though they can still see that number.
+
+### Host (Admin) Login Page Behavior:
+
+* If session not expired (already logged in), redirects host dashboard.  
+* Basic login and sign up  
+* Authentication and registration with email and password or oauth sign in with google account.  
+* Includes appropriate authentication validation and data validations, as well as appropriate data security (i.e. storing hashed passwords, using bcrypt, session concerns etc.)  
+* On successful login goes to Host Dashboard, on sign-up goes to step 2 of host registration  
+* Session expiry should be 1 week.
+
+### Host Sign-up Registration Step 2:
+
+* Field to enter host/admin first and last name (only on admin's first login) and optional nickname  
+* Brief explanation of how the guessing game works (paragraph)  
+* Clicks through the New Event component to create their first event
+
+### 'New Event' component click-through form as swipe/arrow-forward screens (also used when admin user hits the "+" sign from the dashboard to create a new event)
+
+* First page: (not skippable)  
+  * Name of mother-to-be  
+  * Name of partner (optional)  
+  * Editable field for 'Name for the Event' with placeholder text "\[MOTHER-TO-BE NAME\]'s Baby Shower"  
+  * Event Date  
+  * Baby due date  
+  * "Show your email to guests?" toggle on or off  
+  * Textfield: Provide a link to baby shower webpage or invite (optional)  
+  * How much will guests contribute for each guess? (enter dollar amount) default value is 1$  
+* Second page "Choose a picture" or skip for now:  
+  * Field to upload a picture of the mother or couple  
+  * Skip option should be prominent  
+* Third page "Choose a Theme" or skip:  
+  * Drop down for picking a color palette theme for their event's pages (shows a static view of theme in light- and dark-mode) (optional, has a default typical palette, that defaults to light), they choose whether to default to dark- or light-mode when a user enters the event for the first time  
+  * Skip option should be prominent  
+* Fourth page "Enter Guests" or skip:  
+  * Option to copy and paste from a table (google docs or excel), a column of emails of the guests, which will display dynamically once uploaded and saved.   
+    * May also manually enter guest emails, or copy and paste a comma-separated list of emails  
+    * Should have a note that says, "Note: guests can also find your event and enter their own emails and information"  
+    * Formatting validations  
+    * Next (if form filled)  
+    * Skip option should be prominent  
+* Fifth Page: "Have guests venmo me" or skip:  
+  * Can enter any of the following:  
+    * User handle on venmo (enter twice to avoid typos)  
+    * If entering user handle must also enter last 4 digits of their phone number  
+    * OR \- Upload a screenshot of their venmo QR code  
+  * Skip option should be prominent  
+* Sixth Page "Add baby name game":  
+  * Clear description of name game. Guests can suggest a name for the baby or guess the chosen name that hasn't been revealed yet. If they do not know if the baby already has a chosen name, skip for now. Also suggest that they ask the parents before adding this option.  
+  * Yes/No radio: Do the parents already have a name for the baby?   
+  * If yes, enter baby's chosen name  
+  * Next or skip for now  
+  * Skip option should be prominent  
+* FINISH button or go back to edit (please save any entered info so they don't have to re-enter it)  
+* On event creation, generate a unique 4-digit event code associated with the event, between 1000 and 9999\. When an event's date has passed this 4-digit code is now available again. If no 4-digit codes are available, may provide a unique code with greater than 4 digits
+
+## Host Dashboard:
+
+Overview: Host landing page has a stats banner and a parent game display component which by default, shows the calendar date guesses as a scrollable 2-month calendar with first and last initial of guessers. Component has a nav bar (appears as tabs) to navigate between guessing game components (dates, times, names)
+
+### Host Dashboard Components:
+
+1. Display the the auto-generated event code to give to guests  
+2. Stats Banner:   
+   1. Number of guests who have logged in, and total number of guests so far (invitees and guests who added themselves)  
+   2. Total date guesses  
+   3. Total hour and minute guesses  
+   4. Total name guesses (if applicable)  
+   5. Totals of guests whose status is PAID, and PENDING  
+3. Guess Game Data Tabs:  
+   1. Tab 1: Expanded calendar with nickname or first and last initial of guests in their selected squares/days  
+   2. Tab 2: Square grid of all 24 hours, with an hour listed in each square i.e. "1am",   
+   3. Tab 3: Square grid of all 60 minutes, a minute listed in each square i.e. "00:35", that have been guessed/taken should be a light shade of green (user paid in full already) or pink (user payment pending) and should display the name of the guest who chose it.  
+   4. For Tabs 1, 2, and 3:  
+      1. Days, Hours and Minutes that have been guessed/taken should be a light shade of green (user paid in full already) or pink (user payment pending) and should display the name of the guest who chose it.  
+      2. When clicking on a guess, the host sees a user component pop-up/overlay with the following info:  
+         1. Guest's nickname  
+         2. first and last name  
+         3. contact info  
+         4. Can click into username to see expanded guest user info page  
+   5. Tab 4: Guest list:  
+      1. And 'Add guest' field to type in a new guest email  
+      2. Lists all guests as rows with:   
+         1. Full name, Nickname, opens expanded guest user info page when clicked  
+         2. Total guesses  
+         3. Payment status (Paid or Pending \-- calculated from total paid and owed)  
+         4. Mark Paid or Mark Unpaid action based on current status (and adjusts paid amount)  
+         5. Delete option \--- can only delete an email/user if the associated user has never logged in, asks to confirm deletion
+
+### Guest User Info Page (Accessible from Host Dashboard)
+
+(Accessible mainly through guest-list tab, but other places as specified)
+
+Displays:
+
+1. Nickname, Full-name, contact info  
+2. Total guesses  
+3. Total paid  
+4. Total owed  
+5. Guesses (listed as text) by category-- dates, times, baby names (if applicable)  
+6. Payment method preference (cash or venmo)  
+7. Payment status: Displays Paid, Pending or Partial total:  
+   1. Note: Shows total paid of total owed  
+   2. Edit actions (with clear wording in label):   
+      1. Mark paid (paid amount set equal to owed amount, status now paid, but will change back to pending if they make more guesses)  
+      2. Enter amount (adds custom entry to total paid so far)  
+      3. Mark unpaid (sets total paid back to 0\)  
+8. Can delete individual guesses, but will have a confirmation prompt to be sure they want to erase that user's guess.  
+9. Back navigation to last visited guessing game data display
+
+### Event Settings Page (Link on Host Dashboard)
+
+Displays all the current settings with an edit option that allows them to update their event. Note: For simplicity of v1, don't need to be able to update the list of emails (may always add manually one by one), or update the guest list. They can only update the event details initially entered and the photo,
+and theme, and venmo information and the name game settings/on/off
+
+1. All the settings entered in the new event component are displayed in read-only format (as described above in the new event component)
+2. Edit button that allows them to update their event settings by showing each field as a form input
+
+### APIs that need to be created
+
+At a minimum, you'll need endpoints for:
+
+- Guest login and authentication
+- Creating, updating, and retrieving events
+- Managing guesses (creating, retrieving, deleting)
+- Managing guests (adding, updating, removing)
+- User profile management
+
+### Data Models
+
+The basic data models should include:
+
+- User (for both hosts and guests)
+- Event
+- DateGuess, HourGuess, MinuteGuess, NameGuess
+- Payment tracking
+
+The application should follow best practices for security, input validation, and user experience. The UI should be intuitive and responsive, working well on both desktop and mobile devices.
