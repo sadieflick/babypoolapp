@@ -16,20 +16,50 @@ def get_user_from_jwt():
     try:
         jwt_identity = get_jwt_identity()
         
-        # Now we're using string ID for consistent compatibility
-        # Convert to int if it's a string
+        print(f"DEBUG: JWT identity type and value: {type(jwt_identity).__name__}, {jwt_identity}")
+        
+        # Handle different formats of identity
         if isinstance(jwt_identity, str):
-            user_id = int(jwt_identity)
+            # String identities need to be converted to int
+            try:
+                user_id = int(jwt_identity)
+            except ValueError:
+                # If it's not a valid int string, use as is
+                user_id = jwt_identity
         # Legacy support for dict format if needed
         elif isinstance(jwt_identity, dict):
+            # Get user_id from dict, might be int or string
             user_id = jwt_identity.get('id')
+            print(f"DEBUG: ID from dict: {user_id}, type: {type(user_id).__name__}")
+            if isinstance(user_id, str):
+                # Convert string to int if possible
+                try:
+                    user_id = int(user_id)
+                except ValueError:
+                    # Keep as string if not convertible
+                    pass
         else:
+            # Assume it's already an int or other format
             user_id = jwt_identity
             
         if not user_id:
+            print("DEBUG: No user_id found in JWT")
             return None
             
-        return User.query.get(user_id)
+        print(f"DEBUG: Final user_id: {user_id}, type: {type(user_id).__name__}")
+        
+        # Query with explicit integer conversion for safety
+        try:
+            user_id_int = int(user_id)
+            user = User.query.get(user_id_int)
+            if user:
+                return user
+        except (ValueError, TypeError):
+            # If int conversion fails, try string lookup or other methods
+            print(f"DEBUG: Int conversion failed, trying string comparison")
+        
+        # Fallback to manual filtering to handle string IDs
+        return User.query.filter(User.id == user_id).first()
     except Exception as e:
         print(f"Error getting user from JWT: {str(e)}")
         return None
